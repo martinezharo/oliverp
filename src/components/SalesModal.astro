@@ -262,13 +262,15 @@ const { t } = Astro.locals;
         selects.forEach((select) => {
             if (select.options.length > 1) return;
 
-            products.forEach((product: Product) => {
-                const option = document.createElement("option");
-                option.value = product.id.toString();
-                option.textContent = product.name;
-                option.dataset.price = (product.price || 0).toString();
-                select.appendChild(option);
-            });
+            products
+                .filter((product: Product) => product.stock > 0)
+                .forEach((product: Product) => {
+                    const option = document.createElement("option");
+                    option.value = product.id.toString();
+                    option.textContent = product.name;
+                    option.dataset.price = (product.price || 0).toString();
+                    select.appendChild(option);
+                });
         });
     }
 
@@ -317,16 +319,22 @@ const { t } = Astro.locals;
         const select = row.querySelector(
             ".product-select",
         ) as HTMLSelectElement;
-        products.forEach((product: Product) => {
-            const option = document.createElement("option");
-            option.value = product.id.toString();
-            option.textContent = product.name;
-            option.dataset.price = (product.price || 0).toString();
-            if (data && data.producto_id === product.id) {
-                option.selected = true;
-            }
-            select.appendChild(option);
-        });
+        products
+            .filter(
+                (product: Product) =>
+                    product.stock > 0 ||
+                    (data && data.producto_id === product.id),
+            )
+            .forEach((product: Product) => {
+                const option = document.createElement("option");
+                option.value = product.id.toString();
+                option.textContent = product.name;
+                option.dataset.price = (product.price || 0).toString();
+                if (data && data.producto_id === product.id) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
 
         // Add event listeners for dynamic row
         const priceInput = row.querySelector(
