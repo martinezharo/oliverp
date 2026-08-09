@@ -153,7 +153,7 @@ const hasWorkspaceSession = demoMode || Boolean(Astro.locals.user);
 
 						{
 							hasWorkspaceSession && !demoMode && (
-								<form action="/api/auth/signout" method="post">
+								<form action="/api/auth/signout" method="post" data-astro-reload>
 									<button
 										type="submit"
 										class="w-10 h-10 rounded-full bg-white/5 hover:bg-red-500/20 flex items-center justify-center transition-colors relative group"

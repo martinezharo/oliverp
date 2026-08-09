@@ -15,12 +15,13 @@ vi.mock("../../src/lib/auth-proxy", () => ({
 
 const { GET: signInGet, POST: signIn } = await import("../../src/pages/api/auth/signin");
 const { POST: signOut } = await import("../../src/pages/api/auth/signout");
+const { GET: signUpGet, POST: signUp } = await import("../../src/pages/api/auth/signup");
 
 function context(request: Request) {
     return {
         request,
         locals: {} as App.Locals,
-        redirect: (location: string) => new Response(null, { status: 302, headers: { location } }),
+        redirect: (location: string, status = 302) => new Response(null, { status, headers: { location } }),
     } as never;
 }
 
@@ -74,5 +75,47 @@ describe("authentication endpoints", () => {
         expect(response.status).toBe(302);
         expect(response.headers.get("location")).toBe("/login");
         expect(proxyAuthRequest).toHaveBeenCalledWith(expect.anything(), "sign-out", "{}");
+    });
+
+    it("creates an account and forwards its session cookie", async () => {
+        const upstream = new Response(JSON.stringify({ user: { id: "u1" } }), { status: 200 });
+        upstream.headers.append("set-cookie", "better-auth.session_token=abc; Path=/");
+        proxyAuthRequest.mockResolvedValue(upstream);
+
+        const request = new Request("https://erp.test/api/auth/signup", {
+            method: "POST",
+            body: new URLSearchParams({ name: "User", email: "user@example.test", password: "secret123" }),
+        });
+        const response = await signUp(context(request));
+
+        expect(response.status).toBe(303);
+        expect(response.headers.get("location")).toBe("/");
+        expect(response.headers.get("set-cookie")).toContain("better-auth.session_token=abc");
+        expect(proxyAuthRequest).toHaveBeenCalledWith(
+            expect.anything(),
+            "sign-up/email",
+            JSON.stringify({ name: "User", email: "user@example.test", password: "secret123" }),
+        );
+    });
+
+    it("redirects signup errors back to the form instead of exposing the API route", async () => {
+        proxyAuthRequest.mockResolvedValue(
+            new Response(JSON.stringify({ code: "USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL" }), { status: 422 }),
+        );
+        const request = new Request("https://erp.test/api/auth/signup", {
+            method: "POST",
+            body: new URLSearchParams({ name: "User", email: "user@example.test", password: "secret123" }),
+        });
+
+        const response = await signUp(context(request));
+
+        expect(response.status).toBe(303);
+        expect(response.headers.get("location")).toBe("/signup?error=account_exists");
+    });
+
+    it("redirects direct visits to the signup endpoint to the form", async () => {
+        const response = await signUpGet(context(new Request("https://erp.test/api/auth/signup")));
+        expect(response.status).toBe(302);
+        expect(response.headers.get("location")).toBe("/signup");
     });
 });

@@ -3,6 +3,18 @@ import Layout from "../layouts/Layout.astro";
 import { isDemoMode } from "../lib/runtime";
 
 if (isDemoMode(Astro.locals)) return Astro.redirect("/");
+
+const signupError = Astro.url.searchParams.get("error");
+const signupErrorMessage =
+    signupError === "account_exists"
+        ? "Ya existe una cuenta con ese email. Inicia sesión o utiliza otro email."
+        : signupError === "invalid_email"
+          ? "Introduce un email válido."
+          : signupError === "password_too_short"
+            ? "La contraseña debe tener al menos 8 caracteres."
+            : signupError === "generic"
+              ? "No se ha podido crear la cuenta. Comprueba los datos e inténtalo de nuevo."
+              : null;
 ---
 
 <Layout title="Crear cuenta">
@@ -11,7 +23,13 @@ if (isDemoMode(Astro.locals)) return Astro.redirect("/");
             <h1 class="text-3xl font-bold text-center mb-2 text-white">Crear cuenta</h1>
             <p class="text-center text-slate-400 mb-8 text-sm">Tu cuenta se guardará directamente en Convex.</p>
 
-            <form action="/api/auth/signup" method="post" class="space-y-5">
+            {signupErrorMessage && (
+                <p class="mb-6 rounded-lg border border-red-400/20 bg-red-400/10 px-4 py-3 text-center text-sm text-red-200">
+                    {signupErrorMessage}
+                </p>
+            )}
+
+            <form action="/api/auth/signup" method="post" data-astro-reload class="space-y-5">
                 <label class="block text-xs font-medium text-slate-400 uppercase tracking-wider">
                     Nombre
                     <input name="name" required class="mt-2 w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white" />
