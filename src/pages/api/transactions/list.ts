@@ -1,6 +1,6 @@
 import type { APIRoute } from "astro";
 import { backendError, jsonResponse, sessionBackend, unauthorizedResponse } from "../../../lib/legacy-api";
-import { isDemoMode } from "../../../lib/supabase";
+import { isDemoMode } from "../../../lib/runtime";
 
 interface NormalizedTransaction {
     id: number;
@@ -57,7 +57,7 @@ function purchaseTransaction(row: Record<string, unknown>): NormalizedTransactio
 }
 
 export const GET: APIRoute = async (context) => {
-    if (isDemoMode) return jsonResponse({ items: [], total: 0, page: 1, pageSize: 20 });
+    if (isDemoMode(context.locals)) return jsonResponse({ items: [], total: 0, page: 1, pageSize: 20 });
     const session = await sessionBackend(context);
     if (!session) return unauthorizedResponse();
 

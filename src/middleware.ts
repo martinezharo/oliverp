@@ -1,9 +1,17 @@
 import { defineMiddleware } from "astro/middleware";
-import { getAuthenticatedSupabase, isDemoMode } from "./lib/supabase";
+import { getAuthSession } from "./lib/auth";
+import { DEMO_MODE_COOKIE, isDemoMode } from "./lib/runtime";
 import { routePolicy } from "./lib/auth/routes";
 import { getLangFromHeader, getLocale, useTranslations } from "./i18n/utils";
 
-const SESSION_COOKIES = ["sb-access-token", "sb-refresh-token"] as const;
+const SESSION_COOKIES = [
+    "better-auth.session_token",
+    "__Secure-better-auth.session_token",
+    "convex_jwt",
+    "better-auth.convex_jwt",
+    "__Secure-convex_jwt",
+    "__Secure-better-auth.convex_jwt",
+] as const;
 
 function unauthorizedJson(message: string): Response {
     return new Response(JSON.stringify({ error: message }), {
@@ -19,9 +27,10 @@ export const onRequest = defineMiddleware(async ({ cookies, redirect, request, l
     locals.lang = lang;
     locals.locale = getLocale(lang);
     locals.t = useTranslations(lang);
+    locals.demoMode = cookies.get(DEMO_MODE_COOKIE)?.value === "1";
 
     // In demo mode, skip all authentication checks
-    if (isDemoMode) {
+    if (isDemoMode(locals)) {
         return next();
     }
 
@@ -34,10 +43,9 @@ export const onRequest = defineMiddleware(async ({ cookies, redirect, request, l
     // exist would let anyone through by sending two cookies of their own
     // choosing, leaving row-level security as the only thing between a forged
     // request and the books.
-    const supabase = getAuthenticatedSupabase(cookies);
-    const { data: { user } } = await supabase.auth.getUser();
+    const session = await getAuthSession({ cookies, locals, redirect, request } as never);
 
-    if (!user) {
+    if (!session) {
         if (policy === "session_json") {
             return unauthorizedJson(locals.t("api.unauthorized"));
         }
@@ -49,8 +57,8 @@ export const onRequest = defineMiddleware(async ({ cookies, redirect, request, l
 
     // Handed to pages and routes so a validated session is not re-fetched once
     // per component.
-    locals.user = user;
-    locals.supabase = supabase;
+    locals.user = session.user;
+    locals.authToken = session.token;
 
     return next();
 });

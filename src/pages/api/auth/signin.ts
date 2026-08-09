@@ -1,12 +1,15 @@
 import type { APIRoute } from "astro";
-import { supabase, isDemoMode } from "../../../lib/supabase";
+import { copySetCookieHeaders, proxyAuthRequest } from "../../../lib/auth-proxy";
+import { isDemoMode } from "../../../lib/runtime";
 
-export const POST: APIRoute = async ({ request, cookies, redirect }) => {
-    if (isDemoMode) {
-        return redirect("/");
+export const GET: APIRoute = (context) => context.redirect("/login");
+
+export const POST: APIRoute = async (context) => {
+    if (isDemoMode(context.locals)) {
+        return context.redirect("/");
     }
 
-    const formData = await request.formData();
+    const formData = await context.request.formData();
     const email = formData.get("email")?.toString();
     const password = formData.get("password")?.toString();
 
@@ -14,29 +17,14 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
         return new Response("Email and password are required", { status: 400 });
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-    });
+    const upstream = await proxyAuthRequest(
+        context,
+        "sign-in/email",
+        JSON.stringify({ email, password, rememberMe: true }),
+    );
+    if (!upstream.ok) return context.redirect("/login?error=invalid_credentials");
 
-    if (error) {
-        return new Response(error.message, { status: 401 });
-    }
-
-    const { access_token, refresh_token } = data.session;
-    const secure = new URL(request.url).protocol === "https:";
-    const cookieOptions = {
-        path: "/",
-        httpOnly: true,
-        sameSite: "lax" as const,
-        secure,
-    };
-    cookies.set("sb-access-token", access_token, {
-        ...cookieOptions,
-    });
-    cookies.set("sb-refresh-token", refresh_token, {
-        ...cookieOptions,
-    });
-
-    return redirect("/");
+    const response = context.redirect("/");
+    copySetCookieHeaders(upstream.headers, response.headers);
+    return response;
 };

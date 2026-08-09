@@ -23,7 +23,7 @@ vi.mock("../../src/lib/legacy-api", () => ({
     sessionBackend: mocks.sessionBackend,
     unauthorizedResponse: () => new Response(null, { status: 401 }),
 }));
-vi.mock("../../src/lib/supabase", () => ({ isDemoMode: false }));
+vi.mock("../../src/lib/runtime", () => ({ isDemoMode: () => false }));
 
 const { PUT } = await import("../../src/pages/api/purchases/update");
 

@@ -15,6 +15,7 @@ import {
   purchaseByLegacyId,
   transactionByLegacyId,
   vatPart,
+  sessionUserId,
   type Actor,
 } from "./lib/bridge";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
@@ -191,17 +192,17 @@ export const listProjects = query({
     } else if (args.actor.kind === "api_key") {
       projects = await ctx.db.query("projects").withIndex("by_name").collect();
     } else {
-      if (!args.actor.userId) fail("unauthorized", "A user session is required.");
+      const userId = await sessionUserId(ctx, args.actor);
       const memberships = await ctx.db
         .query("projectMembers")
-        .withIndex("by_user", (q) => q.eq("userId", args.actor.userId!))
+        .withIndex("by_user", (q) => q.eq("userId", userId))
         .collect();
       projects = (
         await Promise.all(memberships.map((membership) => ctx.db.get(membership.projectId)))
       ).filter((project): project is Doc<"projects"> => project !== null);
     }
 
-    // Keep the legacy Supabase ordering so the first project remains the
+    // Keep the legacy ordering so the first project remains the
     // default selected project throughout the Astro UI.
     return projects.sort((a, b) => a.legacyId - b.legacyId).map(legacyProject);
   },
@@ -1382,10 +1383,10 @@ async function visibleProjects(ctx: QueryCtx | MutationCtx, actor: Actor) {
     }
     return await ctx.db.query("projects").withIndex("by_name").collect();
   }
-  if (!actor.userId) fail("unauthorized", "A user session is required.");
+  const userId = await sessionUserId(ctx, actor);
   const memberships = await ctx.db
     .query("projectMembers")
-    .withIndex("by_user", (q) => q.eq("userId", actor.userId!))
+    .withIndex("by_user", (q) => q.eq("userId", userId))
     .collect();
   return (
     await Promise.all(memberships.map((membership) => ctx.db.get(membership.projectId)))

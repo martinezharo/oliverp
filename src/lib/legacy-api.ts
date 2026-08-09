@@ -1,7 +1,7 @@
 import type { APIContext } from "astro";
 import { createBackend, type BackendClient } from "./convex";
 import { fromConvexError, ApiError } from "./api/errors";
-import { isDemoMode } from "./supabase";
+import { isDemoMode } from "./runtime";
 
 export function jsonResponse(body: unknown, status = 200): Response {
     return new Response(JSON.stringify(body), {
@@ -30,14 +30,17 @@ export function demoResponse(context: APIContext, emptyBody: unknown = null): Re
 export async function sessionBackend(
     context: APIContext,
 ): Promise<{ backend: BackendClient; userId: string } | null> {
-    if (isDemoMode) return null;
+    if (isDemoMode(context.locals)) return null;
 
     const user = context.locals.user;
     if (!user) return null;
 
     return {
-        backend: createBackend(context.locals, { kind: "session", userId: user.id }),
-        userId: user.id,
+        backend: createBackend(context.locals, {
+            kind: "session",
+            userId: user.tokenIdentifier,
+        }),
+        userId: user.tokenIdentifier,
     };
 }
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 
 /**
- * Copies the application data from Supabase into the Convex legacy-shaped
- * model. It requires a server-side Supabase key because the public key is
- * correctly denied by the project's RLS policies.
+ * Copies the legacy application data from Supabase into the Convex
+ * legacy-shaped model. This is an offline migration utility only; the running
+ * application does not import or call Supabase.
  *
  * Usage:
  *   SUPABASE_SECRET_KEY=... pnpm migrate:supabase
@@ -18,7 +18,6 @@
  */
 
 import { readFileSync } from "node:fs";
-import { createClient } from "@supabase/supabase-js";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../convex/_generated/api.js";
 
@@ -62,18 +61,39 @@ async function importRows(convex, reference, label, rows, bridgeSecret, alreadyI
     }
 }
 
-async function importTable(supabase, convex, sourceTable, label, reference, bridgeSecret) {
+function normalizeSupabaseUrl(value) {
+    return value.startsWith("http://") || value.startsWith("https://") ? value : `https://${value}`;
+}
+
+async function readSupabasePage(supabaseUrl, supabaseKey, sourceTable, offset) {
+    const url = new URL(`${normalizeSupabaseUrl(supabaseUrl).replace(/\/$/, "")}/rest/v1/${sourceTable}`);
+    url.searchParams.set("select", "*");
+    url.searchParams.set("offset", String(offset));
+    url.searchParams.set("limit", String(PAGE_SIZE));
+
+    const response = await fetch(url, {
+        headers: {
+            apikey: supabaseKey,
+            authorization: `Bearer ${supabaseKey}`,
+            accept: "application/json",
+        },
+    });
+    if (!response.ok) {
+        const body = await response.text();
+        fail(`${sourceTable}: HTTP ${response.status} ${body}`);
+    }
+
+    const rows = await response.json();
+    if (!Array.isArray(rows)) fail(`${sourceTable}: la respuesta no es una lista de filas.`);
+    return rows;
+}
+
+async function importTable(supabaseUrl, supabaseKey, convex, sourceTable, label, reference, bridgeSecret) {
     let offset = 0;
     let imported = 0;
 
     for (;;) {
-        const { data, error } = await supabase
-            .from(sourceTable)
-            .select("*")
-            .range(offset, offset + PAGE_SIZE - 1);
-        if (error) fail(`${sourceTable}: ${error.message}`);
-
-        const rows = data ?? [];
+        const rows = await readSupabasePage(supabaseUrl, supabaseKey, sourceTable, offset);
         await importRows(convex, reference, label, rows, bridgeSecret, imported);
         imported += rows.length;
         if (rows.length < PAGE_SIZE) break;
@@ -107,9 +127,6 @@ async function main() {
         );
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-        auth: { persistSession: false, autoRefreshToken: false },
-    });
     const convex = new ConvexHttpClient(convexUrl, { logger: false });
 
     const sourceTables = [
@@ -127,7 +144,7 @@ async function main() {
 
     console.log(`Migrando Supabase -> Convex (${convexUrl})`);
     for (const [sourceTable, label, reference] of sourceTables) {
-        await importTable(supabase, convex, sourceTable, label, reference, bridgeSecret);
+        await importTable(supabaseUrl, supabaseKey, convex, sourceTable, label, reference, bridgeSecret);
     }
 
     console.log("\nMigracion completada. idempotency_keys no se copia por seguridad.");

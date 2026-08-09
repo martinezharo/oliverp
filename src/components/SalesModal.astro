@@ -51,6 +51,25 @@ const { t } = Astro.locals;
         </div>
 
         <form id="form-venta" class="p-6 space-y-6">
+            <div
+                id="sale-data-status"
+                class="hidden items-center gap-2 rounded-lg border border-indigo-500/20 bg-indigo-500/10 px-3 py-2 text-xs text-indigo-200"
+                role="status"
+                aria-live="polite"
+            >
+                <span
+                    id="sale-data-spinner"
+                    class="hidden h-3.5 w-3.5 animate-spin rounded-full border-2 border-indigo-300/30 border-t-indigo-300"
+                ></span>
+                <span id="sale-data-status-text"></span>
+                <button
+                    id="sale-data-retry"
+                    type="button"
+                    class="hidden ml-auto text-indigo-300 underline underline-offset-2 hover:text-white"
+                >
+                    {t("common.retry")}
+                </button>
+            </div>
             <!-- Cabecera Venta -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
@@ -219,45 +238,118 @@ const { t } = Astro.locals;
     let products: Product[] = [];
     let channels: string[] = [];
     let activeProjectId: number | null = null;
+    let salesDataPromise: Promise<boolean> | null = null;
+    let salesDataLoaded = false;
+    let initializedForm: HTMLFormElement | null = null;
 
     // Subscribe to Store
     currentProject.subscribe((project) => {
         if (project) {
             activeProjectId = project.id;
-            loadSalesData();
         }
     });
 
-    async function loadSalesData() {
-        try {
-            const response = await fetch("/api/sales/init-data");
-            const data = await response.json();
-            products = data.products || [];
-            channels = data.channels || [];
+    function renderSalesDataStatus(state: "loading" | "ready" | "error") {
+        const status = document.getElementById("sale-data-status");
+        const spinner = document.getElementById("sale-data-spinner");
+        const text = document.getElementById("sale-data-status-text");
+        const retry = document.getElementById("sale-data-retry");
+        if (!status || !spinner || !text || !retry) return;
 
-            const channelSelect = document.getElementById(
-                "sale-channel",
-            ) as HTMLSelectElement;
-            if (channelSelect) {
-                channelSelect.innerHTML =
-                    `<option value="">${t("modal.sale.selectChannel")}</option>`;
-                channels.forEach((channel: string) => {
-                    const option = document.createElement("option");
-                    option.value = channel;
-                    option.textContent = channel;
-                    channelSelect.appendChild(option);
-                });
-            }
-
-            updateProductSelects();
-        } catch (error) {
-            console.error("Error loading sales data:", error);
+        if (state === "ready") {
+            status.classList.add("hidden");
+            status.classList.remove("flex");
+            return;
         }
+
+        status.classList.remove("hidden");
+        status.classList.add("flex");
+        spinner.classList.toggle("hidden", state !== "loading");
+        retry.classList.toggle("hidden", state !== "error");
+        text.textContent = state === "loading"
+            ? t("common.loadingData")
+            : t("common.errorLoadingData");
+    }
+
+    function renderChannelSelect(state: "loading" | "ready" | "error" = "ready") {
+        const channelSelect = document.getElementById("sale-channel") as HTMLSelectElement | null;
+        if (!channelSelect) return;
+
+        if (state === "loading") {
+            channelSelect.disabled = true;
+            channelSelect.innerHTML = `<option value="">${t("common.loading")}</option>`;
+            return;
+        }
+
+        if (state === "error") {
+            channelSelect.disabled = true;
+            channelSelect.innerHTML = `<option value="">${t("common.errorLoadingData")}</option>`;
+            return;
+        }
+
+        const selectedValue = channelSelect.value;
+        channelSelect.disabled = false;
+        channelSelect.innerHTML = `<option value="">${t("modal.sale.selectChannel")}</option>`;
+        channels.forEach((channel: string) => {
+            const option = document.createElement("option");
+            option.value = channel;
+            option.textContent = channel;
+            channelSelect.appendChild(option);
+        });
+        if (selectedValue && Array.from(channelSelect.options).some((option) => option.value === selectedValue)) {
+            channelSelect.value = selectedValue;
+        }
+    }
+
+    async function loadSalesData(force = false): Promise<boolean> {
+        if (salesDataLoaded && !force) {
+            renderChannelSelect();
+            updateProductSelects();
+            return true;
+        }
+        if (salesDataPromise && !force) return salesDataPromise;
+
+        const request = (async () => {
+            renderChannelSelect("loading");
+            renderSalesDataStatus("loading");
+            const controller = new AbortController();
+            const timeoutId = window.setTimeout(() => controller.abort(), 10000);
+            try {
+                const response = await fetch("/api/sales/init-data", {
+                    credentials: "same-origin",
+                    signal: controller.signal,
+                });
+                const data = await response.json().catch(() => null);
+                if (!response.ok) {
+                    throw new Error(data?.error || `HTTP ${response.status}`);
+                }
+
+                products = Array.isArray(data?.products) ? data.products : [];
+                channels = Array.isArray(data?.channels) ? data.channels : [];
+                salesDataLoaded = true;
+                renderChannelSelect();
+                renderSalesDataStatus("ready");
+                updateProductSelects();
+                return true;
+            } catch (error) {
+                salesDataLoaded = false;
+                renderChannelSelect("error");
+                renderSalesDataStatus("error");
+                console.error("Error loading sales data:", error);
+                return false;
+            } finally {
+                window.clearTimeout(timeoutId);
+                salesDataPromise = null;
+            }
+        })();
+
+        salesDataPromise = request;
+        return request;
     }
 
     function updateProductSelects() {
         const selects = document.querySelectorAll(
-            ".product-select",
+            ".sale-item-row .product-select",
         ) as NodeListOf<HTMLSelectElement>;
         selects.forEach((select) => {
             if (select.options.length > 1) return;
@@ -418,7 +510,7 @@ const { t } = Astro.locals;
         });
     }
 
-    document.addEventListener("astro:page-load", () => {
+    function initializeSalesModal() {
         const modalVenta = document.getElementById(
             "modal-venta",
         ) as HTMLDialogElement;
@@ -429,12 +521,25 @@ const { t } = Astro.locals;
             "total-amount",
         ) as HTMLInputElement;
 
-        if (!modalVenta || !formVenta) return;
+        if (!modalVenta || !formVenta || initializedForm === formVenta) return;
+        initializedForm = formVenta;
 
-        // Initialize data
-        loadSalesData();
+        const retryButton = document.getElementById("sale-data-retry");
+        retryButton?.addEventListener("click", () => void loadSalesData(true));
 
-        addItemBtn?.addEventListener("click", () => addSaleItemRow());
+        const observer = new MutationObserver(() => {
+            if (modalVenta.open) void loadSalesData();
+        });
+        observer.observe(modalVenta, { attributes: true, attributeFilter: ["open"] });
+        if (modalVenta.open) void loadSalesData();
+
+        addItemBtn?.addEventListener("click", async () => {
+            if (!(await loadSalesData())) {
+                alert(t("common.errorLoadingData"));
+                return;
+            }
+            addSaleItemRow();
+        });
         totalAmountInput?.addEventListener("input", recalculateDistribution);
 
         formVenta.addEventListener("submit", async (e) => {
@@ -570,5 +675,8 @@ const { t } = Astro.locals;
                 alert(t("modal.sale.loadError"));
             }
         };
-    });
+    }
+
+    document.addEventListener("astro:page-load", initializeSalesModal);
+    if (document.readyState !== "loading") initializeSalesModal();
 </script>

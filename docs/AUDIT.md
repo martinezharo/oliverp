@@ -71,13 +71,6 @@ that demonstrate how later purchases must affect earlier profit reports.
 
 **Priority:** Medium
 
-Astro validates the Supabase session and then sends a user id plus a shared
-`CONVEX_BRIDGE_SECRET` to public Convex functions. This preserves tenant checks,
-but compromise of that one server secret permits actor impersonation across the
-entire bridge. Direct JWT verification by Convex would remove that trust
-concentration, but requires an authentication migration and token/provider
-configuration.
-
-**Decision required:** retain and operationally rotate the bridge secret, or move
-to a Convex-compatible JWT provider and derive identity exclusively from
-`ctx.auth.getUserIdentity()`.
+Astro forwards the Better Auth session as a Convex JWT. Convex verifies that JWT
+with `ctx.auth.getUserIdentity()` before resolving project memberships; the
+bridge secret remains only as a server-to-server migration/API gateway guard.

@@ -1,6 +1,6 @@
 /**
  * Mock data for Demo Mode
- * Used when Supabase environment variables are not configured
+ * Used when the Convex data gateway is not configured
  */
 
 import type {

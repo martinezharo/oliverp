@@ -7,10 +7,10 @@ import {
     sessionBackend,
     unauthorizedResponse,
 } from "../../../lib/legacy-api";
-import { isDemoMode } from "../../../lib/supabase";
+import { isDemoMode } from "../../../lib/runtime";
 
 export const PUT: APIRoute = async (context) => {
-    if (isDemoMode) return demoResponse(context);
+    if (isDemoMode(context.locals)) return demoResponse(context);
     const session = await sessionBackend(context);
     if (!session) return unauthorizedResponse();
 

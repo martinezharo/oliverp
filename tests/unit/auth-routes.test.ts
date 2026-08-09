@@ -4,6 +4,7 @@ import { routePolicy } from "../../src/lib/auth/routes";
 describe("routePolicy", () => {
     it("leaves the login page and the sign-in endpoint open", () => {
         expect(routePolicy("/login")).toBe("public");
+        expect(routePolicy("/signup")).toBe("public");
         expect(routePolicy("/api/auth/signin")).toBe("public");
     });
 
@@ -12,7 +13,7 @@ describe("routePolicy", () => {
         expect(routePolicy("/api/v1/openapi.json")).toBe("self_authenticated");
     });
 
-    it("guards the browser's own JSON API with a 401 rather than a redirect", () => {
+    it("leaves the browser's Better Auth endpoints public", () => {
         // These are fetched by scripts: an HTML login page returned with a 200
         // would be parsed as a successful response.
         for (const path of [
@@ -24,10 +25,10 @@ describe("routePolicy", () => {
             "/api/stock/adjust",
             "/api/products/create",
             "/api/stats/evolution",
-            "/api/auth/signout",
         ]) {
             expect(routePolicy(path), path).toBe("session_json");
         }
+        expect(routePolicy("/api/auth/signout")).toBe("public");
     });
 
     it("redirects unauthenticated page requests to the login page", () => {
@@ -36,10 +37,8 @@ describe("routePolicy", () => {
         }
     });
 
-    it("does not treat a lookalike path as the public sign-in route", () => {
-        // Prefix matching here would open every route beginning with the same
-        // characters; the public list is matched exactly.
-        expect(routePolicy("/api/auth/signin/evil")).toBe("session_json");
+    it("keeps the complete Better Auth route namespace public", () => {
+        expect(routePolicy("/api/auth/signin/evil")).toBe("public");
         expect(routePolicy("/login/../api/sales/create")).toBe("session_redirect");
         expect(routePolicy("/loginx")).toBe("session_redirect");
     });

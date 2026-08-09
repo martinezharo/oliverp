@@ -1,6 +1,6 @@
 ---
 import { createBackend } from "../lib/convex";
-import { isDemoMode } from "../lib/supabase";
+import { isDemoMode } from "../lib/runtime";
 import { mockFinanzas } from "../lib/mock-data";
 
 interface Props {
@@ -27,12 +27,12 @@ const startOfMonthDate = new Date(currentYear, currentMonth, 1);
 
 let transactions: any[] | null = null;
 
-if (isDemoMode) {
+if (isDemoMode(Astro.locals)) {
   transactions = mockFinanzas.filter(
     (f) => f.proyecto_id === projectId && f.dia >= startOfQuarterStr
   );
 } else {
-  const backend = createBackend(Astro.locals, { kind: "session", userId: Astro.locals.user!.id });
+  const backend = createBackend(Astro.locals, { kind: "session", userId: Astro.locals.user!.tokenIdentifier });
   transactions = await backend.listDailyFinances({ projectId, fromDate: startOfQuarterStr });
 }
 

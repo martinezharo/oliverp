@@ -95,12 +95,16 @@ const { t } = Astro.locals;
     import { currentProject } from '../stores/projectStore';
     import { t } from '../i18n/client';
 
-    document.addEventListener('astro:page-load', () => {
+    let initializedForm: HTMLFormElement | null = null;
+
+    function initializeProductModal() {
         const form = document.getElementById('form-producto') as HTMLFormElement;
         const modal = document.getElementById('modal-producto') as HTMLDialogElement;
 
-        if (form) {
-            form.addEventListener('submit', async (e) => {
+        if (!form || !modal || initializedForm === form) return;
+        initializedForm = form;
+
+        form.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const formData = new FormData(form);
                 const nombre = formData.get('nombre');
@@ -148,7 +152,9 @@ const { t } = Astro.locals;
                     console.error('Error creating product:', error);
                     alert(t('modal.product.createError'));
                 }
-            });
-        }
-    });
+        });
+    }
+
+    document.addEventListener('astro:page-load', initializeProductModal);
+    if (document.readyState !== 'loading') initializeProductModal();
 </script>

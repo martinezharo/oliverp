@@ -28,6 +28,7 @@ const es: Dict = {
   "common.addProduct": "Añadir Producto",
   "common.connectionError": "Error de conexión",
   "common.errorLoadingData": "Error cargando datos",
+  "common.retry": "Reintentar",
   "common.noProjectFirst": "Selecciona un proyecto primero",
   "common.saveErrorPrefix": "Error al guardar:",
   "common.unknown": "Desconocido",
@@ -60,8 +61,9 @@ const es: Dict = {
   // Demo banner
   "demo.title": "Modo Demo",
   "demo.full":
-    "Estás viendo datos de ejemplo. Configura Convex y el proveedor de autenticación para conectar con datos reales.",
+    "Estás viendo datos de ejemplo. Regístrate para poder usar la aplicación con tus propios datos.",
   "demo.short": "Datos de ejemplo.",
+  "demo.exit": "Salir del modo demo",
 
   // Finance labels (shared)
   "finance.income": "Ingresos",
@@ -86,7 +88,11 @@ const es: Dict = {
   "login.email": "Email",
   "login.password": "Contraseña",
   "login.signIn": "Iniciar Sesión",
-  "login.forgot": "¿Olvidaste tu contraseña?",
+  "login.createAccount": "Crear una cuenta nueva",
+  "login.demoDivider": "o prueba sin registrarte",
+  "login.demoCta": "Ver el modo demo",
+  "login.demoDescription": "Explora la aplicación con datos de ejemplo",
+  "login.invalidCredentials": "No se pudo iniciar sesión. Si es tu cuenta antigua, crea una cuenta nueva en Convex.",
 
   // Stock page + table
   "stock.title": "Inventario & Stock",
@@ -309,6 +315,7 @@ const en: Dict = {
   "common.addProduct": "Add Product",
   "common.connectionError": "Connection error",
   "common.errorLoadingData": "Error loading data",
+  "common.retry": "Retry",
   "common.noProjectFirst": "Select a project first",
   "common.saveErrorPrefix": "Error saving:",
   "common.unknown": "Unknown",
@@ -341,8 +348,9 @@ const en: Dict = {
   // Demo banner
   "demo.title": "Demo Mode",
   "demo.full":
-  "You're viewing sample data. Configure Convex and the authentication provider to connect to real data.",
+  "You're viewing sample data. Register to use the app with your own data.",
   "demo.short": "Sample data.",
+  "demo.exit": "Exit demo mode",
 
   // Finance labels
   "finance.income": "Income",
@@ -367,7 +375,11 @@ const en: Dict = {
   "login.email": "Email",
   "login.password": "Password",
   "login.signIn": "Sign In",
-  "login.forgot": "Forgot your password?",
+  "login.createAccount": "Create a new account",
+  "login.demoDivider": "or try it without signing up",
+  "login.demoCta": "View demo mode",
+  "login.demoDescription": "Explore the app with sample data",
+  "login.invalidCredentials": "Unable to sign in. If this is your old account, create a new Convex account.",
 
   // Stock page + table
   "stock.title": "Inventory & Stock",

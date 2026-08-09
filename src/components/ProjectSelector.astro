@@ -1,15 +1,23 @@
 ---
 import { createBackend } from "../lib/convex";
-import { isDemoMode } from "../lib/supabase";
+import { isDemoMode } from "../lib/runtime";
 import { mockProjects, getProjectNameKey } from "../lib/mock-data";
 
-let projects: any[] | null = null;
-const userId = Astro.locals.user?.id;
+interface Props {
+    projects?: Array<{ id: number; nombre: string; activo?: boolean }>;
+}
 
-if (isDemoMode) {
+const { projects: providedProjects } = Astro.props;
+let projects: Array<{ id: number; nombre: string; activo?: boolean }> | null =
+    providedProjects ?? null;
+const user = Astro.locals.user;
+
+if (projects) {
+    // The page already fetched the projects. Reuse them during this render.
+} else if (isDemoMode(Astro.locals)) {
     projects = mockProjects;
-} else if (userId) {
-    const backend = createBackend(Astro.locals, { kind: "session", userId });
+} else if (user) {
+    const backend = createBackend(Astro.locals, { kind: "session", userId: Astro.locals.user!.tokenIdentifier });
     projects = await backend.listProjects();
 } else {
     // Public pages (for example /login) also use the shared layout.

@@ -25,7 +25,7 @@
 - **Framework**: [Astro 5.x](https://astro.build/) (Static Site Generation & Server-Side Rendering)
 - **Styling**: [Tailwind CSS 4.x](https://tailwindcss.com/) (Modern utility-first CSS)
 - **Data backend**: [Convex](https://convex.dev/) (typed queries, mutations and transactional writes)
-- **Authentication bridge**: [Supabase Auth](https://supabase.com/) for the existing password sessions
+- **Authentication**: [Better Auth](https://www.better-auth.com/) running inside the Convex component
 - **Hosting**: [Cloudflare](https://www.cloudflare.com/) (Edge-ready deployment)
 - **Visuals**: [Chart.js](https://www.chartjs.org/) for data visualization
 - **State Management**: [Nano Stores](https://github.com/nanostores/nanostores)
@@ -34,7 +34,7 @@
 
 OlivERP features an automatic **Demo Mode**. This allows anyone to explore the full interface and functionality without needing to set up a database or account.
 
-- **How it works**: If the Supabase environment variables are missing or undefined, the application automatically switches to Demo Mode.
+- **How it works**: If the Convex URL or bridge secret is missing, the application automatically switches to Demo Mode.
 - **Mock Data**: The system provides realistic sample data for projects, products, stock levels, and historical financial transactions.
 - **Zero Configuration**: Perfect for testing the UI, exploring features, or contributing to the frontend without any backend overhead.
 
@@ -45,7 +45,7 @@ OlivERP features an automatic **Demo Mode**. This allows anyone to explore the f
 
 - Node.js (Latest LTS recommended)
 - [pnpm](https://pnpm.io/)
-- A Convex project and the existing Supabase Auth project
+- A Convex project
 
 ### Installation
 
@@ -61,30 +61,27 @@ OlivERP features an automatic **Demo Mode**. This allows anyone to explore the f
    ```
 
 3. **Configure Environment Variables**:
-   Keep the public Supabase Auth variables in `.env` and add the Convex values in
-   `.env.local`:
+   Add the Convex values to `.env.local`:
    ```env
-   PUBLIC_SUPABASE_URL=your_supabase_url
-   PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
    CONVEX_URL=https://your-deployment.convex.cloud
    CONVEX_PRODUCTION_URL=https://your-production-deployment.convex.cloud
+   CONVEX_SITE_URL=https://your-deployment.convex.site
+   SITE_URL=http://localhost:4321
    CONVEX_BRIDGE_SECRET=long-random-server-secret
    ```
-
-   The legacy `PUBLIC_SUPABASE_ANON_KEY` is still accepted as a fallback, but Supabase
-   has replaced it with the publishable key, which can be rotated independently.
 
    `CONVEX_BRIDGE_SECRET` must also exist in the Convex deployment and is never
    sent to the browser. The CLI can create/configure the project with:
    ```bash
    pnpm exec convex dev --configure new
    pnpm exec convex env set CONVEX_BRIDGE_SECRET
+   pnpm exec convex env set SITE_URL
    ```
 
-4. **Migrate existing data (once)**:
-   The public Supabase key is correctly denied by RLS. Supply a server-only
+4. **Migrate existing data (once, if applicable)**:
+   The importer is a temporary, one-way legacy utility. Supply a server-only
    `SUPABASE_SECRET_KEY` (or legacy `SUPABASE_SERVICE_ROLE_KEY`) only for this
-   command:
+   command; the application itself does not use Supabase:
    ```bash
    SUPABASE_SECRET_KEY=... pnpm migrate:supabase
    ```
@@ -94,24 +91,38 @@ OlivERP features an automatic **Demo Mode**. This allows anyone to explore the f
    The import is resumable and preserves the original numeric ids. It starts
    the Convex idempotency ledger empty so stale responses cannot be replayed.
 
-5. **Configure the Cloudflare production runtime**:
+5. **Create the first Convex Auth account**:
+   Open `/signup` and create a new password account. Password hashes from the
+   old Supabase Auth project are not portable; existing users must register
+   again and then rebind their imported project memberships.
+
+   After signing in, rebind the imported memberships by matching the new
+   Convex Auth email:
+   ```bash
+   pnpm exec convex run migration:rebindMemberByEmail \
+     '{"bridgeSecret":"...","legacyUserId":"old-auth-id","email":"you@example.com"}'
+   ```
+   Alternatively, `GET /api/auth/identity` returns the `tokenIdentifier` for
+   the explicit `migration:rebindMemberUser` workflow.
+
+6. **Configure the Cloudflare production runtime**:
    In the Pages project, open **Settings → Variables and Secrets** and set the
    production environment values before the next deployment:
 
    | Name | Type | Purpose |
    | --- | --- | --- |
-   | `PUBLIC_SUPABASE_URL` | plaintext | Existing Supabase Auth URL |
-   | `PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `PUBLIC_SUPABASE_ANON_KEY`) | plaintext | Existing browser Auth key |
    | `CONVEX_URL` | plaintext | `https://reminiscent-cricket-450.convex.cloud` |
+   | `CONVEX_SITE_URL` | plaintext | Matching `https://...convex.site` HTTP endpoint |
+   | `SITE_URL` | plaintext | Public Astro URL |
    | `CONVEX_BRIDGE_SECRET` | encrypted secret | Same value configured in Convex |
 
-   Set the public values for the build as well as runtime, and encrypt the
-   bridge secret. Save the variables and redeploy the Pages project. Astro
+   Set the URL values for the build as well as runtime, and encrypt the bridge
+   secret. Save the variables and redeploy the Pages project. Astro
    reads runtime bindings through `Astro.locals.runtime.env`; see Cloudflare's
    [Pages bindings guide](https://developers.cloudflare.com/pages/functions/bindings/)
    and [Astro deployment guide](https://developers.cloudflare.com/pages/framework-guides/deploy-an-astro-site/).
 
-6. **Legacy Supabase schema (only for the source/Auth project)**:
+7. **Legacy source schema (only if the migration has not run)**:
    Run the files in `db-structure/` in your Supabase SQL Editor, **in order**:
 
    | File | What it creates |

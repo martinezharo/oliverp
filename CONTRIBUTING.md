@@ -48,9 +48,9 @@ This section guides you through submitting an enhancement suggestion, including 
 
 ### Developing with Demo Mode
 
-If you want to contribute to the UI or frontend logic but don't want to set up a Supabase instance, you can use the **Demo Mode**. 
+If you want to contribute to the UI or frontend logic without configuring a backend or creating an account, you can use the **Demo Mode**.
 
-Simply skip step 3 of the installation (skip the `.env` file credentials). The application will detect the absence of credentials and automatically populate the dashboard with realistic mock data, allowing you to develop and test your changes immediately.
+Simply skip step 3 of the installation (skip the `.env` file credentials). The application will detect the absence of Convex credentials and automatically populate the dashboard with realistic mock data, allowing you to develop and test your changes immediately.
 
 
 ## Styleguides

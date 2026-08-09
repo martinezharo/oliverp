@@ -1,7 +1,7 @@
 ---
 import Layout from "../layouts/Layout.astro";
 import { createBackend } from "../lib/convex";
-import { isDemoMode } from "../lib/supabase";
+import { isDemoMode } from "../lib/runtime";
 import { mockProjects, mockFinanzas } from "../lib/mock-data";
 
 const { t, locale } = Astro.locals;
@@ -9,11 +9,11 @@ const { t, locale } = Astro.locals;
 let projects: any[] = [];
 let historyData: any[] = [];
 
-if (isDemoMode) {
+if (isDemoMode(Astro.locals)) {
   projects = mockProjects.map((p) => ({ id: p.id, nombre: p.nombre }));
 } else {
-  const backend = createBackend(Astro.locals, { kind: "session", userId: Astro.locals.user!.id });
-  projects = (await backend.listProjects()).slice(0, 5);
+  const backend = createBackend(Astro.locals, { kind: "session", userId: Astro.locals.user!.tokenIdentifier });
+  projects = await backend.listProjects();
 }
 
 const projectIdParam = Astro.url.searchParams.get("projectId");
@@ -24,12 +24,12 @@ let projectId = projectIdParam
 const viewParam = Astro.url.searchParams.get("view") || "month";
 
 if (projectId) {
-  if (isDemoMode) {
+  if (isDemoMode(Astro.locals)) {
     historyData = mockFinanzas
       .filter((f) => f.proyecto_id === projectId)
       .sort((a, b) => b.dia.localeCompare(a.dia));
   } else {
-    const backend = createBackend(Astro.locals, { kind: "session", userId: Astro.locals.user!.id });
+    const backend = createBackend(Astro.locals, { kind: "session", userId: Astro.locals.user!.tokenIdentifier });
     historyData = await backend.listDailyFinances({ projectId });
   }
 }
@@ -114,9 +114,9 @@ const viewOptions = [
 ];
 ---
 
-<Layout title={t("title.history")}>
+<Layout title={t("title.history")} projects={projects}>
   {
-    isDemoMode && (
+    isDemoMode(Astro.locals) && (
       <div class="mb-6 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm flex items-center gap-3">
         <svg
           xmlns="http://www.w3.org/2000/svg"

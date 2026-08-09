@@ -52,6 +52,25 @@ const { t } = Astro.locals;
         </div>
 
         <form id="form-compra" class="p-6 space-y-6">
+            <div
+                id="purchase-data-status"
+                class="hidden items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-200"
+                role="status"
+                aria-live="polite"
+            >
+                <span
+                    id="purchase-data-spinner"
+                    class="hidden h-3.5 w-3.5 animate-spin rounded-full border-2 border-emerald-300/30 border-t-emerald-300"
+                ></span>
+                <span id="purchase-data-status-text"></span>
+                <button
+                    id="purchase-data-retry"
+                    type="button"
+                    class="hidden ml-auto text-emerald-300 underline underline-offset-2 hover:text-white"
+                >
+                    {t("common.retry")}
+                </button>
+            </div>
             <!-- Cabecera Compra -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
@@ -232,25 +251,92 @@ const { t } = Astro.locals;
 
     let products: Product[] = [];
     let activeProjectId: number | null = null;
+    let productsPromise: Promise<boolean> | null = null;
+    let productsLoaded = false;
+    let initializedForm: HTMLFormElement | null = null;
 
     // Subscribe to Store
     currentProject.subscribe((project) => {
         if (project) {
             activeProjectId = project.id;
-            loadProducts();
         }
     });
 
-    async function loadProducts() {
-        try {
-            // Reusing sales init data as it returns products.
-            // If we need strict supplier products later, we'd make a dedicated endpoint.
-            const response = await fetch("/api/sales/init-data");
-            const data = await response.json();
-            products = data.products || [];
-        } catch (error) {
-            console.error("Error loading products:", error);
+    function renderProductsStatus(state: "loading" | "ready" | "error") {
+        const status = document.getElementById("purchase-data-status");
+        const spinner = document.getElementById("purchase-data-spinner");
+        const text = document.getElementById("purchase-data-status-text");
+        const retry = document.getElementById("purchase-data-retry");
+        if (!status || !spinner || !text || !retry) return;
+
+        if (state === "ready") {
+            status.classList.add("hidden");
+            status.classList.remove("flex");
+            return;
         }
+
+        status.classList.remove("hidden");
+        status.classList.add("flex");
+        spinner.classList.toggle("hidden", state !== "loading");
+        retry.classList.toggle("hidden", state !== "error");
+        text.textContent = state === "loading"
+            ? t("common.loadingData")
+            : t("common.errorLoadingData");
+    }
+
+    function updateProductSelects() {
+        document.querySelectorAll(".purchase-item-row .product-select").forEach((element) => {
+            const select = element as HTMLSelectElement;
+            if (select.options.length > 1) return;
+
+            products.forEach((product: Product) => {
+                const option = document.createElement("option");
+                option.value = product.id.toString();
+                option.textContent = product.name;
+                select.appendChild(option);
+            });
+        });
+    }
+
+    async function loadProducts(force = false): Promise<boolean> {
+        if (productsLoaded && !force) {
+            updateProductSelects();
+            return true;
+        }
+        if (productsPromise && !force) return productsPromise;
+
+        const request = (async () => {
+            renderProductsStatus("loading");
+            const controller = new AbortController();
+            const timeoutId = window.setTimeout(() => controller.abort(), 10000);
+            try {
+                // Reusing sales init data as it returns products.
+                const response = await fetch("/api/sales/init-data", {
+                    credentials: "same-origin",
+                    signal: controller.signal,
+                });
+                const data = await response.json().catch(() => null);
+                if (!response.ok) {
+                    throw new Error(data?.error || `HTTP ${response.status}`);
+                }
+                products = Array.isArray(data?.products) ? data.products : [];
+                productsLoaded = true;
+                renderProductsStatus("ready");
+                updateProductSelects();
+                return true;
+            } catch (error) {
+                productsLoaded = false;
+                renderProductsStatus("error");
+                console.error("Error loading products:", error);
+                return false;
+            } finally {
+                window.clearTimeout(timeoutId);
+                productsPromise = null;
+            }
+        })();
+
+        productsPromise = request;
+        return request;
     }
 
     // Add Item Logic
@@ -345,17 +431,24 @@ const { t } = Astro.locals;
         }
     }
 
-    document.addEventListener("astro:page-load", () => {
+    function initializePurchaseModal() {
         const modal = document.getElementById("modal-compra") as HTMLDialogElement;
         const form = document.getElementById("form-compra") as HTMLFormElement;
         const itemsContainer = document.getElementById("purchase-items-container");
         const addItemBtn = document.getElementById("add-purchase-item-btn");
         const transactionTotalInput = document.getElementById("purchase-transaction-total");
 
-        if (!modal || !form) return;
+        if (!modal || !form || initializedForm === form) return;
+        initializedForm = form;
 
-        // Load products
-        loadProducts();
+        const retryButton = document.getElementById("purchase-data-retry");
+        retryButton?.addEventListener("click", () => void loadProducts(true));
+
+        const observer = new MutationObserver(() => {
+            if (modal.open) void loadProducts();
+        });
+        observer.observe(modal, { attributes: true, attributeFilter: ["open"] });
+        if (modal.open) void loadProducts();
 
         // Initialize Date to Today
         const dateInput = form.querySelector(
@@ -369,7 +462,13 @@ const { t } = Astro.locals;
             transactionTotalInput.addEventListener("input", calculateGrandTotal);
         }
 
-        addItemBtn?.addEventListener("click", () => addPurchaseItemRow());
+        addItemBtn?.addEventListener("click", async () => {
+            if (!(await loadProducts())) {
+                alert(t("common.errorLoadingData"));
+                return;
+            }
+            addPurchaseItemRow();
+        });
 
         // Submit Handler
         form.addEventListener("submit", async (e) => {
@@ -554,5 +653,8 @@ const { t } = Astro.locals;
                 alert(t("modal.purchase.loadError"));
             }
         };
-    });
+    }
+
+    document.addEventListener("astro:page-load", initializePurchaseModal);
+    if (document.readyState !== "loading") initializePurchaseModal();
 </script>

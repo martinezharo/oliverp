@@ -7,15 +7,23 @@ its transactional domain operations in `convex/domain.ts`. Numeric ids and the
 Spanish response fields are retained so the public API and existing UI keep
 their contract. Prices are stored as integer cents internally.
 
-Supabase remains only as the temporary password/session provider. Moving
-password hashes between providers would require an explicit auth migration and
-user re-authentication plan, so it is intentionally outside this data cutover.
+Authentication and ERP data are now managed by Convex: Better Auth stores users,
+passwords and sessions in its Convex component, while `convex/schema.ts` stores
+the business tables. Password hashes from the old provider are not portable;
+existing users must create a new account at `/signup`.
 
-For an existing Supabase database, run `pnpm migrate:supabase` with a
-server-side Supabase key. The importer targets `CONVEX_PRODUCTION_URL` (or an
-explicit `--convex-url`) instead of accidentally using a local `CONVEX_URL`,
+For an existing legacy database, run `pnpm migrate:supabase` with a
+server-side key. This is an offline import utility, not an application runtime
+dependency. It targets `CONVEX_PRODUCTION_URL` (or an explicit `--convex-url`),
 preserves relationships and original ids, and can be run again safely. It
 deliberately starts the Convex idempotency ledger empty.
+
+After a user creates their new account, the protected
+`migration:rebindMemberByEmail` mutation can match the new Convex Auth email
+and rebind the imported memberships. `GET /api/auth/identity` also exposes the
+Convex `tokenIdentifier` for the explicit `migration:rebindMemberUser`
+workflow. Convex then authorizes the imported memberships from the verified JWT
+identity.
 
 The executable schema lives in `db-structure/` and is loaded in this order:
 

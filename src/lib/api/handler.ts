@@ -97,8 +97,6 @@ async function hashRequest(endpoint: string, body: unknown): Promise<string> {
 }
 
 /** Marks a reservation row as still in flight; see the state machine below. */
-const IN_FLIGHT = 0;
-
 /**
  * Makes a write safe to retry.
  *
@@ -134,104 +132,11 @@ export async function withIdempotency(
     // authenticated namespace prevents cross-account conflicts and replays.
     const storageKey = await hashText(`${principal.idempotencyNamespace}\n${idempotencyKey}`);
     const requestHash = await hashRequest(endpoint, body);
-    if (principal.backend) {
-        return withConvexIdempotency(principal, storageKey, endpoint, requestHash, fn);
-    }
-
-    const { supabase } = principal;
-    if (!supabase) {
-        throw new ApiError("not_configured", "No hay un backend de datos configurado.");
-    }
-
-    const { error: insertError } = await supabase.from("idempotency_keys").insert({
-        idempotency_key: storageKey,
-        api_key_id: principal.apiKeyId,
-        endpoint,
-        request_hash: requestHash,
-        response_status: IN_FLIGHT,
-        response_body: {},
-    });
-
-    if (insertError) {
-        if (insertError.code !== "23505") {
-            throw new ApiError(
-                "internal_error",
-                `No se pudo registrar la clave de idempotencia: ${insertError.message}`,
-            );
-        }
-
-        const { data: existing } = await supabase
-            .from("idempotency_keys")
-            .select("request_hash, response_status, response_body")
-            .eq("idempotency_key", storageKey)
-            .eq("endpoint", endpoint)
-            .maybeSingle();
-
-        if (!existing) {
-            // Deleted between the failed insert and this read (a concurrent
-            // attempt failed and released it). Retrying is safe.
-            throw new ApiError("conflict", "Conflicto al reservar la clave de idempotencia. Reintenta.");
-        }
-
-        if (existing.request_hash !== requestHash) {
-            throw new ApiError(
-                "idempotency_mismatch",
-                "Esta 'Idempotency-Key' ya se uso con un cuerpo distinto.",
-                { hint: "Usa una clave nueva para cada operacion distinta." },
-            );
-        }
-
-        if (existing.response_status === IN_FLIGHT) {
-            throw new ApiError(
-                "conflict",
-                "Ya hay una peticion en curso con esta 'Idempotency-Key'.",
-                { hint: "Espera a que termine antes de reintentar." },
-            );
-        }
-
-        return json(existing.response_body, existing.response_status, {
-            "Idempotency-Replayed": "true",
-        });
-    }
-
-    let response: Response;
-    try {
-        response = await fn();
-    } catch (error) {
-        await releaseKey(principal, storageKey, endpoint);
-        throw error;
-    }
-
-    // Only successful outcomes are worth replaying. Releasing the key on failure
-    // lets the caller fix the payload and retry with the same key.
-    if (!response.ok) {
-        await releaseKey(principal, storageKey, endpoint);
-        return response;
-    }
-
-    const stored = await response.clone().json().catch(() => ({}));
-    await supabase
-        .from("idempotency_keys")
-        .update({ response_status: response.status, response_body: stored })
-        .eq("idempotency_key", storageKey)
-        .eq("endpoint", endpoint);
-
-    return response;
+    return withConvexIdempotency(principal, storageKey, endpoint, requestHash, fn);
 }
 
 async function releaseKey(principal: Principal, key: string, endpoint: string): Promise<void> {
-    if (principal.backend) {
-        await principal.backend.releaseIdempotency(key, endpoint);
-        return;
-    }
-
-    if (principal.supabase) {
-        await principal.supabase
-            .from("idempotency_keys")
-            .delete()
-            .eq("idempotency_key", key)
-            .eq("endpoint", endpoint);
-    }
+    await principal.backend.releaseIdempotency(key, endpoint);
 }
 
 async function withConvexIdempotency(
@@ -241,7 +146,7 @@ async function withConvexIdempotency(
     requestHash: string,
     fn: () => Promise<Response>,
 ): Promise<Response> {
-    const backend = principal.backend!;
+    const backend = principal.backend;
     const reservation = await backend.reserveIdempotency(key, endpoint, requestHash);
 
     if (reservation.status === "mismatch") {

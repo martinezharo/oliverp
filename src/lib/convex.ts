@@ -36,8 +36,10 @@ export class BackendClient {
     constructor(
         private readonly config: BackendConfig,
         private readonly actor: BackendActor,
+        authToken?: string,
     ) {
         this.client = new ConvexHttpClient(config.convexUrl, { logger: false });
+        if (authToken) this.client.setAuth(authToken);
     }
 
     private args(values: Record<string, unknown> = {}): Record<string, unknown> {
@@ -567,6 +569,10 @@ export function convexConfig(locals?: App.Locals): BackendConfig {
     return { convexUrl, bridgeSecret };
 }
 
-export function createBackend(locals: App.Locals | undefined, actor: BackendActor): BackendClient {
-    return new BackendClient(convexConfig(locals), actor);
+export function createBackend(
+    locals: App.Locals | undefined,
+    actor: BackendActor,
+    authToken?: string,
+): BackendClient {
+    return new BackendClient(convexConfig(locals), actor, authToken ?? locals?.authToken);
 }

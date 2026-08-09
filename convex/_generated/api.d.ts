@@ -8,7 +8,9 @@
  * @module
  */
 
+import type * as auth from "../auth.js";
 import type * as domain from "../domain.js";
+import type * as http from "../http.js";
 import type * as lib_bridge from "../lib/bridge.js";
 import type * as migration from "../migration.js";
 
@@ -19,7 +21,9 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  auth: typeof auth;
   domain: typeof domain;
+  http: typeof http;
   "lib/bridge": typeof lib_bridge;
   migration: typeof migration;
 }>;
@@ -50,4 +54,6 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  betterAuth: import("@convex-dev/better-auth/_generated/component.js").ComponentApi<"betterAuth">;
+};

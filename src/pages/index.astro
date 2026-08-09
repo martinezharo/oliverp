@@ -6,16 +6,16 @@ import OtherTransactionModal from "../components/OtherTransactionModal.astro";
 import DashboardStats from "../components/DashboardStats.astro";
 import RevenueChart from "../components/RevenueChart.astro";
 import { createBackend } from "../lib/convex";
-import { isDemoMode } from "../lib/supabase";
+import { isDemoMode } from "../lib/runtime";
 import { mockProjects } from "../lib/mock-data";
 
 let projects: any[] = [];
 
-if (isDemoMode) {
+if (isDemoMode(Astro.locals)) {
 	projects = mockProjects.map((p) => ({ id: p.id, nombre: p.nombre }));
 } else {
-    const backend = createBackend(Astro.locals, { kind: "session", userId: Astro.locals.user!.id });
-    projects = (await backend.listProjects()).slice(0, 5);
+    const backend = createBackend(Astro.locals, { kind: "session", userId: Astro.locals.user!.tokenIdentifier });
+    projects = await backend.listProjects();
 }
 
 const projectIdParam = Astro.url.searchParams.get("projectId");
@@ -26,9 +26,9 @@ let projectId = projectIdParam
 const { t } = Astro.locals;
 ---
 
-<Layout title={t("title.dashboard")}>
+<Layout title={t("title.dashboard")} projects={projects}>
 	{
-		isDemoMode && (
+		isDemoMode(Astro.locals) && (
 			<div class="mb-6 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm flex items-center gap-3">
 				<svg
 					xmlns="http://www.w3.org/2000/svg"

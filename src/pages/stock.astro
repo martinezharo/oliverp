@@ -4,7 +4,7 @@ import StockTable from "../components/StockTable.astro";
 import ProductModal from "../components/ProductModal.astro";
 import ProductHistoryModal from "../components/ProductHistoryModal.astro";
 import { createBackend } from "../lib/convex";
-import { isDemoMode } from "../lib/supabase";
+import { isDemoMode } from "../lib/runtime";
 import { mockStock, mockProjects } from "../lib/mock-data";
 import type { VistaStockFinal } from "../types/database";
 
@@ -12,12 +12,14 @@ const { t } = Astro.locals;
 
 let data: VistaStockFinal[] = [];
 let errorMsg = "";
+let projects: any[] = [];
 
 // Get Project ID
 const projectIdParam = Astro.url.searchParams.get("projectId");
 let projectId = projectIdParam ? parseInt(projectIdParam) : null;
 
-if (isDemoMode) {
+if (isDemoMode(Astro.locals)) {
+    projects = mockProjects;
     if (!projectId) {
         projectId = mockProjects[0]?.id || null;
     }
@@ -25,11 +27,12 @@ if (isDemoMode) {
         data = mockStock.filter((s) => s.proyecto_id === projectId);
     }
 } else {
-    const backend = createBackend(Astro.locals, { kind: "session", userId: Astro.locals.user!.id });
+    const backend = createBackend(Astro.locals, { kind: "session", userId: Astro.locals.user!.tokenIdentifier });
+    projects = await backend.listProjects();
 
     // If no project ID in URL, fetch the first available project to default to
     if (!projectId) {
-        projectId = (await backend.listProjects())[0]?.id ?? null;
+        projectId = projects[0]?.id ?? null;
     }
 
     // Fetch data if we have a project ID
@@ -43,9 +46,9 @@ if (isDemoMode) {
 }
 ---
 
-<Layout title={t("title.stock")}>
+<Layout title={t("title.stock")} projects={projects}>
     {
-        isDemoMode && (
+        isDemoMode(Astro.locals) && (
             <div class="mb-6 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm flex items-center gap-3">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"

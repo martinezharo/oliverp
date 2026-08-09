@@ -28,8 +28,8 @@ CONVEX_BRIDGE_SECRET=long-random-server-secret
 ```
 
 `CONVEX_BRIDGE_SECRET` is server-only. Do not prefix it with `PUBLIC_` or put it
-in a browser bundle. The existing Supabase public key is still required for the
-login/session bridge.
+in a browser bundle. Browser sessions are issued by Better Auth in Convex and
+presented to Convex as a verified JWT.
 
 ### 2. Create an API key
 
@@ -61,9 +61,8 @@ curl -H "Authorization: Bearer erp_sk_..." https://your-erp/api/v1/proyectos
 `X-API-Key: erp_sk_...` is also accepted and is the default header sent by
 several automation tools.
 
-The web interface continues to work with its Supabase cookie session; the same
-endpoints support both types of caller. Supabase is no longer the ERP data
-store.
+The web interface uses the Better Auth cookie session stored in Convex; the
+same endpoints support both browser sessions and API keys.
 
 ### Permissions
 

@@ -1,19 +1,5 @@
 ---
-import { createBackend } from "../lib/convex";
-import { isDemoMode } from "../lib/supabase";
-
 const { t } = Astro.locals;
-
-let concepts: string[] = [];
-
-if (!isDemoMode) {
-    const backend = createBackend(Astro.locals, { kind: "session", userId: Astro.locals.user!.id });
-    const projects = await backend.listProjects();
-    const rows = (await Promise.all(
-        projects.map((project) => backend.listTransactions({ projectId: project.id, page: 1, pageSize: 10000 })),
-    )).flatMap((result) => result.data);
-    concepts = [...new Set(rows.map((row) => String(row.concepto)))].sort();
-}
 ---
 
 <dialog
@@ -156,9 +142,26 @@ if (!isDemoMode) {
                         required
                         class="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:border-purple-500 transition-all placeholder:text-slate-600"
                     />
-                    <datalist id="conceptos-list">
-                        {concepts.map((c) => <option value={c} />)}
-                    </datalist>
+                    <datalist id="conceptos-list"></datalist>
+                    <div
+                        id="other-concepts-status"
+                        class="hidden mt-2 items-center gap-2 text-[11px] text-slate-500"
+                        role="status"
+                        aria-live="polite"
+                    >
+                        <span
+                            id="other-concepts-spinner"
+                            class="hidden h-3 w-3 animate-spin rounded-full border border-slate-500/30 border-t-slate-300"
+                        ></span>
+                        <span id="other-concepts-status-text"></span>
+                        <button
+                            id="other-concepts-retry"
+                            type="button"
+                            class="hidden text-purple-400 underline underline-offset-2 hover:text-purple-300"
+                        >
+                            {t("common.retry")}
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -265,21 +268,104 @@ if (!isDemoMode) {
     import { t } from "../i18n/client";
 
     let activeProjectId: number | null = null;
+    let conceptsPromise: Promise<boolean> | null = null;
+    let conceptsLoaded = false;
+    let initializedForm: HTMLFormElement | null = null;
 
     // Subscribe to Store
     currentProject.subscribe((project) => {
         if (project) {
+            if (activeProjectId !== project.id) {
+                conceptsLoaded = false;
+                conceptsPromise = null;
+            }
             activeProjectId = project.id;
         }
     });
 
-    document.addEventListener("astro:page-load", () => {
+    function renderConceptsStatus(state: "loading" | "ready" | "error") {
+        const status = document.getElementById("other-concepts-status");
+        const spinner = document.getElementById("other-concepts-spinner");
+        const text = document.getElementById("other-concepts-status-text");
+        const retry = document.getElementById("other-concepts-retry");
+        if (!status || !spinner || !text || !retry) return;
+
+        if (state === "ready") {
+            status.classList.add("hidden");
+            status.classList.remove("flex");
+            return;
+        }
+
+        status.classList.remove("hidden");
+        status.classList.add("flex");
+        spinner.classList.toggle("hidden", state !== "loading");
+        retry.classList.toggle("hidden", state !== "error");
+        text.textContent = state === "loading"
+            ? t("common.loadingData")
+            : t("common.errorLoadingData");
+    }
+
+    function renderConceptOptions(concepts: string[]) {
+        const datalist = document.getElementById("conceptos-list");
+        if (!datalist) return;
+        datalist.innerHTML = "";
+        concepts.forEach((concept) => {
+            const option = document.createElement("option");
+            option.value = concept;
+            datalist.appendChild(option);
+        });
+    }
+
+    async function loadConcepts(force = false): Promise<boolean> {
+        if (conceptsLoaded && !force) {
+            renderConceptsStatus("ready");
+            return true;
+        }
+        if (conceptsPromise && !force) return conceptsPromise;
+
+        const request = (async () => {
+            renderConceptsStatus("loading");
+            const controller = new AbortController();
+            const timeoutId = window.setTimeout(() => controller.abort(), 10000);
+            try {
+                if (!activeProjectId) throw new Error("No active project");
+                const response = await fetch(`/api/transactions/concepts?projectId=${activeProjectId}`, {
+                    credentials: "same-origin",
+                    signal: controller.signal,
+                });
+                const data = await response.json().catch(() => null);
+                if (!response.ok) throw new Error(data?.error || `HTTP ${response.status}`);
+                const concepts = Array.isArray(data?.concepts) ? data.concepts : [];
+                renderConceptOptions(concepts);
+                conceptsLoaded = true;
+                renderConceptsStatus("ready");
+                return true;
+            } catch (error) {
+                conceptsLoaded = false;
+                renderConceptsStatus("error");
+                console.error("Error loading transaction concepts:", error);
+                return false;
+            } finally {
+                window.clearTimeout(timeoutId);
+                conceptsPromise = null;
+            }
+        })();
+
+        conceptsPromise = request;
+        return request;
+    }
+
+    function initializeOtherTransactionModal() {
         const modal = document.getElementById(
             "modal-otro"
         ) as HTMLDialogElement;
         const form = document.getElementById("form-otro") as HTMLFormElement;
 
-        if (!modal || !form) return;
+        if (!modal || !form || initializedForm === form) return;
+        initializedForm = form;
+
+        const conceptsRetry = document.getElementById("other-concepts-retry");
+        conceptsRetry?.addEventListener("click", () => void loadConcepts(true));
 
         // Helper to set date to today (local)
         function setDateToToday() {
@@ -302,6 +388,9 @@ if (!isDemoMode) {
                     mutation.type === "attributes" &&
                     mutation.attributeName === "open"
                 ) {
+                    if (modal.hasAttribute("open")) {
+                        void loadConcepts();
+                    }
                     if (modal.hasAttribute("open") && !form.dataset.editingId) {
                         // Reset first, then set date
                         form.reset();
@@ -318,6 +407,8 @@ if (!isDemoMode) {
             });
         });
         observer.observe(modal, { attributes: true });
+
+        if (modal.open) void loadConcepts();
 
         form.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -411,5 +502,8 @@ if (!isDemoMode) {
                 alert(t("modal.other.loadError"));
             }
         };
-    });
+    }
+
+    document.addEventListener("astro:page-load", initializeOtherTransactionModal);
+    if (document.readyState !== "loading") initializeOtherTransactionModal();
 </script>

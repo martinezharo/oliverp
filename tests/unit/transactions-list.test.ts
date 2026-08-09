@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const transactionSources = vi.hoisted(() => vi.fn());
 
-vi.mock("../../src/lib/supabase", () => ({
-    isDemoMode: false,
+vi.mock("../../src/lib/runtime", () => ({
+    isDemoMode: () => false,
 }));
 
 vi.mock("../../src/lib/legacy-api", () => ({

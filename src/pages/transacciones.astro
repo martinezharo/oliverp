@@ -7,7 +7,7 @@ import PurchaseModal from "../components/PurchaseModal.astro";
 import OtherTransactionModal from "../components/OtherTransactionModal.astro";
 import Pagination from "../components/Pagination.astro";
 import { createBackend } from "../lib/convex";
-import { isDemoMode } from "../lib/supabase";
+import { isDemoMode } from "../lib/runtime";
 import { mockFinanzas, mockProjects } from "../lib/mock-data";
 import type { VistaFinanzasDiarias } from "../types/database";
 
@@ -15,6 +15,7 @@ const { t } = Astro.locals;
 
 let data: VistaFinanzasDiarias[] = [];
 let errorMsg = "";
+let projects: any[] = [];
 
 // Get Project ID
 const projectIdParam = Astro.url.searchParams.get("projectId");
@@ -34,7 +35,8 @@ let totalPages = 0;
 // used for purchases and other movements).
 let channels: string[] = [];
 
-if (isDemoMode) {
+if (isDemoMode(Astro.locals)) {
+    projects = mockProjects;
     if (!projectId) {
         projectId = mockProjects[0]?.id || null;
     }
@@ -49,20 +51,21 @@ if (isDemoMode) {
         data = filtered.slice(from, to + 1);
     }
 } else {
-    const backend = createBackend(Astro.locals, { kind: "session", userId: Astro.locals.user!.id });
+    const backend = createBackend(Astro.locals, { kind: "session", userId: Astro.locals.user!.tokenIdentifier });
+    projects = await backend.listProjects();
 
-    if (!projectId) {
-        projectId = (await backend.listProjects())[0]?.id ?? null;
-    }
+    if (!projectId) projectId = projects[0]?.id ?? null;
 
     if (projectId) {
         try {
-            const finance = await backend.listDailyFinances({ projectId });
+            const [finance, sources] = await Promise.all([
+                backend.listDailyFinances({ projectId }),
+                backend.transactionSources({ projectId }),
+            ]);
             const ordered = finance.sort((a, b) => String(b.dia).localeCompare(String(a.dia)));
             totalCount = ordered.length;
             totalPages = Math.ceil(totalCount / pageSize);
             data = ordered.slice(from, to + 1) as unknown as VistaFinanzasDiarias[];
-            const sources = await backend.transactionSources({ projectId });
             channels = [...new Set(sources.sales.map((sale) => String(sale.canal)).filter(Boolean))].sort();
             channels = [...channels, "Proveedor", "Manual"];
         } catch (error) {
@@ -72,9 +75,9 @@ if (isDemoMode) {
 }
 ---
 
-<Layout title={t("title.transactions")}>
+<Layout title={t("title.transactions")} projects={projects}>
     {
-        isDemoMode && (
+        isDemoMode(Astro.locals) && (
             <div class="mb-6 px-4 py-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm flex items-center gap-3">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"

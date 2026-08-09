@@ -3,18 +3,24 @@ import "../styles/global.css";
 import Sidebar from "../components/Sidebar.astro";
 import ProjectSelector from "../components/ProjectSelector.astro";
 import { ClientRouter } from "astro:transitions";
-import { isDemoMode } from "../lib/supabase";
+import { isDemoMode } from "../lib/runtime";
 import { ui } from "../i18n/ui";
 
 interface Props {
 	title: string;
 	description?: string;
+	projects?: Array<{ id: number; nombre: string; activo?: boolean }>;
 }
 
-const { title, description = "OlivERP - Management System" } = Astro.props;
+const {
+	title,
+	description = "OlivERP - Management System",
+	projects,
+} = Astro.props;
 const currentPath = Astro.url.pathname;
 const { lang, locale, t } = Astro.locals;
-const hasWorkspaceSession = isDemoMode || Boolean(Astro.locals.user);
+const demoMode = isDemoMode(Astro.locals);
+const hasWorkspaceSession = demoMode || Boolean(Astro.locals.user);
 ---
 
 <!DOCTYPE html>
@@ -51,6 +57,60 @@ const hasWorkspaceSession = isDemoMode || Boolean(Astro.locals.user);
 		</style>
 	</head>
 	<body class="bg-[#0f1016] text-slate-300 min-h-screen overflow-x-hidden">
+		<div
+			id="navigation-progress"
+			data-loading-label={t("common.loadingData")}
+			class="fixed inset-x-0 top-0 z-[100] h-1 bg-primary-500/20 opacity-0 transition-opacity duration-200 pointer-events-none"
+			role="status"
+			aria-live="polite"
+			aria-label={t("common.loadingData")}
+		>
+			<div
+				id="navigation-progress-bar"
+				class="h-full w-0 bg-primary-400 shadow-[0_0_12px_rgba(var(--primary-400),0.8)] transition-[width] duration-300"
+			></div>
+			<span class="sr-only">{t("common.loadingData")}</span>
+		</div>
+		<script is:inline>
+			(() => {
+				if (window.__navigationFeedbackInitialized) return;
+				window.__navigationFeedbackInitialized = true;
+
+				let finishTimer;
+				const elements = () => ({
+					progress: document.getElementById("navigation-progress"),
+					bar: document.getElementById("navigation-progress-bar"),
+				});
+				const start = () => {
+					const { progress, bar } = elements();
+					if (!progress || !bar) return;
+					window.clearTimeout(finishTimer);
+					progress.classList.remove("opacity-0");
+					bar.style.width = "20%";
+					window.requestAnimationFrame(() => {
+						bar.style.width = "65%";
+					});
+				};
+				const ready = () => {
+					const { bar } = elements();
+					if (!bar) return;
+					bar.style.width = "85%";
+				};
+				const finish = () => {
+					const { progress, bar } = elements();
+					if (!progress || !bar) return;
+					bar.style.width = "100%";
+					finishTimer = window.setTimeout(() => {
+						progress.classList.add("opacity-0");
+						bar.style.width = "0%";
+					}, 220);
+				};
+
+				document.addEventListener("astro:before-preparation", start);
+				document.addEventListener("astro:after-preparation", ready);
+				document.addEventListener("astro:after-swap", finish);
+			})();
+		</script>
 		<div class="flex h-screen overflow-hidden">
 			<!-- Sidebar -->
 			<Sidebar currentPath={currentPath} />
@@ -75,13 +135,24 @@ const hasWorkspaceSession = isDemoMode || Boolean(Astro.locals.user);
 						{
 							hasWorkspaceSession && (
 								<div class="w-40 md:w-64">
-									<ProjectSelector />
+									<ProjectSelector projects={projects} />
 								</div>
 							)
 						}
 
 						{
-							hasWorkspaceSession && !isDemoMode && (
+							hasWorkspaceSession && demoMode && (
+								<a
+									href="/api/demo/exit"
+									class="rounded-lg border border-amber-400/20 bg-amber-400/5 px-3 py-2 text-xs font-medium text-amber-200 transition-colors hover:border-amber-300/40 hover:bg-amber-400/10"
+								>
+									{t("demo.exit")}
+								</a>
+							)
+						}
+
+						{
+							hasWorkspaceSession && !demoMode && (
 								<form action="/api/auth/signout" method="post">
 									<button
 										type="submit"

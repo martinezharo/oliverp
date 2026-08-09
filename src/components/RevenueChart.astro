@@ -63,10 +63,16 @@ const { t } = Astro.locals;
 </div>
 
 <script>
-  import Chart from 'chart.js/auto';
   import { t, locale } from '../i18n/client';
 
-  let chartInstance: Chart | null = null;
+  let chartInstance: { destroy: () => void } | null = null;
+  let chartLibraryPromise: Promise<any> | null = null;
+  let initializedCanvas: HTMLCanvasElement | null = null;
+
+  async function loadChartLibrary() {
+    chartLibraryPromise ??= import('chart.js/auto');
+    return (await chartLibraryPromise).default;
+  }
 
   function getProjectId() {
     const config = document.getElementById('chart-config');
@@ -88,7 +94,8 @@ const { t } = Astro.locals;
       if (!response.ok) throw new Error('Failed to fetch data');
       
       const data = await response.json();
-      updateChart(data);
+      const Chart = await loadChartLibrary();
+      updateChart(data, Chart);
     } catch (error) {
       console.error('Error loading chart data:', error);
     } finally {
@@ -99,7 +106,7 @@ const { t } = Astro.locals;
     }
   }
 
-  function updateChart(data: any[]) {
+  function updateChart(data: any[], Chart: any) {
     const canvas = document.getElementById('revenueChart') as HTMLCanvasElement;
     if (!canvas) return;
 
@@ -222,6 +229,10 @@ const { t } = Astro.locals;
 
   // Setup function to be called on load
   function setupChart() {
+    const canvas = document.getElementById('revenueChart') as HTMLCanvasElement | null;
+    if (!canvas || initializedCanvas === canvas) return;
+    initializedCanvas = canvas;
+
     const buttons = document.querySelectorAll('.period-btn');
     
     // Remove old listeners to avoid duplicates if any (though Astro usually handles DOM replacement)
@@ -241,8 +252,14 @@ const { t } = Astro.locals;
       });
     });
 
-    // Initial Load
-    loadChartData(30);
+    const loadInitialChart = () => void loadChartData(30);
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        observer.disconnect();
+        loadInitialChart();
+      }
+    }, { rootMargin: "200px" });
+    observer.observe(canvas);
   }
 
   // Run on page load (initial and view transitions)

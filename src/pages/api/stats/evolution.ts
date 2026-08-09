@@ -1,7 +1,7 @@
 import type { APIRoute } from "astro";
 import { getMockEvolution } from "../../../lib/mock-data";
 import { backendError, jsonResponse, sessionBackend, unauthorizedResponse } from "../../../lib/legacy-api";
-import { isDemoMode } from "../../../lib/supabase";
+import { isDemoMode } from "../../../lib/runtime";
 
 export const GET: APIRoute = async (context) => {
     const projectId = Number(context.url.searchParams.get("projectId"));
@@ -11,7 +11,7 @@ export const GET: APIRoute = async (context) => {
         return jsonResponse({ error: "Project ID is required" }, 400);
     }
 
-    if (isDemoMode) return jsonResponse(getMockEvolution(days));
+    if (isDemoMode(context.locals)) return jsonResponse(getMockEvolution(days));
 
     const session = await sessionBackend(context);
     if (!session) return unauthorizedResponse();

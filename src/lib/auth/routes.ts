@@ -15,7 +15,12 @@ export type RoutePolicy =
     /** Needs a valid session; an anonymous caller is redirected to the login page. */
     | "session_redirect";
 
-const PUBLIC_ROUTES = new Set(["/login", "/api/auth/signin"]);
+const PUBLIC_ROUTES = new Set([
+    "/login",
+    "/signup",
+    "/api/demo/start",
+    "/api/demo/exit",
+]);
 
 /**
  * The machine-facing API carries an API key in a header, not in cookies.
@@ -28,6 +33,7 @@ const API_PREFIX = "/api/";
 
 export function routePolicy(pathname: string): RoutePolicy {
     if (PUBLIC_ROUTES.has(pathname)) return "public";
+    if (pathname.startsWith("/api/auth/")) return "public";
     if (pathname.startsWith(SELF_AUTHENTICATED_PREFIX)) return "self_authenticated";
     // Everything else under /api/ is the browser UI's own JSON API. It is
     // fetched by scripts, so an HTML redirect would be parsed as a successful

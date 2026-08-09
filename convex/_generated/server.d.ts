@@ -26,6 +26,8 @@ import type { DataModel } from "./dataModel.js";
  */
 type Env = {
   readonly CONVEX_BRIDGE_SECRET: string;
+  readonly CONVEX_SITE_URL: string | undefined;
+  readonly SITE_URL: string | undefined;
 };
 
 /**

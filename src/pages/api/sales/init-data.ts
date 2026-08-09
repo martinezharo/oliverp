@@ -1,10 +1,10 @@
 import type { APIRoute } from "astro";
 import { mockStock } from "../../../lib/mock-data";
 import { backendError, jsonResponse, sessionBackend, unauthorizedResponse } from "../../../lib/legacy-api";
-import { isDemoMode } from "../../../lib/supabase";
+import { isDemoMode } from "../../../lib/runtime";
 
 export const GET: APIRoute = async (context) => {
-    if (isDemoMode) {
+    if (isDemoMode(context.locals)) {
         return jsonResponse({
             products: mockStock.map((product) => ({
                 id: product.producto_id,

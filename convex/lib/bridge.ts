@@ -34,6 +34,24 @@ export function fail(code: string, message: string): never {
   throw new ConvexError({ code, message });
 }
 
+/**
+ * Resolve a browser session from Convex's verified JWT. The actor field is
+ * retained for the Astro gateway contract, but it is never trusted on its
+ * own.
+ */
+export async function sessionUserId(
+  ctx: QueryCtx | MutationCtx,
+  actor: Actor,
+): Promise<string> {
+  if (actor.kind !== "session") fail("unauthorized", "A user session is required.");
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) fail("unauthorized", "A user session is required.");
+  if (actor.userId && actor.userId !== identity.tokenIdentifier) {
+    fail("unauthorized", "The session identity does not match the request.");
+  }
+  return identity.tokenIdentifier;
+}
+
 export function cents(value: number): number {
   if (!Number.isFinite(value) || value < 0) fail("validation_error", "Money value is invalid.");
   return Math.round(value * 100);
@@ -96,11 +114,11 @@ export async function requireProject(
     return project;
   }
 
-  if (!actor.userId) fail("unauthorized", "A user session is required.");
+  const userId = await sessionUserId(ctx, actor);
   const membership = await ctx.db
     .query("projectMembers")
     .withIndex("by_user_project", (q) =>
-      q.eq("userId", actor.userId!).eq("projectId", project._id),
+      q.eq("userId", userId).eq("projectId", project._id),
     )
     .unique();
   if (!membership) fail("forbidden", "You are not a member of that project.");
@@ -114,10 +132,11 @@ export async function requireAdmin(
 ) {
   const project = await requireProject(ctx, actor, projectLegacyId);
   if (actor.kind === "api_key") return project;
+  const userId = await sessionUserId(ctx, actor);
   const membership = await ctx.db
     .query("projectMembers")
     .withIndex("by_user_project", (q) =>
-      q.eq("userId", actor.userId!).eq("projectId", project._id),
+      q.eq("userId", userId).eq("projectId", project._id),
     )
     .unique();
   if (membership?.role !== "admin") {
