@@ -4,7 +4,7 @@ Import `wallapop-gmail-to-erp.json` into n8n and attach a Gmail OAuth credential
 to the Gmail Trigger node. Configure these n8n variables without committing
 them:
 
-- `ERP_API_URL`: for example `https://oliverp.pages.dev`
+- `ERP_API_URL`: `https://oliverp.4oli.com`
 - `ERP_API_KEY`: a project-pinned `erp_sk_...` key with `write` scope
 - `ERP_PROJECT_ID`: the ERP project id, normally `1` for Octopus Control
 

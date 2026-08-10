@@ -55,10 +55,10 @@ Add the credentials to that single Convex deployment, never to a
 `NEXT_PUBLIC_` variable:
 
    ```bash
-   pnpm exec auth --prod --web-server-url https://erp-1f3.pages.dev
+   pnpm exec auth --prod --web-server-url https://oliverp.4oli.com
    pnpm exec convex env set AUTH_GITHUB_ID
    pnpm exec convex env set AUTH_GITHUB_SECRET
-   pnpm exec convex env set SITE_URL https://erp-1f3.pages.dev
+   pnpm exec convex env set SITE_URL https://oliverp.4oli.com
    pnpm exec convex env set CONVEX_BRIDGE_SECRET
    ```
 
@@ -90,13 +90,18 @@ deployment above. For production, the same value is defined in
 
 ## Cloudflare Worker deployment
 
-The repository is configured for one OpenNext Worker, not Pages:
+The repository is configured for the `oliverp` OpenNext Worker at
+`https://oliverp.4oli.com`, not Pages:
 
 ```bash
-pnpm build
 pnpm preview
 pnpm deploy
 ```
+
+`pnpm run build:worker` produces the `.open-next` output expected by
+`wrangler deploy`. Cloudflare Git builds inject `WORKERS_CI=1`, so their
+existing `pnpm build` command automatically adds that OpenNext output after
+the underlying Next.js build. Local `pnpm build` remains a plain Next.js build.
 
 Configure these Worker bindings:
 

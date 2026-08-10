@@ -4,6 +4,12 @@
   "name": "oliverp",
   "compatibility_date": "2026-04-10",
   "compatibility_flags": ["nodejs_compat"],
+  "routes": [
+    {
+      "pattern": "oliverp.4oli.com",
+      "custom_domain": true
+    }
+  ],
   "vars": {
     "NEXT_PUBLIC_CONVEX_URL": "https://reminiscent-cricket-450.convex.cloud"
   },

@@ -33,7 +33,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.ERP_API_URL || 'https://oliverp.pages.dev'}}/api/v1/importaciones/wallapop",
+        "url": "={{$env.ERP_API_URL || 'https://oliverp.4oli.com'}}/api/v1/importaciones/wallapop",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [

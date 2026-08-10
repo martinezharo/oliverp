@@ -5,9 +5,10 @@
     "packageManager": "pnpm@11.20.0",
     "scripts": {
         "dev": "next dev",
-        "build": "next build",
+        "build": "if [ \"${WORKERS_CI:-}\" = \"1\" ]; then NEXT_PRIVATE_STANDALONE=true next build && opennextjs-cloudflare build --skipNextBuild; else next build; fi",
+        "build:worker": "NEXT_PRIVATE_STANDALONE=true next build && opennextjs-cloudflare build --skipNextBuild",
         "start": "next start",
-        "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+        "preview": "pnpm run build:worker && opennextjs-cloudflare preview",
         "deploy": "convex deploy --cmd 'opennextjs-cloudflare build' && opennextjs-cloudflare deploy",
         "upload": "convex deploy --cmd 'opennextjs-cloudflare build' && opennextjs-cloudflare upload",
         "check": "tsc --noEmit",
