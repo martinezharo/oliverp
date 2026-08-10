@@ -65,6 +65,10 @@ describe("extractApiKey", () => {
         expect(extractApiKey(request({ authorization: "BEARER erp_sk_123" }))).toBe("erp_sk_123");
     });
 
+    it("does not mistake a Convex Auth bearer token for an API key", () => {
+        expect(extractApiKey(request({ authorization: "Bearer eyJhbGciOiJIUzI1NiJ9.session" }))).toBeNull();
+    });
+
     it("tolerates surrounding and internal whitespace", () => {
         expect(extractApiKey(request({ authorization: "  Bearer    erp_sk_123  " }))).toBe(
             "erp_sk_123",

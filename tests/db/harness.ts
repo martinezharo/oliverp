@@ -33,7 +33,7 @@ export interface Db {
         sql: string,
         params?: unknown[],
         options?: { statementTimeoutMs?: number },
-    ): Promise<any[]>;
+    ): Promise<any[]>; // eslint-disable-line @typescript-eslint/no-explicit-any
     /** Same, but returns the error message instead of throwing. */
     expectDenied(role: Role, userId: string | null, sql: string, params?: unknown[]): Promise<string>;
     close(): Promise<void>;

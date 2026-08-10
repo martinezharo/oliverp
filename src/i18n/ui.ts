@@ -84,15 +84,12 @@ const es: Dict = {
 
   // Login
   "login.welcome": "Bienvenido",
-  "login.subtitle": "Inicia sesión para acceder al ERP",
-  "login.email": "Email",
-  "login.password": "Contraseña",
-  "login.signIn": "Iniciar Sesión",
-  "login.createAccount": "Crear una cuenta nueva",
+  "login.subtitle": "Accede con la cuenta de GitHub autorizada",
+  "login.signInWithGitHub": "Continuar con GitHub",
   "login.demoDivider": "o prueba sin registrarte",
   "login.demoCta": "Ver el modo demo",
   "login.demoDescription": "Explora la aplicación con datos de ejemplo",
-  "login.invalidCredentials": "No se pudo iniciar sesión. Si es tu cuenta antigua, crea una cuenta nueva en Convex.",
+  "login.githubError": "No se pudo iniciar sesión. Comprueba que estás usando la cuenta de GitHub autorizada.",
 
   // Stock page + table
   "stock.title": "Inventario & Stock",
@@ -189,6 +186,7 @@ const es: Dict = {
   // Transactions list
   "txn.noTransactions": "No hay transacciones registradas para este proyecto.",
   "txn.noDetails": "No hay movimientos detallados",
+  "txn.unknownProduct": "Producto desconocido",
   "txn.colDate": "Fecha",
   "txn.colType": "Tipo",
   "txn.colConcept": "Concepto / Productos",
@@ -211,6 +209,13 @@ const es: Dict = {
   "modal.product.save": "Guardar Producto",
   "modal.product.noProject": "Error: No se ha seleccionado ningún proyecto.",
   "modal.product.createError": "Error al crear el producto",
+  "modal.project.title": "Nuevo Proyecto",
+  "modal.project.firstTitle": "Crea tu primer proyecto",
+  "modal.project.intro": "Necesitas un proyecto para empezar a registrar ventas, compras y stock.",
+  "modal.project.name": "Nombre del Proyecto",
+  "modal.project.placeholder": "Mi Tienda",
+  "modal.project.save": "Crear Proyecto",
+  "modal.project.createError": "Error al crear el proyecto",
 
   // Sale modal
   "modal.sale.title": "Nueva Venta",
@@ -218,6 +223,9 @@ const es: Dict = {
   "modal.sale.autofill": "Autocompleta precios unitarios",
   "modal.sale.save": "Guardar Venta",
   "modal.sale.selectChannel": "Seleccionar canal",
+  "modal.sale.channelPlaceholder": "Wallapop, Amazon, Web...",
+  "modal.sale.noProducts": "No hay productos con stock disponible",
+  "modal.sale.noLines": "Añade al menos un producto a la operación.",
   "modal.sale.created": "Venta guardada correctamente",
   "modal.sale.updated": "Venta actualizada correctamente",
   "modal.sale.editTitle": "Editar Venta #{id}",
@@ -298,6 +306,18 @@ const es: Dict = {
   // API
   "api.demoUnavailable": "No disponible en modo demo",
   "api.unauthorized": "Sesion no valida o caducada. Vuelve a iniciar sesion.",
+  // Keyed by the `code` of the API error envelope, so the UI never shows the
+  // API's own message (that vocabulary is a fixed Spanish contract for
+  // machine clients, documented in docs/API.md).
+  "api.error.validation_error": "La peticion no es valida.",
+  "api.error.unauthorized": "Sesion no valida o caducada. Vuelve a iniciar sesion.",
+  "api.error.forbidden": "No tienes acceso a este recurso.",
+  "api.error.not_found": "El recurso solicitado no existe.",
+  "api.error.conflict": "La operacion entra en conflicto con datos existentes.",
+  "api.error.idempotency_mismatch": "Esta peticion ya se envio con datos distintos.",
+  "api.error.demo_mode": "No disponible en modo demo",
+  "api.error.not_configured": "El backend no esta configurado en este despliegue.",
+  "api.error.internal_error": "Se produjo un error interno.",
 };
 
 const en: Dict = {
@@ -371,15 +391,12 @@ const en: Dict = {
 
   // Login
   "login.welcome": "Welcome",
-  "login.subtitle": "Sign in to access the ERP",
-  "login.email": "Email",
-  "login.password": "Password",
-  "login.signIn": "Sign In",
-  "login.createAccount": "Create a new account",
+  "login.subtitle": "Use the authorized GitHub account to sign in",
+  "login.signInWithGitHub": "Continue with GitHub",
   "login.demoDivider": "or try it without signing up",
   "login.demoCta": "View demo mode",
   "login.demoDescription": "Explore the app with sample data",
-  "login.invalidCredentials": "Unable to sign in. If this is your old account, create a new Convex account.",
+  "login.githubError": "Unable to sign in. Check that you are using the authorized GitHub account.",
 
   // Stock page + table
   "stock.title": "Inventory & Stock",
@@ -476,6 +493,7 @@ const en: Dict = {
   // Transactions list
   "txn.noTransactions": "No transactions recorded for this project.",
   "txn.noDetails": "No detailed movements",
+  "txn.unknownProduct": "Unknown product",
   "txn.colDate": "Date",
   "txn.colType": "Type",
   "txn.colConcept": "Concept / Products",
@@ -498,6 +516,13 @@ const en: Dict = {
   "modal.product.save": "Save Product",
   "modal.product.noProject": "Error: No project selected.",
   "modal.product.createError": "Error creating product",
+  "modal.project.title": "New Project",
+  "modal.project.firstTitle": "Create your first project",
+  "modal.project.intro": "You need a project before you can record sales, purchases and stock.",
+  "modal.project.name": "Project Name",
+  "modal.project.placeholder": "My Store",
+  "modal.project.save": "Create Project",
+  "modal.project.createError": "Error creating project",
 
   // Sale modal
   "modal.sale.title": "New Sale",
@@ -505,6 +530,9 @@ const en: Dict = {
   "modal.sale.autofill": "Auto-fills unit prices",
   "modal.sale.save": "Save Sale",
   "modal.sale.selectChannel": "Select channel",
+  "modal.sale.channelPlaceholder": "Wallapop, Amazon, Web...",
+  "modal.sale.noProducts": "No products with stock available",
+  "modal.sale.noLines": "Add at least one product to the operation.",
   "modal.sale.created": "Sale saved successfully",
   "modal.sale.updated": "Sale updated successfully",
   "modal.sale.editTitle": "Edit Sale #{id}",
@@ -585,6 +613,15 @@ const en: Dict = {
   // API
   "api.demoUnavailable": "Not available in demo mode",
   "api.unauthorized": "Invalid or expired session. Please sign in again.",
+  "api.error.validation_error": "The request was not valid.",
+  "api.error.unauthorized": "Invalid or expired session. Please sign in again.",
+  "api.error.forbidden": "You do not have access to this resource.",
+  "api.error.not_found": "The requested resource does not exist.",
+  "api.error.conflict": "The operation conflicts with existing data.",
+  "api.error.idempotency_mismatch": "This request was already sent with different data.",
+  "api.error.demo_mode": "Not available in demo mode",
+  "api.error.not_configured": "The backend is not configured in this deployment.",
+  "api.error.internal_error": "An internal error occurred.",
 };
 
 export const ui: Record<Lang, Dict> = { es, en };

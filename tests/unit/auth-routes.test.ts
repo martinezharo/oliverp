@@ -13,7 +13,7 @@ describe("routePolicy", () => {
         expect(routePolicy("/api/v1/openapi.json")).toBe("self_authenticated");
     });
 
-    it("leaves the browser's Better Auth endpoints public", () => {
+    it("leaves the browser's Convex Auth compatibility endpoints public", () => {
         // These are fetched by scripts: an HTML login page returned with a 200
         // would be parsed as a successful response.
         for (const path of [
@@ -37,7 +37,7 @@ describe("routePolicy", () => {
         }
     });
 
-    it("keeps the complete Better Auth route namespace public", () => {
+    it("keeps the complete Convex Auth compatibility namespace public", () => {
         expect(routePolicy("/api/auth/signin/evil")).toBe("public");
         expect(routePolicy("/login/../api/sales/create")).toBe("session_redirect");
         expect(routePolicy("/loginx")).toBe("session_redirect");

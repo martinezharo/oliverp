@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
 import type { BackendClient } from "../../src/lib/convex";
+import type { ServerLocals } from "../../src/lib/server-context";
 
 const resolvePrincipal = vi.fn();
 const requireScope = vi.fn();
@@ -19,7 +20,7 @@ const ENDPOINT = "POST /api/v1/ventas";
 function context(headers: Record<string, string> = {}) {
     return {
         request: new Request("https://example.test/api/v1/ventas", { method: "POST", headers }),
-        locals: {} as App.Locals,
+        locals: {} as ServerLocals,
     } as never;
 }
 

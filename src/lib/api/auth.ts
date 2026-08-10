@@ -1,9 +1,9 @@
-import type { APIContext } from "astro";
 import { createBackend, type BackendClient } from "../convex";
 import { getAuthSession } from "../auth";
 import { isDemoMode } from "../runtime";
 import { ApiError } from "./errors";
 import { extractApiKey, hashApiKey, type Scope } from "./keys";
+import type { ServerContext } from "../server-context";
 
 /** Who is making a request to the machine-facing API. */
 export interface Principal {
@@ -19,7 +19,7 @@ export interface Principal {
 
 const LAST_USED_THROTTLE_MS = 60_000;
 
-async function resolveConvexApiKey(context: APIContext, rawKey: string): Promise<Principal> {
+async function resolveConvexApiKey(context: ServerContext, rawKey: string): Promise<Principal> {
     const keyHash = await hashApiKey(rawKey);
     const lookup = createBackend(context.locals, { kind: "api_key" });
     const apiKey = await lookup.apiKeyByHash(keyHash);
@@ -52,7 +52,7 @@ async function resolveConvexApiKey(context: APIContext, rawKey: string): Promise
     };
 }
 
-async function resolveSession(context: APIContext): Promise<Principal> {
+async function resolveSession(context: ServerContext): Promise<Principal> {
     const session = await getAuthSession(context);
     if (!session) {
         throw new ApiError("unauthorized", "Se requiere autenticacion.", {
@@ -65,16 +65,16 @@ async function resolveSession(context: APIContext): Promise<Principal> {
         scopes: ["read", "write"],
         projectId: null,
         apiKeyId: null,
-        idempotencyNamespace: `session:${session.user.tokenIdentifier}`,
+        idempotencyNamespace: `session:${session.user.id}`,
         backend: createBackend(
             context.locals,
-            { kind: "session", userId: session.user.tokenIdentifier },
+            { kind: "session", userId: session.user.id },
             session.token,
         ),
     };
 }
 
-export async function resolvePrincipal(context: APIContext): Promise<Principal> {
+export async function resolvePrincipal(context: ServerContext): Promise<Principal> {
     if (isDemoMode(context.locals)) {
         throw new ApiError("demo_mode", "La API no esta disponible en modo demo.", {
             hint: "Configura Convex para salir del modo demo.",

@@ -1,5 +1,5 @@
-// Server-side i18n helpers (no DOM access). Used by middleware, .astro
-// frontmatter and API routes.
+// Server-side i18n helpers (no DOM access). Used by API routes and server
+// components.
 import { ui, defaultLang, type Lang } from "./ui";
 
 const SUPPORTED: Lang[] = ["es", "en"];

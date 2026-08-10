@@ -36,7 +36,7 @@ export function fail(code: string, message: string): never {
 
 /**
  * Resolve a browser session from Convex's verified JWT. The actor field is
- * retained for the Astro gateway contract, but it is never trusted on its
+ * retained for the Next gateway contract, but it is never trusted on its
  * own.
  */
 export async function sessionUserId(
@@ -46,10 +46,13 @@ export async function sessionUserId(
   if (actor.kind !== "session") fail("unauthorized", "A user session is required.");
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) fail("unauthorized", "A user session is required.");
-  if (actor.userId && actor.userId !== identity.tokenIdentifier) {
+  // Convex Auth's subject is `<userId>|<sessionId>`. The user document id is
+  // stable across sessions and is the value stored in projectMembers.
+  const userId = identity.subject.split("|")[0];
+  if (actor.userId && actor.userId !== userId) {
     fail("unauthorized", "The session identity does not match the request.");
   }
-  return identity.tokenIdentifier;
+  return userId;
 }
 
 export function cents(value: number): number {

@@ -43,7 +43,7 @@ This section guides you through submitting an enhancement suggestion, including 
 2. **If you've added code that should be tested, add tests**.
 3. **If you've changed APIs, update the documentation**.
 4. **Ensure the test suite passes**.
-5. **Make sure your code lints** (`pnpm astro check`).
+5. **Make sure the checks and lint pass** (`pnpm check && pnpm lint`).
 6. **Submit a Pull Request** with a comprehensive description of your changes.
 
 ### Developing with Demo Mode
@@ -71,8 +71,9 @@ Simply skip step 3 of the installation (skip the `.env` file credentials). The a
 
 ### Tailwind CSS Styleguide
 
-- Use Tailwind 4 utility classes (integrated via Vite).
-- Avoid writing custom CSS in `.astro` files unless absolutely necessary.
+- Use Tailwind 4 utility classes (integrated via PostCSS).
+- Keep custom CSS in `src/styles/global.css` unless a component-local rule is
+  genuinely required.
 - Use the project's color palette (indigo/emerald/rose accents) to keep the UI consistent.
 
 ## Questions?

@@ -25,7 +25,7 @@ vi.mock("../../src/lib/legacy-api", () => ({
 }));
 vi.mock("../../src/lib/runtime", () => ({ isDemoMode: () => false }));
 
-const { PUT } = await import("../../src/pages/api/purchases/update");
+const { PUT } = await import("../../src/internal/api/purchases/update");
 
 describe("PUT /api/purchases/update", () => {
     it("converts the string id emitted by the edit form before calling Convex", async () => {

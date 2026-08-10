@@ -18,18 +18,18 @@ contract before it has credentials. It does not expose any data.
 
 ### 1. Configure the Convex bridge
 
-Requests authenticated with an ERP API key are resolved by the Astro server and
-authorized in Convex. Configure the same random value in Convex and the Astro
-deployment:
+Requests authenticated with an ERP API key are resolved by the Next.js Worker
+and authorized in Convex. Configure the same random value in Convex and the
+Worker deployment:
 
 ```env
-CONVEX_URL=https://your-deployment.convex.cloud
+NEXT_PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
 CONVEX_BRIDGE_SECRET=long-random-server-secret
 ```
 
 `CONVEX_BRIDGE_SECRET` is server-only. Do not prefix it with `PUBLIC_` or put it
-in a browser bundle. Browser sessions are issued by Better Auth in Convex and
-presented to Convex as a verified JWT.
+in a browser bundle. Browser sessions are issued by Convex Auth and presented to
+Convex as a verified JWT.
 
 ### 2. Create an API key
 
@@ -61,8 +61,8 @@ curl -H "Authorization: Bearer erp_sk_..." https://your-erp/api/v1/proyectos
 `X-API-Key: erp_sk_...` is also accepted and is the default header sent by
 several automation tools.
 
-The web interface uses the Better Auth cookie session stored in Convex; the
-same endpoints support both browser sessions and API keys.
+The web interface uses the Convex Auth cookie session stored in Convex; the same
+endpoints support both browser sessions and API keys.
 
 ### Permissions
 
@@ -214,7 +214,7 @@ allowing a model to correct the call instead of retrying it unchanged.
 | `conflict`             | 409  | A request with the same key is still in progress.   |
 | `idempotency_mismatch` | 422  | The key was reused with a different body.           |
 | `demo_mode`            | 403  | The deployment is running in demo mode.             |
-| `not_configured`       | 503  | `CONVEX_URL` or `CONVEX_BRIDGE_SECRET` is missing.  |
+| `not_configured`       | 503  | `NEXT_PUBLIC_CONVEX_URL` or `CONVEX_BRIDGE_SECRET` is missing.  |
 | `internal_error`       | 500  | Server failure.                                     |
 
 ---

@@ -1,3 +1,4 @@
+import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
@@ -28,6 +29,8 @@ const movementType = v.union(
  * backend use typed Convex document references internally.
  */
 export default defineSchema({
+  ...authTables,
+
   projects: defineTable({
     legacyId: v.number(),
     name: v.string(),

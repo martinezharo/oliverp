@@ -15,7 +15,7 @@ vi.mock("../../src/lib/legacy-api", () => ({
     unauthorizedResponse: () => new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 }),
 }));
 
-const { GET } = await import("../../src/pages/api/transactions/list");
+const { GET } = await import("../../src/internal/api/transactions/list");
 
 const sources = {
     sales: [

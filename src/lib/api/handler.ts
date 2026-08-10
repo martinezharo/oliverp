@@ -1,8 +1,8 @@
-import type { APIContext } from "astro";
 import type { ZodType } from "zod";
 import { resolvePrincipal, requireScope, type Principal } from "./auth";
 import { ApiError, fromConvexError, fromZodError } from "./errors";
 import type { Scope } from "./keys";
+import type { ServerContext } from "../server-context";
 
 export const OPENAPI_PATH = "/api/v1/openapi.json";
 
@@ -19,7 +19,7 @@ export function json(body: unknown, status = 200, headers: Record<string, string
  * ApiError(...)` anywhere instead of threading response objects around.
  */
 export async function apiHandler(
-    context: APIContext,
+    context: ServerContext,
     scope: Scope,
     fn: (principal: Principal) => Promise<Response>,
 ): Promise<Response> {
@@ -114,7 +114,7 @@ async function hashRequest(endpoint: string, body: unknown): Promise<string> {
  * Failed attempts release the reservation so the same key can be retried.
  */
 export async function withIdempotency(
-    context: APIContext,
+    context: ServerContext,
     principal: Principal,
     endpoint: string,
     body: unknown,

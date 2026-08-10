@@ -2,7 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const createBackend = vi.fn(() => ({ kind: "backend" }));
 vi.mock("../../src/lib/convex", () => ({ createBackend }));
-vi.mock("../../src/lib/runtime", () => ({ isDemoMode: () => false }));
+vi.mock("../../src/lib/runtime", () => ({
+    isDemoMode: () => false,
+    convexAppUrl: () => undefined,
+}));
 
 const { parsePositiveInteger, sessionBackend } = await import("../../src/lib/legacy-api");
 
@@ -23,11 +26,12 @@ describe("sessionBackend", () => {
         } as never;
         await expect(sessionBackend(context)).resolves.toEqual({
             backend: { kind: "backend" },
-            userId: "issuer|user-1",
+            userId: "user-1",
         });
         expect(createBackend).toHaveBeenCalledWith(
             expect.objectContaining({ user: expect.objectContaining({ id: "user-1" }) }),
-            { kind: "session", userId: "issuer|user-1" },
+            { kind: "session", userId: "user-1" },
+            undefined,
         );
     });
 

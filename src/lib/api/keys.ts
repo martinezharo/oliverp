@@ -2,7 +2,7 @@
  * API key generation and hashing.
  *
  * Uses WebCrypto only (no node:crypto) so it runs unchanged on Cloudflare
- * Workers, in `astro dev`, and in the key-minting CLI script.
+ * Workers, in `next dev`, and in the key-minting CLI script.
  */
 
 export const KEY_PREFIX = "erp_sk_";
@@ -31,14 +31,19 @@ export async function hashApiKey(key: string): Promise<string> {
 }
 
 /**
- * Extracts the key from an `Authorization: Bearer <key>` header. Also accepts
- * `X-API-Key: <key>`, which several automation tools send by default.
+ * Extracts an ERP key from the machine-facing auth headers.
+ *
+ * The browser also sends its Convex Auth JWT as `Authorization: Bearer ...`
+ * when it calls `/api/v1/*`. Only the ERP prefix can identify a Bearer value
+ * as an API key; otherwise that header must be left for session auth.
+ * `X-API-Key` is unambiguous and is therefore accepted as-is.
  */
 export function extractApiKey(request: Request): string | null {
     const authHeader = request.headers.get("authorization");
     if (authHeader) {
         const match = /^Bearer\s+(.+)$/i.exec(authHeader.trim());
-        if (match) return match[1].trim();
+        const candidate = match?.[1].trim();
+        if (candidate?.startsWith(KEY_PREFIX)) return candidate;
     }
 
     const headerKey = request.headers.get("x-api-key");

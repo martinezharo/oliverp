@@ -1,9 +1,7 @@
 import { v } from "convex/values";
-import type { BetterAuthOptions } from "better-auth";
-import { env, mutation, query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { assertBridgeSecret, fail, productByLegacyId, projectByLegacyId } from "./lib/bridge";
 import type { MutationCtx } from "./_generated/server";
-import { authComponent } from "./auth";
 
 /**
  * One-shot, secret-protected import surface for the Supabase compatibility
@@ -92,16 +90,15 @@ export const importMembers = mutation({
 });
 
 /**
- * Rebinds memberships imported with a legacy Auth subject to the
- * tokenIdentifier emitted by Better Auth + Convex. Run this once per user
- * after the user creates their Convex Auth account.
+ * Rebinds memberships imported with a legacy Auth subject to the stable Convex
+ * Auth user document id. Run this once per user after their first GitHub login.
  */
 async function rebindMemberships(
   ctx: MutationCtx,
   legacyUserId: string,
-  authTokenIdentifier: string,
+  authUserId: string,
 ): Promise<number> {
-  if (legacyUserId === authTokenIdentifier) return 0;
+  if (legacyUserId === authUserId) return 0;
 
   const memberships = await ctx.db
     .query("projectMembers")
@@ -113,7 +110,7 @@ async function rebindMemberships(
     const existing = await ctx.db
       .query("projectMembers")
       .withIndex("by_user_project", (q) =>
-        q.eq("userId", authTokenIdentifier).eq("projectId", membership.projectId),
+        q.eq("userId", authUserId).eq("projectId", membership.projectId),
       )
       .unique();
     if (existing && existing._id !== membership._id) {
@@ -122,7 +119,7 @@ async function rebindMemberships(
       }
       await ctx.db.delete(membership._id);
     } else {
-      await ctx.db.patch(membership._id, { userId: authTokenIdentifier });
+      await ctx.db.patch(membership._id, { userId: authUserId });
     }
     rebound += 1;
   }
@@ -134,11 +131,11 @@ export const rebindMemberUser = mutation({
   args: {
     bridgeSecret: v.string(),
     legacyUserId: v.string(),
-    authTokenIdentifier: v.string(),
+    authUserId: v.string(),
   },
   handler: async (ctx, args) => {
     assertBridgeSecret(args.bridgeSecret);
-    return await rebindMemberships(ctx, args.legacyUserId, args.authTokenIdentifier);
+    return await rebindMemberships(ctx, args.legacyUserId, args.authUserId);
   },
 });
 
@@ -154,19 +151,14 @@ export const rebindMemberByEmail = mutation({
   },
   handler: async (ctx, args) => {
     assertBridgeSecret(args.bridgeSecret);
-    const adapter = authComponent.adapter(ctx)({} as BetterAuthOptions);
-    const user = await adapter.findOne({
-      model: "user",
-      where: [{ field: "email", operator: "eq", value: args.email }],
-    });
-    const authUserId = (user as { id?: unknown } | null)?.id;
-    if (typeof authUserId !== "string") {
+    const email = args.email.trim().toLowerCase();
+    const user = (await ctx.db.query("users").collect()).find(
+      (candidate) => candidate.email?.trim().toLowerCase() === email,
+    );
+    if (!user) {
       fail("not_found", `No Convex Auth account exists for ${args.email}.`);
     }
-
-    const issuer = env.CONVEX_SITE_URL?.replace(/\/$/, "");
-    if (!issuer) fail("not_configured", "CONVEX_SITE_URL is not configured.");
-    return await rebindMemberships(ctx, args.legacyUserId, `${issuer}|${authUserId}`);
+    return await rebindMemberships(ctx, args.legacyUserId, user._id);
   },
 });
 

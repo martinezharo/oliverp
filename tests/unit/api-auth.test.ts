@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { ServerLocals } from "../../src/lib/server-context";
 
 const demo = { active: false };
 const getAuthSession = vi.fn();
@@ -28,7 +29,7 @@ interface StoredKey {
 function context(headers: Record<string, string> = {}) {
     return {
         request: new Request("https://example.test/api/v1/ventas", { headers }),
-        locals: {} as App.Locals,
+        locals: {} as ServerLocals,
     } as never;
 }
 
@@ -108,7 +109,22 @@ describe("resolvePrincipal — Convex API keys", () => {
     });
 });
 
-describe("resolvePrincipal — Better Auth session", () => {
+describe("resolvePrincipal — Convex Auth session", () => {
+    it("uses a Convex bearer token as a session instead of an API key", async () => {
+        const backend = { kind: "backend" };
+        createBackend.mockReturnValue(backend);
+        getAuthSession.mockResolvedValue({
+            token: "convex-jwt",
+            user: { id: "user-1", tokenIdentifier: "issuer|user-1", email: "user@example.test", name: "User" },
+        });
+
+        const principal = await resolvePrincipal(context({ authorization: "Bearer convex-jwt" }));
+
+        expect(principal.kind).toBe("session");
+        expect(getAuthSession).toHaveBeenCalled();
+        expect(createBackend).not.toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ kind: "api_key" }));
+    });
+
     it("rejects a request without a valid Convex session", async () => {
         getAuthSession.mockResolvedValue(null);
         await expectApiError(resolvePrincipal(context()), "unauthorized");
@@ -126,11 +142,11 @@ describe("resolvePrincipal — Better Auth session", () => {
         expect(principal).toMatchObject({
             kind: "session",
             scopes: ["read", "write"],
-            idempotencyNamespace: "session:issuer|user-1",
+            idempotencyNamespace: "session:user-1",
         });
         expect(createBackend).toHaveBeenLastCalledWith(
             expect.anything(),
-            { kind: "session", userId: "issuer|user-1" },
+            { kind: "session", userId: "user-1" },
             "convex-jwt",
         );
     });

@@ -1,7 +1,8 @@
-import type { APIContext } from "astro";
 import { createBackend, type BackendClient } from "./convex";
 import { fromConvexError, ApiError } from "./api/errors";
 import { isDemoMode } from "./runtime";
+import { getAuthSession } from "./auth";
+import type { ServerContext } from "./server-context";
 
 export function jsonResponse(body: unknown, status = 200): Response {
     return new Response(JSON.stringify(body), {
@@ -21,26 +22,33 @@ export function parsePositiveInteger(value: unknown): number | null {
     return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-export function demoResponse(context: APIContext, emptyBody: unknown = null): Response {
+export function demoResponse(context: ServerContext, emptyBody: unknown = null): Response {
     if (emptyBody !== null) return jsonResponse(emptyBody);
-    return jsonResponse({ error: context.locals.t("api.demoUnavailable") }, 403);
+    const translate = context.locals.t;
+    const message = typeof translate === "function"
+        ? translate("api.demoUnavailable")
+        : "Not available in demo mode";
+    return jsonResponse({ error: message }, 403);
 }
 
 /** Returns the authenticated user's Convex gateway, or null for a 401. */
 export async function sessionBackend(
-    context: APIContext,
+    context: ServerContext,
 ): Promise<{ backend: BackendClient; userId: string } | null> {
     if (isDemoMode(context.locals)) return null;
 
-    const user = context.locals.user;
+    const session = context.locals.user
+        ? { user: context.locals.user, token: context.locals.authToken ?? "" }
+        : await getAuthSession(context);
+    const user = session?.user;
     if (!user) return null;
 
     return {
         backend: createBackend(context.locals, {
             kind: "session",
-            userId: user.tokenIdentifier,
-        }),
-        userId: user.tokenIdentifier,
+            userId: user.id,
+        }, session?.token || context.locals.authToken),
+        userId: user.id,
     };
 }
 

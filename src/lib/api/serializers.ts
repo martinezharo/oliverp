@@ -1,3 +1,6 @@
+/* The Convex gateway intentionally accepts legacy rows with several historical
+ * shapes; the typed public envelopes below are the normalization boundary. */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Response shaping for the v1 API.
  *

@@ -1,14 +1,14 @@
-import { getToken } from "@convex-dev/better-auth/utils";
 import { ConvexHttpClient } from "convex/browser";
-import type { APIContext } from "astro";
 import { api } from "../../convex/_generated/api";
-import { convexAppUrl, convexSiteUrl } from "./runtime";
+import { convexAppUrl } from "./runtime";
+import type { ServerContext } from "./server-context";
 
 export interface AuthUser {
     id: string;
     tokenIdentifier: string;
-    email: string;
-    name: string;
+    email: string | null;
+    name: string | null;
+    imageUrl?: string | null;
 }
 
 export interface AuthSession {
@@ -17,19 +17,18 @@ export interface AuthSession {
 }
 
 /**
- * Exchanges the Better Auth session cookie for a Convex JWT, then validates
- * that JWT with a Convex query. The browser never receives the bridge secret.
+ * Validates the Convex Auth JWT sent by the browser. Convex Auth stores this
+ * token in the client auth provider, so the Next API bridge receives it as a
+ * bearer token rather than relying on a second application session cookie.
  */
-export async function getAuthSession(context: APIContext): Promise<AuthSession | null> {
+export async function getAuthSession(context: ServerContext): Promise<AuthSession | null> {
     const appUrl = convexAppUrl(context.locals);
-    const siteUrl = convexSiteUrl(context.locals);
-    if (!appUrl || !siteUrl) return null;
+    if (!appUrl) return null;
+
+    const token = context.locals.authToken ?? getBearerToken(context.request);
+    if (!token) return null;
 
     try {
-        const headers = new Headers(context.request.headers);
-        const { token } = await getToken(siteUrl, headers);
-        if (!token) return null;
-
         const client = new ConvexHttpClient(appUrl, { logger: false });
         client.setAuth(token);
 
@@ -39,4 +38,10 @@ export async function getAuthSession(context: APIContext): Promise<AuthSession |
         console.error("[auth] Convex session validation failed:", error);
         return null;
     }
+}
+
+export function getBearerToken(request: Request): string | null {
+    const authorization = request.headers.get("authorization") ?? "";
+    const match = authorization.match(/^Bearer\s+(.+)$/i);
+    return match?.[1]?.trim() || null;
 }

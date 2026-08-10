@@ -203,8 +203,31 @@ export const listProjects = query({
     }
 
     // Keep the legacy ordering so the first project remains the
-    // default selected project throughout the Astro UI.
+    // default selected project throughout the Next UI.
     return projects.sort((a, b) => a.legacyId - b.legacyId).map(legacyProject);
+  },
+});
+
+export const createProject = mutation({
+  args: { ...bridgeArgs, name: v.string() },
+  handler: async (ctx, args) => {
+    check(args);
+    // Only a browser session can create a project: an API key is always scoped
+    // to projects that already exist, and the creator has to become a member.
+    const userId = await sessionUserId(ctx, args.actor);
+    const name = args.name.trim();
+    if (!name) fail("validation_error", "Project name cannot be empty.");
+
+    const legacyId = await nextLegacyId(ctx, "projects");
+    const projectId = await ctx.db.insert("projects", { legacyId, name, active: true });
+    await ctx.db.insert("projectMembers", {
+      projectId,
+      userId,
+      role: "admin",
+      createdAt: new Date().toISOString(),
+    });
+
+    return { id: legacyId, nombre: name, activo: true };
   },
 });
 

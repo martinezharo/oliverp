@@ -2,6 +2,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../convex/_generated/api";
 import { ApiError } from "./api/errors";
 import { getEnv } from "./api/env";
+import type { ServerLocals } from "./server-context";
 
 export type BackendActor =
     | { kind: "session"; userId: string }
@@ -14,7 +15,7 @@ export interface SaleItemInput {
     vatRate: number;
 }
 
-export interface PurchaseItemInput extends SaleItemInput {}
+export type PurchaseItemInput = SaleItemInput;
 
 export interface BackendConfig {
     convexUrl: string;
@@ -26,7 +27,7 @@ type ConvexReference = unknown;
 /**
  * Server-side gateway to Convex.
  *
- * The Astro app is deliberately the only caller of this class. The bridge
+ * The Next app is deliberately the only caller of this class. The bridge
  * secret never reaches the browser; the actor is attached to every operation
  * so Convex can apply the same project boundary for UI sessions and API keys.
  */
@@ -60,6 +61,10 @@ export class BackendClient {
 
     listProjects(): Promise<Array<{ id: number; nombre: string; activo: boolean }>> {
         return this.query(api.domain.listProjects, this.args());
+    }
+
+    createProject(name: string): Promise<{ id: number; nombre: string; activo: boolean }> {
+        return this.mutation(api.domain.createProject, this.args({ name }));
     }
 
     listProducts(values: {
@@ -544,15 +549,17 @@ export class BackendClient {
     }
 }
 
-export function convexConfig(locals?: App.Locals): BackendConfig {
-    // `convex dev` may keep a local URL in CONVEX_URL. The Astro app uses the
-    // migrated production dataset unless an explicit app URL is provided.
+export function convexConfig(locals?: ServerLocals): BackendConfig {
+    // Keep the URL public and the bridge credential server-only. The legacy
+    // aliases remain as a migration fallback, but new deployments only need
+    // NEXT_PUBLIC_CONVEX_URL plus CONVEX_BRIDGE_SECRET.
     const convexUrl = getEnv(
         locals,
         "CONVEX_APP_URL",
         "CONVEX_PRODUCTION_URL",
         "CONVEX_URL",
         "PUBLIC_CONVEX_URL",
+        "NEXT_PUBLIC_CONVEX_URL",
     );
     const bridgeSecret = getEnv(locals, "CONVEX_BRIDGE_SECRET");
 
@@ -561,7 +568,7 @@ export function convexConfig(locals?: App.Locals): BackendConfig {
             "not_configured",
             "Convex no esta configurado en este despliegue.",
             {
-                hint: "Define CONVEX_URL y CONVEX_BRIDGE_SECRET como variables del servidor.",
+                hint: "Define NEXT_PUBLIC_CONVEX_URL y CONVEX_BRIDGE_SECRET como variables del servidor.",
             },
         );
     }
@@ -570,7 +577,7 @@ export function convexConfig(locals?: App.Locals): BackendConfig {
 }
 
 export function createBackend(
-    locals: App.Locals | undefined,
+    locals: ServerLocals | undefined,
     actor: BackendActor,
     authToken?: string,
 ): BackendClient {

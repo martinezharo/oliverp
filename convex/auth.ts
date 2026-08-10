@@ -1,47 +1,67 @@
-import { createClient, type GenericCtx } from "@convex-dev/better-auth";
-import { convex } from "@convex-dev/better-auth/plugins";
-import { components } from "./_generated/api";
-import type { DataModel } from "./_generated/dataModel";
-import { env, query } from "./_generated/server";
-import { betterAuth } from "better-auth/minimal";
-import authConfig from "./auth.config";
+import GitHub from "@auth/core/providers/github";
+import { convexAuth } from "@convex-dev/auth/server";
+import type { Id } from "./_generated/dataModel";
+import { query } from "./_generated/server";
 
-export const authComponent = createClient<DataModel>(components.betterAuth);
+const localDevelopmentOrigins = new Set([
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "http://100.122.18.49:3000",
+]);
 
-export const createAuth = (ctx: GenericCtx<DataModel>) =>
-  betterAuth({
-    database: authComponent.adapter(ctx),
-    baseURL: env.SITE_URL ?? "http://localhost:4321",
-    basePath: "/api/auth",
-    trustedOrigins: async (request) => {
-      const origins = new Set<string>([env.SITE_URL ?? "http://localhost:4321"]);
-      const forwardedHost = request?.headers.get("x-forwarded-host");
-      const forwardedProto = request?.headers.get("x-forwarded-proto") ?? "https";
-      if (forwardedHost) origins.add(`${forwardedProto}://${forwardedHost}`);
-      const origin = request?.headers.get("origin");
-      if (origin) origins.add(origin);
-      return [...origins];
+function canonicalSiteUrl() {
+  const siteUrl = process.env.SITE_URL;
+  if (!siteUrl) throw new Error("Missing environment variable SITE_URL");
+  return siteUrl.replace(/\/$/, "");
+}
+
+/**
+ * GitHub is deliberately the only provider. Convex Auth keeps the OAuth
+ * callback on the Convex deployment, so one GitHub OAuth App can serve the
+ * local Next dev server and the production Worker without an OAuth proxy or
+ * application-specific secrets in the frontend. SITE_URL is the canonical
+ * production origin; local development is explicitly allowlisted below.
+ */
+export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
+  providers: [GitHub],
+  callbacks: {
+    async redirect({ redirectTo }) {
+      const siteUrl = canonicalSiteUrl();
+
+      if (redirectTo.startsWith("?") || redirectTo.startsWith("/")) {
+        return `${siteUrl}${redirectTo}`;
+      }
+
+      try {
+        const destination = new URL(redirectTo);
+        if (destination.origin === siteUrl || localDevelopmentOrigins.has(destination.origin)) {
+          return redirectTo;
+        }
+      } catch {
+        // Fall through to the canonical site instead of accepting an invalid URL.
+      }
+
+      return `${siteUrl}/`;
     },
-    emailAndPassword: {
-      enabled: true,
-    },
-    plugins: [convex({ authConfig })],
-  });
+  },
+});
 
 export const currentUser = query({
   args: {},
   handler: async (ctx) => {
-    const user = await authComponent.safeGetAuthUser(ctx);
-    if (!user) return null;
-
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
 
+    const userId = identity.subject.split("|")[0] as Id<"users">;
+    const user = await ctx.db.get(userId);
+    if (!user) return null;
+
     return {
-      id: identity.subject,
+      id: userId,
       tokenIdentifier: identity.tokenIdentifier,
-      email: user.email,
-      name: user.name,
+      email: user.email ?? null,
+      name: user.name ?? null,
+      imageUrl: user.image ?? null,
     };
   },
 });

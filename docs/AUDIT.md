@@ -1,25 +1,24 @@
 # Engineering Audit
 
-Last updated: 2026-08-08
+Last updated: 2026-08-09
 
 This file records findings that should not be changed without an explicit product,
 data-model, deployment, or accounting decision. Straightforward defects found in
 the same audit are fixed in code and covered by tests rather than duplicated here.
 
-## 1. Framework security upgrade requires a major-version migration
+## 1. Framework migration and deployment upgrade — resolved
 
-**Priority:** High
+**Priority:** Resolved
 
-`pnpm audit` still reports 14 advisories after safe in-range upgrades reduced the
-count from 71. The remaining set includes three high-severity advisories. The
-Astro fixes require Astro 6 or 7, while the Cloudflare and Node adapter fixes
-require corresponding major adapter upgrades. `sharp` also needs a 0.35 upgrade.
-Forcing these versions through package-manager overrides would bypass peer-version
-contracts and is not a safe maintenance patch.
+The application has been migrated from Astro to Next.js 16 with the App Router,
+React 19, Convex Auth, and OpenNext on a single Cloudflare Worker. The old Pages,
+Astro, Better Auth, and OAuth-proxy runtime layers were removed rather than kept
+as parallel paths.
 
-**Decision required:** schedule an Astro 7 migration (preferred over an interim
-Astro 6 migration), confirm the production Cloudflare adapter configuration, and
-run browser-level regression tests before deployment.
+The migration was verified with TypeScript, ESLint, unit tests, Convex tests,
+Playwright E2E tests, Next production builds, an OpenNext build, and a real local
+Worker preview. The remaining findings below are backend and accounting design
+decisions, independent of the framework migration.
 
 ## 2. Convex list and reporting queries are not scalable
 
@@ -71,6 +70,6 @@ that demonstrate how later purchases must affect earlier profit reports.
 
 **Priority:** Medium
 
-Astro forwards the Better Auth session as a Convex JWT. Convex verifies that JWT
-with `ctx.auth.getUserIdentity()` before resolving project memberships; the
-bridge secret remains only as a server-to-server migration/API gateway guard.
+Convex Auth issues the browser session and Convex verifies it with
+`ctx.auth.getUserIdentity()` before resolving project memberships. The bridge
+secret remains only as a server-to-server Worker/API gateway guard.

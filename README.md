@@ -1,179 +1,142 @@
 # OlivERP 🚀
 
-**OlivERP** is a modern, lightweight, and high-performance ERP (Enterprise Resource Planning) system designed for personal projects, freelancers, and small businesses. Originally built for personal use by **Oli**, this project is now open-source to help others manage their projects efficiently and to welcome community contributions.
+OlivERP is a small ERP for personal projects, freelancers, and small
+businesses. It supports multiple projects, inventory, sales, purchases,
+financial dashboards, and a machine-facing API backed by Convex.
 
-![OlivERP Dashboard Mockup](public/dashboard_preview.png)
+Production URL: configure after the first Worker deployment · [API documentation](./docs/API.md)
 
-[**🌐 Live Demo**](https://oliverp.pages.dev)
+## Stack
 
+- [Next.js](https://nextjs.org/) with the App Router
+- [Convex](https://convex.dev/) for data and [Convex Auth](https://auth.convex.dev/)
+- GitHub OAuth as the only sign-in provider
+- [OpenNext](https://opennext.js.org/) on one Cloudflare Worker
+- Tailwind CSS 4
 
-## ✨ Features
+The old Astro, Pages, Better Auth, and OAuth-proxy layers are no longer part of
+the application.
 
-- � **Multi-Project Management**: Manage multiple businesses or side-projects from a single dashboard.
-- 📦 **Inventory & Stock Tracking**: Real-time stock levels with automatic movement triggers for sales and purchases.
-- 💰 **Financial Analytics**: 
-  - Track Revenue, Expenses, and Net Profit.
-  - Automatic Tax (IVA/VAT) balance calculation.
-  - Daily finance visualizations via integrated charts.
-- 🛒 **Sales & Purchase Management**: Streamlined workflows for recording transactions and managing product units.
-- 📊 **Stock Intelligence**: Predictive alerts for "Days of inventory remaining" and restock valuations.
-- ⚡ **Built for Speed**: Powered by Astro for near-instant load times and a sleek developer experience.
-- 🤖 **Automation-ready API**: A documented REST API with API-key auth, strict validation and safe retries, so AI agents and tools like n8n or Make can drive the ERP. See [docs/API.md](./docs/API.md).
+## Demo mode
 
-## 🛠 Tech Stack
+If the Worker is missing its Convex URL or bridge secret, it deliberately falls
+back to a read-only demo experience. The demo has mock projects, stock, and
+financial data and does not require an account.
 
-- **Framework**: [Astro 5.x](https://astro.build/) (Static Site Generation & Server-Side Rendering)
-- **Styling**: [Tailwind CSS 4.x](https://tailwindcss.com/) (Modern utility-first CSS)
-- **Data backend**: [Convex](https://convex.dev/) (typed queries, mutations and transactional writes)
-- **Authentication**: [Better Auth](https://www.better-auth.com/) running inside the Convex component
-- **Hosting**: [Cloudflare](https://www.cloudflare.com/) (Edge-ready deployment)
-- **Visuals**: [Chart.js](https://www.chartjs.org/) for data visualization
-- **State Management**: [Nano Stores](https://github.com/nanostores/nanostores)
+## Local development
 
-## 🕹️ Demo Mode
+Prerequisites: Node.js LTS, pnpm, and a Convex project.
 
-OlivERP features an automatic **Demo Mode**. This allows anyone to explore the full interface and functionality without needing to set up a database or account.
+```bash
+pnpm install
+cp .env.example .env.local
+pnpm dev
+```
 
-- **How it works**: If the Convex URL or bridge secret is missing, the application automatically switches to Demo Mode.
-- **Mock Data**: The system provides realistic sample data for projects, products, stock levels, and historical financial transactions.
-- **Zero Configuration**: Perfect for testing the UI, exploring features, or contributing to the frontend without any backend overhead.
+Set `NEXT_PUBLIC_CONVEX_URL` to the `https://...convex.cloud` URL of the Convex
+deployment used by the browser. Set `CONVEX_BRIDGE_SECRET` to the same random
+value in the Worker and in Convex. The bridge secret is server-only.
 
+Convex functions run on the deployment, not from the working tree: a new query
+or mutation has to be pushed with `pnpm exec convex deploy` (or `pnpm deploy`)
+before the UI can call it. Until then the call fails, and because production
+masks internal errors the browser only sees `[Request ID: …] Server Error`.
 
-## 🚀 Getting Started
+### One GitHub OAuth App for local development and production
 
-### Prerequisites
+Convex Auth owns the OAuth flow. This project deliberately uses one canonical
+Convex deployment for both local Next development and the production Worker,
+following the same pattern as KlipCode. That means the existing GitHub OAuth
+App needs only one callback URL:
 
-- Node.js (Latest LTS recommended)
-- [pnpm](https://pnpm.io/)
-- A Convex project
+`https://reminiscent-cricket-450.convex.site/api/auth/callback/github`
 
-### Installation
+Add the credentials to that single Convex deployment, never to a
+`NEXT_PUBLIC_` variable:
 
-1. **Clone the repository**:
    ```bash
-   git clone https://github.com/martinezharo/erp.git
-   cd erp
-   ```
-
-2. **Install dependencies**:
-   ```bash
-   pnpm install
-   ```
-
-3. **Configure Environment Variables**:
-   Add the Convex values to `.env.local`:
-   ```env
-   CONVEX_URL=https://your-deployment.convex.cloud
-   CONVEX_PRODUCTION_URL=https://your-production-deployment.convex.cloud
-   CONVEX_SITE_URL=https://your-deployment.convex.site
-   SITE_URL=http://localhost:4321
-   CONVEX_BRIDGE_SECRET=long-random-server-secret
-   ```
-
-   `CONVEX_BRIDGE_SECRET` must also exist in the Convex deployment and is never
-   sent to the browser. The CLI can create/configure the project with:
-   ```bash
-   pnpm exec convex dev --configure new
+   pnpm exec auth --prod --web-server-url https://erp-1f3.pages.dev
+   pnpm exec convex env set AUTH_GITHUB_ID
+   pnpm exec convex env set AUTH_GITHUB_SECRET
+   pnpm exec convex env set SITE_URL https://erp-1f3.pages.dev
    pnpm exec convex env set CONVEX_BRIDGE_SECRET
-   pnpm exec convex env set SITE_URL
    ```
 
-4. **Migrate existing data (once, if applicable)**:
-   The importer is a temporary, one-way legacy utility. Supply a server-only
-   `SUPABASE_SECRET_KEY` (or legacy `SUPABASE_SERVICE_ROLE_KEY`) only for this
-   command; the application itself does not use Supabase:
-   ```bash
-   SUPABASE_SECRET_KEY=... pnpm migrate:supabase
-   ```
-   If `.env.local` points to a local Convex deployment, the importer uses
-   `CONVEX_PRODUCTION_URL` instead. You can override it explicitly with
-   `pnpm migrate:supabase -- --convex-url https://...`.
-   The import is resumable and preserves the original numeric ids. It starts
-   the Convex idempotency ledger empty so stale responses cannot be replayed.
+The one-time `pnpm exec auth` setup generates the internal `JWT_PRIVATE_KEY`
+and `JWKS` values required to sign Convex Auth sessions. Keep those values in
+Convex only; they are not application or GitHub keys.
 
-5. **Create the first Convex Auth account**:
-   Open `/signup` and create a new password account. Password hashes from the
-   old Supabase Auth project are not portable; existing users must register
-   again and then rebind their imported project memberships.
+The callback is on Convex, not on the Next app. Both environments use
+`https://reminiscent-cricket-450.convex.cloud`, so the same OAuth App works in
+local development and production. `SITE_URL` is only Convex Auth's public
+post-login origin; it is not a credential. There are no `BETTER_AUTH_SECRET`,
+`OAUTH_PROXY_*`, or application-level GitHub variables. When the new Worker
+gets its final public URL, update only `SITE_URL`; the GitHub callback and app
+remain unchanged.
 
-   After signing in, rebind the imported memberships by matching the new
-   Convex Auth email:
-   ```bash
-   pnpm exec convex run migration:rebindMemberByEmail \
-     '{"bridgeSecret":"...","legacyUserId":"old-auth-id","email":"you@example.com"}'
-   ```
-   Alternatively, `GET /api/auth/identity` returns the `tokenIdentifier` for
-   the explicit `migration:rebindMemberUser` workflow.
+A separate Convex deployment would need its own GitHub OAuth App, because the
+callback lives on the deployment host and a GitHub OAuth App accepts a single
+callback URL. That is the reason this repository keeps one deployment.
 
-6. **Configure the Cloudflare production runtime**:
-   In the Pages project, open **Settings → Variables and Secrets** and set the
-   production environment values before the next deployment:
+The first deployment can be configured with:
 
-   | Name | Type | Purpose |
-   | --- | --- | --- |
-   | `CONVEX_URL` | plaintext | `https://reminiscent-cricket-450.convex.cloud` |
-   | `CONVEX_SITE_URL` | plaintext | Matching `https://...convex.site` HTTP endpoint |
-   | `SITE_URL` | plaintext | Public Astro URL |
-   | `CONVEX_BRIDGE_SECRET` | encrypted secret | Same value configured in Convex |
+```bash
+pnpm exec convex dev --configure new
+```
 
-   Set the URL values for the build as well as runtime, and encrypt the bridge
-   secret. Save the variables and redeploy the Pages project. Astro
-   reads runtime bindings through `Astro.locals.runtime.env`; see Cloudflare's
-   [Pages bindings guide](https://developers.cloudflare.com/pages/functions/bindings/)
-   and [Astro deployment guide](https://developers.cloudflare.com/pages/framework-guides/deploy-an-astro-site/).
+For local development, keep `NEXT_PUBLIC_CONVEX_URL` pointed at the canonical
+deployment above. For production, the same value is defined in
+`wrangler.jsonc`.
 
-7. **Legacy source schema (only if the migration has not run)**:
-   Run the files in `db-structure/` in your Supabase SQL Editor, **in order**:
+## Cloudflare Worker deployment
 
-   | File | What it creates |
-   | --- | --- |
-   | `01-schema.sql` | Tables, enums, stock triggers, reporting views |
-   | `02-rls.sql` | Project membership and the row level security policies |
-   | `03-agent-api.sql` | API keys, idempotency and the transactional RPCs — see [docs/API.md](./docs/API.md) |
+The repository is configured for one OpenNext Worker, not Pages:
 
-   Then give yourself access to a project. Projects are deliberately not
-   creatable from the browser: a project and its first membership row have to
-   appear together, and the UI cannot do two writes atomically. Create both with
-   the service role:
+```bash
+pnpm build
+pnpm preview
+pnpm deploy
+```
 
-   ```sql
-   WITH p AS (
-     INSERT INTO proyectos (nombre) VALUES ('My project') RETURNING id
-   )
-   INSERT INTO proyecto_usuarios (proyecto_id, user_id, rol)
-   SELECT p.id, '<your auth.users uuid>', 'admin' FROM p;
-   ```
+Configure these Worker bindings:
 
-   **Upgrading an existing database**: `02-rls.sql` turns row level security on,
-   and a user with no membership row sees nothing at all. Backfill
-   `proyecto_usuarios` for every existing project *before* running it, or the
-   dashboards go blank.
+| Name | Type | Purpose |
+| --- | --- | --- |
+| `NEXT_PUBLIC_CONVEX_URL` | variable | Public Convex cloud URL used by the browser; set in `wrangler.jsonc` |
+| `CONVEX_BRIDGE_SECRET` | secret | Server-only bridge credential, matching Convex |
 
-7. **Start Development Server**:
-   ```bash
-   pnpm dev
-   ```
+`AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET` belong only to Convex. Convex
+automatically provides `CONVEX_SITE_URL` to its functions for the auth issuer.
 
-##  Genie Commands
+The generated Worker entrypoint is `.open-next/worker.js`; `wrangler.jsonc`
+defines the Worker, assets, self-reference service, and `nodejs_compat`.
+
+## Existing data
+
+The Convex backend keeps the legacy numeric ids used by the UI and API. If an
+old Supabase database still needs to be imported, use the one-off migration:
+
+```bash
+SUPABASE_SECRET_KEY=... pnpm migrate:supabase
+```
+
+The Supabase key is only needed for that command and is not an application
+runtime variable.
+
+## Commands
 
 | Command | Action |
-| :--- | :--- |
-| `pnpm dev` | Starts local dev server at `localhost:4321` |
-| `pnpm build` | Build the production-ready site to `./dist/` |
-| `pnpm preview` | Preview your build locally before deploying |
-| `pnpm astro ...` | Run Astro CLI commands |
-| `pnpm api:key --nombre "..."` | Create a Convex-backed API key for the automation API |
+| --- | --- |
+| `pnpm dev` | Start Next development server |
+| `pnpm check` | Type-check Next, Convex, and tests |
+| `pnpm lint` | Run ESLint |
+| `pnpm test` | Run unit and integration-style tests |
+| `pnpm test:convex` | Run Convex tests |
+| `pnpm build` | Build the Next application |
+| `pnpm preview` | Build and preview the OpenNext Worker |
+| `pnpm deploy` | Deploy Convex functions, then the Worker |
+| `pnpm api:key --nombre "..."` | Create an API key |
 
-## 🤝 Contributing
+## License
 
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-Please see [CONTRIBUTING.md](./CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
-
-## � License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
-
-Built with ❤️ by [Oli](https://github.com/martinezharo)
+Distributed under the MIT License. See [LICENSE](./LICENSE).

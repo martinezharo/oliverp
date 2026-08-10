@@ -1,12 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ServerContext } from "../../src/lib/server-context";
 
-const getToken = vi.fn();
 const query = vi.fn();
 const setAuth = vi.fn();
 
-vi.mock("@convex-dev/better-auth/utils", () => ({
-    getToken: (...args: unknown[]) => getToken(...args),
-}));
 vi.mock("convex/browser", () => ({
     ConvexHttpClient: class {
         setAuth = setAuth;
@@ -15,22 +12,29 @@ vi.mock("convex/browser", () => ({
 }));
 vi.mock("../../src/lib/runtime", () => ({
     convexAppUrl: () => "https://deployment.convex.cloud",
-    convexSiteUrl: () => "https://deployment.convex.site",
 }));
 
 const { getAuthSession } = await import("../../src/lib/auth");
 
-function context() {
+function context(): ServerContext {
+    const request = new Request("https://erp.test/", {
+        headers: { authorization: "Bearer jwt" },
+    });
     return {
-        request: new Request("https://erp.test/", {
-            headers: { cookie: "better-auth.session_token=session" },
-        }),
+        request,
+        url: new URL(request.url),
+        params: {},
         locals: {},
-    } as never;
+        cookies: {
+            get: () => undefined,
+            set: () => undefined,
+            delete: () => undefined,
+        },
+        redirect: (path, status = 302) => Response.redirect(new URL(path, request.url), status),
+    };
 }
 
 beforeEach(() => {
-    getToken.mockReset();
     query.mockReset();
     setAuth.mockReset();
 });
@@ -43,7 +47,6 @@ describe("getAuthSession", () => {
             email: "user@example.test",
             name: "User",
         };
-        getToken.mockResolvedValue({ token: "jwt" });
         query.mockResolvedValue(user);
 
         await expect(getAuthSession(context())).resolves.toEqual({ user, token: "jwt" });
@@ -51,15 +54,14 @@ describe("getAuthSession", () => {
     });
 
     it("treats a rejected JWT as an invalid session instead of throwing a 500", async () => {
-        getToken.mockResolvedValue({ token: "jwt" });
         query.mockRejectedValue(new Error("NoAuthProvider"));
 
         await expect(getAuthSession(context())).resolves.toBeNull();
     });
 
-    it("treats an unavailable token endpoint as an invalid session", async () => {
-        getToken.mockRejectedValue(new Error("Auth endpoint unavailable"));
+    it("treats a missing bearer token as an invalid session", async () => {
+        const request = new Request("https://erp.test/");
 
-        await expect(getAuthSession(context())).resolves.toBeNull();
+        await expect(getAuthSession({ ...context(), request })).resolves.toBeNull();
     });
 });
