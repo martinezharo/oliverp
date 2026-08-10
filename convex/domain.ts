@@ -789,15 +789,65 @@ async function insertPurchaseLines(
       unitPriceCents: cents(item.unitPrice),
       vatRate: item.vatRate,
     });
+    if (purchase.status === "recibida") {
+      await ctx.db.insert("stockMovements", {
+        legacyId: movementLegacyId++,
+        productId: product._id,
+        productLegacyId: product.legacyId,
+        projectId: purchase.projectId,
+        projectLegacyId: purchase.projectLegacyId,
+        units: item.units,
+        type: "compra",
+        purchaseLineId: lineId,
+        date: purchase.date,
+      });
+    }
+  }
+}
+
+/**
+ * Reconciles movements when a purchase changes status without replacing its
+ * lines. Pending and cancelled purchases are commitments, not inventory; a
+ * transition to received creates the linked movement and a transition away
+ * from received removes it.
+ */
+async function syncPurchaseStockMovements(
+  ctx: MutationCtx,
+  purchase: Doc<"purchases">,
+): Promise<void> {
+  const lines = await ctx.db
+    .query("purchaseLines")
+    .withIndex("by_purchase", (q) => q.eq("purchaseId", purchase._id))
+    .collect();
+  let movementLegacyId = await nextLegacyId(ctx, "stockMovements");
+
+  for (const line of lines) {
+    const movements = await ctx.db
+      .query("stockMovements")
+      .withIndex("by_purchase_line", (q) => q.eq("purchaseLineId", line._id))
+      .collect();
+
+    if (purchase.status !== "recibida") {
+      for (const movement of movements) await ctx.db.delete(movement._id);
+      continue;
+    }
+
+    const movement = movements[0];
+    for (const duplicate of movements.slice(1)) await ctx.db.delete(duplicate._id);
+    if (movement) {
+      await ctx.db.patch(movement._id, { units: line.units, date: purchase.date });
+      continue;
+    }
+
     await ctx.db.insert("stockMovements", {
       legacyId: movementLegacyId++,
-      productId: product._id,
-      productLegacyId: product.legacyId,
-      projectId: purchase.projectId,
-      projectLegacyId: purchase.projectLegacyId,
-      units: item.units,
+      productId: line.productId,
+      productLegacyId: line.productLegacyId,
+      projectId: line.projectId,
+      projectLegacyId: line.projectLegacyId,
+      units: line.units,
       type: "compra",
-      purchaseLineId: lineId,
+      purchaseLineId: line._id,
       date: purchase.date,
     });
   }
@@ -862,6 +912,9 @@ export const updatePurchase = mutation({
       }
       const updated = (await ctx.db.get(existing._id))!;
       await insertPurchaseLines(ctx, updated, args.items);
+    } else {
+      const updated = (await ctx.db.get(existing._id))!;
+      await syncPurchaseStockMovements(ctx, updated);
     }
     return args.legacyId;
   },

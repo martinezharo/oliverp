@@ -8,7 +8,7 @@ import { useEffect, useMemo, useState } from "react";
 import AppLayout from "@/components/legacy/AppLayout";
 import OperationModals from "@/components/legacy/OperationModals";
 import ProjectModal from "@/components/legacy/ProjectModal";
-import { ErpContext, type ModalKind, type Project } from "@/hooks/useErpContext";
+import { ErpContext, type ModalKind, type ModalRequest, type Project } from "@/hooks/useErpContext";
 import { useCloudSession } from "@/hooks/useCloudSession";
 import { ui } from "@/i18n/ui";
 import { mockProjects } from "@/lib/mock-data";
@@ -35,7 +35,7 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
   const router = useRouter();
   const pathname = usePathname() ?? "/";
   const searchParams = useSearchParams();
-  const [modal, setModal] = useState<ModalKind>(null);
+  const [modal, setModal] = useState<ModalRequest | null>(null);
   const [projectModal, setProjectModal] = useState(false);
 
   const authenticated = Boolean(session.user);
@@ -68,7 +68,11 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
     router.replace(`${pathname}?projectId=${project.id}`);
   }
 
-  const context = { projectId, projects, demo, ready, openModal: setModal };
+  function openModal(kind: Exclude<ModalKind, null>, id?: number) {
+    setModal({ kind, ...(id === undefined ? {} : { id }) });
+  }
+
+  const context = { projectId, projects, demo, ready, openModal };
 
   return (
     <ErpContext.Provider value={context}>
@@ -86,8 +90,9 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
       </AppLayout>
 
       <OperationModals
-        key={`${modal ?? "closed"}-${projectId ?? "none"}`}
-        kind={modal}
+        key={`${modal?.kind ?? "closed"}-${modal?.id ?? "new"}-${projectId ?? "none"}`}
+        kind={modal?.kind ?? null}
+        transactionId={modal?.id ?? null}
         projectId={projectId}
         demo={demo}
         onClose={() => setModal(null)}

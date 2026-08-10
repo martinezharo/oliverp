@@ -5,7 +5,8 @@ import { isDemoMode } from "../../../lib/runtime";
 
 export const GET: APIRoute = async (context) => {
     const projectId = Number(context.url.searchParams.get("projectId"));
-    const days = Math.max(1, Number.parseInt(context.url.searchParams.get("days") || "30", 10));
+    const requestedDays = Number.parseInt(context.url.searchParams.get("days") || "30", 10);
+    const days = Number.isFinite(requestedDays) ? Math.min(366, Math.max(1, requestedDays)) : 30;
 
     if (!Number.isInteger(projectId) || projectId <= 0) {
         return jsonResponse({ error: "Project ID is required" }, 400);

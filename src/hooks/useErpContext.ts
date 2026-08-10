@@ -4,6 +4,7 @@ import { createContext, useContext } from "react";
 
 export type Project = { id: number; nombre: string; activo?: boolean };
 export type ModalKind = "sale" | "purchase" | "other" | "product" | null;
+export type ModalRequest = { kind: Exclude<ModalKind, null>; id?: number };
 
 export interface ErpContextValue {
   /** The project every view reads, or null while none is selected. */
@@ -12,7 +13,7 @@ export interface ErpContextValue {
   demo: boolean;
   /** False only while the very first project list is in flight. */
   ready: boolean;
-  openModal: (kind: Exclude<ModalKind, null>) => void;
+  openModal: (kind: Exclude<ModalKind, null>, id?: number) => void;
 }
 
 const defaultContext: ErpContextValue = {

@@ -1,6 +1,6 @@
 # Engineering Audit
 
-Last updated: 2026-08-09
+Last updated: 2026-08-10
 
 This file records findings that should not be changed without an explicit product,
 data-model, deployment, or accounting decision. Straightforward defects found in
@@ -19,6 +19,14 @@ The migration was verified with TypeScript, ESLint, unit tests, Convex tests,
 Playwright E2E tests, Next production builds, an OpenNext build, and a real local
 Worker preview. The remaining findings below are backend and accounting design
 decisions, independent of the framework migration.
+
+The follow-up regression sweep found and fixed the React 19 stock-adjustment
+failure caused by reading `event.currentTarget` after an `await`, restored the
+sale/purchase/other edit flow, made purchase stock movements depend on the
+`recibida` status, and hardened the legacy transaction delete/update paths. The
+browser now covers the operation dialogs and the stock history flow in E2E tests;
+demo writes remain intentionally read-only, so the stock save test isolates only
+the demo response while exercising the real form and refresh behavior.
 
 ## 2. Convex list and reporting queries are not scalable
 

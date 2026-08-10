@@ -16,6 +16,10 @@ const t = (key: string, values?: Record<string, string | number>) => {
 
 type Movement = { unidades: number; tipo: string; fecha: string; precio?: number | null; canal?: string | null };
 
+function movementLabel(type: string): string {
+  return ui.en[`movementType.${type}`] ?? type.replace("_", " ");
+}
+
 export default function ProductHistoryModal({ product, onClose, onChanged }: { product: StockRow | null; onClose: () => void; onChanged: () => void }) {
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   const [movements, setMovements] = useState<Movement[] | null>(null);
@@ -45,11 +49,16 @@ export default function ProductHistoryModal({ product, onClose, onChanged }: { p
   async function submitAdjustment(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!product) return;
-    const form = new FormData(event.currentTarget);
+    // React's event currentTarget is only guaranteed while the synchronous
+    // handler is running. Capture the form before awaiting the API call;
+    // otherwise React 19 exposes a null currentTarget after the await and the
+    // successful adjustment is incorrectly reported as a save failure.
+    const formElement = event.currentTarget;
+    const form = new FormData(formElement);
     setSaving(true);
     try {
       await apiJson("/api/stock/adjust", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productId: product.producto_id, units: Number(form.get("units")), date: String(form.get("date")) }) });
-      event.currentTarget.reset();
+      formElement.reset();
       await loadMovements(product.producto_id);
       onChanged();
     } catch (cause) {
@@ -76,7 +85,7 @@ export default function ProductHistoryModal({ product, onClose, onChanged }: { p
               <div className="md:col-span-2"><button type="submit" disabled={saving} className="flex w-full items-center justify-center gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 px-4 py-2 text-sm font-medium text-blue-400 transition-all hover:bg-blue-500/20 disabled:opacity-50">{t("modal.history.registerAdjust")}</button></div>
             </form>
           </div>
-          <div className="overflow-x-auto rounded-xl border border-white/5"><table className="w-full text-left text-sm text-slate-400"><thead className="bg-white/5 text-xs font-semibold uppercase text-slate-200"><tr><th className="px-4 py-3">{t("modal.history.colDate")}</th><th className="px-4 py-3">{t("modal.history.colType")}</th><th className="px-4 py-3 text-right">{t("modal.history.colUnits")}</th><th className="px-4 py-3 text-right">{t("modal.history.colPrice")}</th><th className="px-4 py-3">{t("modal.history.colChannel")}</th></tr></thead><tbody className="divide-y divide-white/5">{movements === null ? <tr><td colSpan={5} className="px-4 py-8 text-center italic">{t("modal.history.loading")}</td></tr> : movements.length === 0 ? <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">{t("modal.history.noMovementsDot")}</td></tr> : movements.map((movement, index) => <tr key={`${movement.fecha}-${index}`} className="transition-colors hover:bg-white/5"><td className="px-4 py-3 text-slate-300">{new Date(movement.fecha).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" })}</td><td className={`px-4 py-3 font-medium capitalize ${movement.tipo === "venta" ? "text-blue-400" : movement.tipo === "compra" ? "text-emerald-400" : "text-slate-200"}`}>{movement.tipo.replace("_", " ")}</td><td className={`px-4 py-3 text-right font-mono ${movement.unidades > 0 ? "text-emerald-400" : "text-red-400"}`}>{movement.unidades > 0 ? "+" : ""}{movement.unidades}</td><td className="px-4 py-3 text-right font-mono text-slate-300">{movement.precio == null ? "-" : new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" }).format(movement.precio)}</td><td className="px-4 py-3 text-slate-400">{movement.canal || "-"}</td></tr>)}</tbody></table></div>
+          <div className="overflow-x-auto rounded-xl border border-white/5"><table className="w-full text-left text-sm text-slate-400"><thead className="bg-white/5 text-xs font-semibold uppercase text-slate-200"><tr><th className="px-4 py-3">{t("modal.history.colDate")}</th><th className="px-4 py-3">{t("modal.history.colType")}</th><th className="px-4 py-3 text-right">{t("modal.history.colUnits")}</th><th className="px-4 py-3 text-right">{t("modal.history.colPrice")}</th><th className="px-4 py-3">{t("modal.history.colChannel")}</th></tr></thead><tbody className="divide-y divide-white/5">{movements === null ? <tr><td colSpan={5} className="px-4 py-8 text-center italic">{t("modal.history.loading")}</td></tr> : movements.length === 0 ? <tr><td colSpan={5} className="px-4 py-8 text-center text-slate-500">{t("modal.history.noMovementsDot")}</td></tr> : movements.map((movement, index) => <tr key={`${movement.fecha}-${index}`} className="transition-colors hover:bg-white/5"><td className="px-4 py-3 text-slate-300">{new Date(movement.fecha).toLocaleDateString("en-GB", { year: "numeric", month: "short", day: "numeric" })}</td><td className={`px-4 py-3 font-medium capitalize ${movement.tipo === "venta" ? "text-blue-400" : movement.tipo === "compra" ? "text-emerald-400" : "text-slate-200"}`}>{movementLabel(movement.tipo)}</td><td className={`px-4 py-3 text-right font-mono ${movement.unidades > 0 ? "text-emerald-400" : "text-red-400"}`}>{movement.unidades > 0 ? "+" : ""}{movement.unidades}</td><td className="px-4 py-3 text-right font-mono text-slate-300">{movement.precio == null ? "-" : new Intl.NumberFormat("en-GB", { style: "currency", currency: "EUR" }).format(movement.precio)}</td><td className="px-4 py-3 text-slate-400">{movement.canal || "-"}</td></tr>)}</tbody></table></div>
         </div>
       </div>
     </dialog>

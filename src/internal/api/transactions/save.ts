@@ -1,5 +1,5 @@
 import type { APIRoute, ServerContext } from "@/lib/server-context";
-import { backendError, demoResponse, jsonResponse, sessionBackend, unauthorizedResponse } from "../../../lib/legacy-api";
+import { backendError, demoResponse, jsonResponse, parsePositiveInteger, sessionBackend, unauthorizedResponse } from "../../../lib/legacy-api";
 import { isDemoMode } from "../../../lib/runtime";
 
 export const POST: APIRoute = (context) => handleSave(context, "POST");
@@ -12,16 +12,32 @@ async function handleSave(context: ServerContext, method: string) {
 
     try {
         const body = await context.request.json() as {
-            id?: number;
-            projectId?: number;
+            id?: unknown;
+            projectId?: unknown;
             tipo?: string;
             fecha?: string;
             concepto?: string;
             descripcion?: string;
-            importe?: number | string;
-            porcentaje_iva?: number | string;
+            importe?: unknown;
+            porcentaje_iva?: unknown;
         };
-        if (!body.projectId || !body.tipo || !body.fecha || !body.concepto || !body.importe) {
+        const id = parsePositiveInteger(body.id);
+        const projectId = parsePositiveInteger(body.projectId);
+        const amount = Number(body.importe);
+        const vatRate = body.porcentaje_iva === undefined || body.porcentaje_iva === ""
+            ? 0
+            : Number(body.porcentaje_iva);
+        if (
+            projectId === null ||
+            !body.tipo ||
+            !body.fecha ||
+            !body.concepto ||
+            !Number.isFinite(amount) ||
+            amount <= 0 ||
+            !Number.isFinite(vatRate) ||
+            vatRate < 0 ||
+            (method === "PUT" && id === null)
+        ) {
             return jsonResponse({ error: "Missing required fields" }, 400);
         }
 
@@ -29,15 +45,15 @@ async function handleSave(context: ServerContext, method: string) {
             type: body.tipo,
             concept: body.concepto,
             description: body.descripcion,
-            amount: Number(body.importe),
-            vatRate: body.porcentaje_iva ? Number(body.porcentaje_iva) : 0,
+            amount,
+            vatRate,
             date: body.fecha,
         };
-        const id = method === "PUT" && body.id
-            ? await session.backend.updateTransaction(body.id, values)
-            : await session.backend.createTransaction({ projectId: body.projectId, ...values });
+        const savedId = method === "PUT"
+            ? await session.backend.updateTransaction(id!, values)
+            : await session.backend.createTransaction({ projectId, ...values });
 
-        return jsonResponse({ success: true, id });
+        return jsonResponse({ success: true, id: savedId });
     } catch (error) {
         return backendError(error);
     }
