@@ -1,5 +1,5 @@
-/* eslint-disable @next/next/no-page-custom-font */
 import type { Metadata } from "next";
+import { JetBrains_Mono, Outfit } from "next/font/google";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { ConvexClientProvider } from "@/components/ConvexClientProvider";
 import "@/styles/global.css";
@@ -10,7 +10,21 @@ export const metadata: Metadata = {
   icons: { icon: "/favicon.webp" },
 };
 
-export const dynamic = "force-dynamic";
+// Self-hosted at build time: the previous <link> to fonts.googleapis.com
+// blocked the first render on two extra connections to a third party.
+const outfit = Outfit({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-outfit",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  display: "swap",
+  variable: "--font-jetbrains-mono",
+});
 
 function runtimeConvexUrl(): string | undefined {
   try {
@@ -24,12 +38,7 @@ function runtimeConvexUrl(): string | undefined {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const convexUrl = runtimeConvexUrl();
   return (
-    <html lang="en" className="dark">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
-      </head>
+    <html lang="en" className={`dark ${outfit.variable} ${jetbrainsMono.variable}`}>
       <body className="min-h-screen overflow-x-hidden bg-[#0f1016] text-slate-300">
         <ConvexClientProvider convexUrl={convexUrl}>{children}</ConvexClientProvider>
       </body>

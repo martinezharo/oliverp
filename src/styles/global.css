@@ -26,7 +26,7 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-family: "Outfit", sans-serif;
+  font-family: var(--font-outfit), sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -34,7 +34,7 @@ body {
 code,
 pre,
 .font-mono {
-  font-family: "JetBrains Mono", monospace;
+  font-family: var(--font-jetbrains-mono), monospace;
 }
 
 @layer components {
