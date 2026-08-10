@@ -7,7 +7,7 @@ import { apiJson } from "@/lib/client-api";
 import { ui } from "@/i18n/ui";
 import { useErpContext } from "@/hooks/useErpContext";
 import { useFinanceRows, useTransactions } from "@/hooks/useErpData";
-import { filterTransactions } from "@/lib/transactions";
+import { filterTransactions, transactionDeleteUrl } from "@/lib/transactions";
 
 import EmptyProject from "./EmptyProject";
 import Pagination from "./Pagination";
@@ -149,12 +149,14 @@ function TransactionRow({ item, demo, onOpenModal }: { item: Transaction; demo?:
 function MobileTransaction({ item, demo, onOpenModal }: { item: Transaction; demo: boolean; onOpenModal: (kind: "sale" | "purchase" | "other", id?: number) => void }) { const income = item.type === "venta" || item.type === "ingreso"; return <div className="flex items-center justify-between gap-3 rounded-xl border border-white/5 bg-[#1a1b23] px-3 py-3"><div className="flex min-w-0 items-center gap-2.5"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/5">{income ? "↑" : "↓"}</div><div className="min-w-0"><div className="truncate text-sm font-medium text-white">{item.concept}</div><div className="mt-0.5 flex flex-wrap items-center gap-1.5"><span className="text-[10px] uppercase tracking-wide text-slate-500">{item.type}</span><span className="text-slate-600">·</span><span className="rounded border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] text-slate-400">{item.channel}</span></div></div></div><div className="flex shrink-0 items-center gap-2"><span className={`font-mono text-sm font-bold ${income ? "text-emerald-400" : "text-red-400"}`}>{currency(Math.abs(item.amount))}</span>{!demo && <ActionButtons item={item} onOpenModal={onOpenModal} />}</div></div>; }
 
 function ActionButtons({ item, onOpenModal }: { item: Transaction; onOpenModal: (kind: "sale" | "purchase" | "other", id?: number) => void }) {
+  const { projectId } = useErpContext();
   const edit = item.type === "venta" ? "sale" : item.type === "compra" ? "purchase" : "other";
 
   async function remove() {
     if (!window.confirm(t("txn.confirmDelete"))) return;
     try {
-      const response = await apiJson<{ success?: boolean }>("/api/transactions/delete?id=" + item.id + "&type=" + item.type, { method: "DELETE" });
+      if (!projectId) throw new Error("No project selected");
+      const response = await apiJson<{ success?: boolean }>(transactionDeleteUrl(projectId, item), { method: "DELETE" });
       if (!response.success) throw new Error("The transaction was not deleted");
     } catch {
       window.alert(t("txn.deleteError"));

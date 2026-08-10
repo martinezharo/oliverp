@@ -31,6 +31,15 @@ export interface TransactionSources {
 export const PURCHASE_CHANNEL = "Proveedor";
 export const OTHER_CHANNEL = "Manual";
 
+export function transactionDeleteUrl(projectId: number, transaction: Pick<NormalizedTransaction, "id" | "type">): string {
+  const params = new URLSearchParams({
+    id: String(transaction.id),
+    projectId: String(projectId),
+    type: transaction.type,
+  });
+  return `/api/transactions/delete?${params.toString()}`;
+}
+
 const unknownProduct = ui.en["txn.unknownProduct"];
 
 function detailsOf(row: Record<string, unknown>, key: string): Array<Record<string, unknown>> {
