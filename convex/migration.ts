@@ -1,12 +1,23 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, internalQuery } from "./_generated/server";
 import { assertBridgeSecret, fail, productByLegacyId, projectByLegacyId } from "./lib/bridge";
 import type { MutationCtx } from "./_generated/server";
 
 /**
- * One-shot, secret-protected import surface for the Supabase compatibility
- * migration. The script sends small batches so it remains below Convex's
- * argument and transaction limits. Each operation is idempotent by legacy id.
+ * One-shot import surface for the Supabase compatibility migration.
+ *
+ * These are `internal*` functions: they are not part of the deployment's
+ * public API and cannot be reached with the bridge secret alone. Run them from
+ * a trusted shell with `npx convex run migration:importProjects '{...}'`.
+ * They can rewrite any row and reassign project membership, so remote
+ * reachability was the wrong default once the deployment stopped being
+ * single-tenant.
+ *
+ * The Supabase migration is complete and its driver script has been removed
+ * along with the rest of the Postgres tooling. These functions are kept because
+ * they document the shape of the imported rows and can still be replayed by
+ * hand. Each operation is idempotent by legacy id and expects small batches, so
+ * a replay stays below Convex's argument and transaction limits.
  *
  * This is deliberately separate from the application domain mutations: source
  * rows already contain their identity and must not receive new sequence ids.
@@ -42,7 +53,7 @@ async function existingByLegacyId(
   return await ctx.db.query(table).withIndex("by_legacy_id", (q) => q.eq("legacyId", legacyId)).unique();
 }
 
-export const importProjects = mutation({
+export const importProjects = internalMutation({
   args: importArgs,
   handler: async (ctx, args) => {
     assertBridgeSecret(args.bridgeSecret);
@@ -62,7 +73,7 @@ export const importProjects = mutation({
   },
 });
 
-export const importMembers = mutation({
+export const importMembers = internalMutation({
   args: importArgs,
   handler: async (ctx, args) => {
     assertBridgeSecret(args.bridgeSecret);
@@ -127,7 +138,7 @@ async function rebindMemberships(
   return rebound;
 }
 
-export const rebindMemberUser = mutation({
+export const rebindMemberUser = internalMutation({
   args: {
     bridgeSecret: v.string(),
     legacyUserId: v.string(),
@@ -143,7 +154,7 @@ export const rebindMemberUser = mutation({
  * Rebinds a legacy user's memberships by matching the new Convex Auth email.
  * This keeps the one-time operator workflow from requiring a browser JWT.
  */
-export const rebindMemberByEmail = mutation({
+export const rebindMemberByEmail = internalMutation({
   args: {
     bridgeSecret: v.string(),
     legacyUserId: v.string(),
@@ -162,7 +173,7 @@ export const rebindMemberByEmail = mutation({
   },
 });
 
-export const importProducts = mutation({
+export const importProducts = internalMutation({
   args: importArgs,
   handler: async (ctx, args) => {
     assertBridgeSecret(args.bridgeSecret);
@@ -188,7 +199,7 @@ export const importProducts = mutation({
   },
 });
 
-export const importSales = mutation({
+export const importSales = internalMutation({
   args: importArgs,
   handler: async (ctx, args) => {
     assertBridgeSecret(args.bridgeSecret);
@@ -216,7 +227,7 @@ export const importSales = mutation({
   },
 });
 
-export const importSaleLines = mutation({
+export const importSaleLines = internalMutation({
   args: importArgs,
   handler: async (ctx, args) => {
     assertBridgeSecret(args.bridgeSecret);
@@ -249,7 +260,7 @@ export const importSaleLines = mutation({
   },
 });
 
-export const importPurchases = mutation({
+export const importPurchases = internalMutation({
   args: importArgs,
   handler: async (ctx, args) => {
     assertBridgeSecret(args.bridgeSecret);
@@ -276,7 +287,7 @@ export const importPurchases = mutation({
   },
 });
 
-export const importPurchaseLines = mutation({
+export const importPurchaseLines = internalMutation({
   args: importArgs,
   handler: async (ctx, args) => {
     assertBridgeSecret(args.bridgeSecret);
@@ -309,7 +320,7 @@ export const importPurchaseLines = mutation({
   },
 });
 
-export const importMovements = mutation({
+export const importMovements = internalMutation({
   args: importArgs,
   handler: async (ctx, args) => {
     assertBridgeSecret(args.bridgeSecret);
@@ -355,7 +366,7 @@ export const importMovements = mutation({
   },
 });
 
-export const importTransactions = mutation({
+export const importTransactions = internalMutation({
   args: importArgs,
   handler: async (ctx, args) => {
     assertBridgeSecret(args.bridgeSecret);
@@ -384,12 +395,23 @@ export const importTransactions = mutation({
   },
 });
 
-export const importApiKeys = mutation({
+export const importApiKeys = internalMutation({
   args: importArgs,
   handler: async (ctx, args) => {
     assertBridgeSecret(args.bridgeSecret);
+    let imported = 0;
+    const skipped: string[] = [];
+
     for (const raw of args.rows) {
       const row = raw as Record<string, unknown>;
+      // A key with no project was a wildcard over every project in the
+      // deployment. That is exactly what the pinned-key rule removes, so such a
+      // row is reported rather than silently carried over.
+      if (row.proyecto_id == null) {
+        skipped.push(stringValue(row.nombre, "(unnamed)"));
+        continue;
+      }
+
       const keyHash = stringValue(row.key_hash);
       const existing = await ctx.db
         .query("apiKeys")
@@ -401,7 +423,7 @@ export const importApiKeys = mutation({
         name: stringValue(row.nombre),
         keyHash,
         keyPrefix: stringValue(row.key_prefix),
-        ...(row.proyecto_id == null ? {} : { projectLegacyId: numberValue(row.proyecto_id) }),
+        projectLegacyId: numberValue(row.proyecto_id),
         scopes: scopes.length ? scopes : ["read" as const],
         active: Boolean(row.activa),
         ...(row.expira_en ? { expiresAt: stringValue(row.expira_en) } : {}),
@@ -410,8 +432,10 @@ export const importApiKeys = mutation({
       };
       if (existing) await ctx.db.patch(existing._id, values);
       else await ctx.db.insert("apiKeys", values);
+      imported += 1;
     }
-    return args.rows.length;
+
+    return { imported, skippedUnpinned: skipped };
   },
 });
 
@@ -420,7 +444,7 @@ export const importApiKeys = mutation({
  * API: business callers should not receive raw table counts, while the
  * migration operator needs to verify every imported relation.
  */
-export const stats = query({
+export const stats = internalQuery({
   args: { bridgeSecret: v.string() },
   handler: async (ctx, args) => {
     assertBridgeSecret(args.bridgeSecret);

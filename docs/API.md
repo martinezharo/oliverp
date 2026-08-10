@@ -42,7 +42,7 @@ Options:
 | Flag         | Description                                                        |
 | :----------- | :----------------------------------------------------------------- |
 | `--nombre`   | Required. Used to identify the key later.                       |
-| `--proyecto` | ID of the project to which the key is bound. Omit for all.       |
+| `--proyecto` | **Required.** ID of the project the key is bound to.             |
 | `--scopes`   | `read`, `write`, or `read,write`. Defaults to `read`.            |
 | `--expira`   | Expiration date (`YYYY-MM-DD`). Does not expire by default.      |
 
@@ -69,14 +69,26 @@ endpoints support both browser sessions and API keys.
 - `read` → `GET` methods.
 - `write` → `POST`, `PATCH`, and `DELETE` methods.
 
-### Binding a key to a project
+### Every key is bound to one project
 
-A key bound to a project (`--proyecto 1`) cannot read or write data in another
-one. For these keys, `proyecto_id` is optional in requests; if it is provided
-and does not match, the request is rejected instead of being silently rewritten.
+A key is always pinned to a single project and cannot read or write data in any
+other, including projects belonging to other users. `proyecto_id` is optional in
+requests; if it is provided and does not match, the request is rejected instead
+of being silently rewritten.
 
-This is the recommended configuration for agents: it grants access to a single
-business without exposing the rest.
+Binding used to be optional, and an unbound key was treated as a wildcard over
+every project in the deployment. With open sign-up that would have meant every
+project of every user, so a key without a project is now refused outright.
+
+### Ids are unique per project
+
+`id` values for sales, purchases, products and transactions are unique **within
+a project**, not across the deployment. The `/{id}` routes resolve the id inside
+the project of the calling key, so two projects can each have a sale with
+`id: 1` and neither can reach the other's.
+
+A browser session, which is not pinned to a project, must pass `?proyecto_id=`
+on those routes.
 
 ---
 

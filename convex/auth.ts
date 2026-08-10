@@ -3,11 +3,23 @@ import { convexAuth } from "@convex-dev/auth/server";
 import type { Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 
-const localDevelopmentOrigins = new Set([
-  "http://localhost:3000",
-  "http://127.0.0.1:3000",
-  "http://100.122.18.49:3000",
-]);
+/**
+ * Post-login destinations allowed in addition to SITE_URL.
+ *
+ * These are development hosts, and a production deployment must not accept
+ * them: the redirect carries the OAuth authorization code, so any origin on
+ * this list is an origin that can be handed a working session. They are
+ * therefore opt-in per deployment — set ALLOW_LOCAL_AUTH_ORIGINS=true on the
+ * dev deployment only, never on production.
+ */
+function localDevelopmentOrigins(): Set<string> {
+  if (process.env.ALLOW_LOCAL_AUTH_ORIGINS !== "true") return new Set();
+  const extra = (process.env.LOCAL_AUTH_ORIGINS ?? "")
+    .split(",")
+    .map((origin) => origin.trim().replace(/\/$/, ""))
+    .filter(Boolean);
+  return new Set(["http://localhost:3000", "http://127.0.0.1:3000", ...extra]);
+}
 
 function canonicalSiteUrl() {
   const siteUrl = process.env.SITE_URL;
@@ -34,7 +46,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
 
       try {
         const destination = new URL(redirectTo);
-        if (destination.origin === siteUrl || localDevelopmentOrigins.has(destination.origin)) {
+        if (destination.origin === siteUrl || localDevelopmentOrigins().has(destination.origin)) {
           return redirectTo;
         }
       } catch {

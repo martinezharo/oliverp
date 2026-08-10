@@ -55,7 +55,7 @@ export const POST: APIRoute = (context) =>
                 vatRate: body.porcentaje_iva,
                 date: body.fecha,
             });
-            const data = await principal.backend!.getTransaction(id);
+            const data = await principal.backend!.getTransaction(projectId, id);
             return json({ data: serializeTransaccion(data) }, 201);
         });
     });

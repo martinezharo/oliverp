@@ -59,6 +59,7 @@ describe("critical inventory workflows", () => {
     const sale = await t.query(api.domain.getSale, {
       bridgeSecret: SECRET,
       actor,
+      projectLegacyId: 7,
       legacyId: saleId,
     });
     expect(sale).toMatchObject({
@@ -104,6 +105,7 @@ describe("critical inventory workflows", () => {
     await t.mutation(api.domain.updatePurchase, {
       bridgeSecret: SECRET,
       actor,
+      projectLegacyId: 7,
       legacyId: purchaseId,
       status: "recibida",
     });
@@ -121,6 +123,7 @@ describe("critical inventory workflows", () => {
     await t.mutation(api.domain.updatePurchase, {
       bridgeSecret: SECRET,
       actor,
+      projectLegacyId: 7,
       legacyId: purchaseId,
       status: "cancelada",
     });

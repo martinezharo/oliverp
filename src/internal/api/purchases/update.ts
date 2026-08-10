@@ -35,7 +35,7 @@ export const PUT: APIRoute = async (context) => {
             return jsonResponse({ error: "Missing required fields" }, 400);
         }
 
-        await session.backend.updatePurchase(id, {
+        await session.backend.updatePurchase(projectId, id, {
             date: body.date,
             ...(typeof body.estado === "string" ? { status: body.estado } : {}),
             items: body.items.map((item) => ({

@@ -98,13 +98,14 @@ describe("browser write routes", () => {
 
   it("looks up the product project before recording a signed stock adjustment", async () => {
     const response = await adjustStock(context({
+      projectId: 7,
       productId: 11,
       units: -2,
       date: "2026-08-10",
     }));
 
     expect(response.status).toBe(200);
-    expect(mocks.backend.getProductGlobal).toHaveBeenCalledWith(11);
+    expect(mocks.backend.getProductGlobal).toHaveBeenCalledWith(7, 11);
     expect(mocks.backend.adjustStock).toHaveBeenCalledWith({
       projectId: 7,
       productId: 11,
@@ -130,7 +131,7 @@ describe("browser write routes", () => {
     }));
 
     expect(response.status).toBe(200);
-    expect(mocks.backend.updateSale).toHaveBeenCalledWith(17, {
+    expect(mocks.backend.updateSale).toHaveBeenCalledWith(7, 17, {
       date: "2026-08-11",
       channel: "Web",
       items: [{ productId: 11, units: 1, unitPrice: 9, vatRate: 21 }],
@@ -147,7 +148,7 @@ describe("browser write routes", () => {
     }));
 
     expect(response.status).toBe(200);
-    expect(mocks.backend.updatePurchase).toHaveBeenCalledWith(18, {
+    expect(mocks.backend.updatePurchase).toHaveBeenCalledWith(7, 18, {
       date: "2026-08-11",
       status: "recibida",
       items: [{ productId: 11, units: 3, unitPrice: 4, vatRate: 10 }],
@@ -167,7 +168,7 @@ describe("browser write routes", () => {
     }));
 
     expect(response.status).toBe(200);
-    expect(mocks.backend.updateTransaction).toHaveBeenCalledWith(19, {
+    expect(mocks.backend.updateTransaction).toHaveBeenCalledWith(7, 19, {
       type: "gasto",
       concept: "Shipping",
       description: "Updated",

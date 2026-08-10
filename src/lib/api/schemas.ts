@@ -7,7 +7,7 @@ import { roundMoney, roundVatRate } from "./numbers";
  * The enum tuples below are the single source of truth shared by validation and
  * the OpenAPI document, so the accepted values quoted in an error message can
  * never drift from the ones the database actually takes. They mirror the
- * Postgres enums declared in `db-structure/01-schema.sql`.
+ * status unions declared in `convex/schema.ts`.
  */
 export const ESTADOS_VENTA = ["pendiente", "enviada", "devuelta", "reembolsada"] as const;
 export const ESTADOS_COMPRA = ["pendiente", "recibida", "cancelada"] as const;
@@ -166,6 +166,8 @@ export const importarVentaWallapopSchema = z.object({
 });
 
 export const ajustarStockSchema = z.object({
+    /** Required for keys that are not pinned; ignored when the key is. */
+    proyecto_id: idSchema.optional(),
     producto_id: idSchema,
     /** Signed: positive adds stock, negative removes it. Zero is a no-op. */
     unidades: z

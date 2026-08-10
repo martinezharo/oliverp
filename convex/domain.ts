@@ -4,9 +4,12 @@ import {
   assertBridgeSecret,
   bridgeArgs,
   cents,
+  consumeWriteBudget,
   euros,
   fail,
   nextLegacyId,
+  nextProjectLegacyId,
+  reserveLegacyIds,
   productByLegacyId,
   projectByLegacyId,
   requireProduct,
@@ -42,6 +45,19 @@ const purchaseStatus = v.union(
 const transactionType = v.union(v.literal("ingreso"), v.literal("gasto"));
 function check(args: { bridgeSecret: string }): void {
   assertBridgeSecret(args.bridgeSecret);
+}
+
+/**
+ * The mutation entry gate: proves the caller is the Next gateway and charges
+ * the actor's write budget. Queries keep using `check` alone — they cannot
+ * write, and reads are already bounded by the project boundary.
+ */
+async function guard(
+  ctx: MutationCtx,
+  args: { bridgeSecret: string; actor: Actor },
+): Promise<void> {
+  assertBridgeSecret(args.bridgeSecret);
+  await consumeWriteBudget(ctx, args.actor);
 }
 
 export function legacyProject(project: Doc<"projects">) {
@@ -186,11 +202,13 @@ export const listProjects = query({
     check(args);
     let projects: Doc<"projects">[];
 
-    if (args.actor.kind === "api_key" && args.actor.projectLegacyId !== undefined) {
+    if (args.actor.kind === "api_key") {
+      // A key without a project is refused rather than shown every project.
+      if (args.actor.projectLegacyId === undefined) {
+        fail("forbidden", "This API key is not bound to a project.");
+      }
       const project = await projectByLegacyId(ctx, args.actor.projectLegacyId);
       projects = project ? [project] : [];
-    } else if (args.actor.kind === "api_key") {
-      projects = await ctx.db.query("projects").withIndex("by_name").collect();
     } else {
       const userId = await sessionUserId(ctx, args.actor);
       const memberships = await ctx.db
@@ -211,14 +229,14 @@ export const listProjects = query({
 export const createProject = mutation({
   args: { ...bridgeArgs, name: v.string() },
   handler: async (ctx, args) => {
-    check(args);
+    await guard(ctx, args);
     // Only a browser session can create a project: an API key is always scoped
     // to projects that already exist, and the creator has to become a member.
     const userId = await sessionUserId(ctx, args.actor);
     const name = args.name.trim();
     if (!name) fail("validation_error", "Project name cannot be empty.");
 
-    const legacyId = await nextLegacyId(ctx, "projects");
+    const legacyId = await nextProjectLegacyId(ctx);
     const projectId = await ctx.db.insert("projects", { legacyId, name, active: true });
     await ctx.db.insert("projectMembers", {
       projectId,
@@ -267,7 +285,7 @@ export const createProduct = mutation({
     wallapopTitle: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    check(args);
+    await guard(ctx, args);
     const project = await requireProject(ctx, args.actor, args.projectLegacyId);
     const name = args.name.trim();
     if (!name) fail("validation_error", "Product name cannot be empty.");
@@ -281,7 +299,7 @@ export const createProduct = mutation({
         .first();
       if (mapped) fail("conflict", "That Wallapop title is already mapped to a product.");
     }
-    const legacyId = await nextLegacyId(ctx, "products");
+    const legacyId = await nextLegacyId(ctx, "products", project.legacyId);
     const id = await ctx.db.insert("products", {
       legacyId,
       projectId: project._id,
@@ -307,7 +325,7 @@ export const updateProductWallapopTitle = mutation({
     wallapopTitle: v.string(),
   },
   handler: async (ctx, args) => {
-    check(args);
+    await guard(ctx, args);
     const product = await requireProduct(
       ctx,
       args.actor,
@@ -398,16 +416,18 @@ export const getProduct = query({
   },
 });
 
+/**
+ * Product ids are unique per project, so the "global" lookup now resolves
+ * inside a project like every other one. The name is kept because the callers
+ * use it to mean "I have an id but no other context".
+ */
 export const getProductGlobal = query({
-  args: { ...bridgeArgs, productLegacyId: v.number() },
+  args: { ...bridgeArgs, projectLegacyId: v.number(), productLegacyId: v.number() },
   handler: async (ctx, args) => {
     check(args);
-    const product = await ctx.db
-      .query("products")
-      .withIndex("by_legacy_id", (q) => q.eq("legacyId", args.productLegacyId))
-      .unique();
+    await requireProject(ctx, args.actor, args.projectLegacyId);
+    const product = await productByLegacyId(ctx, args.projectLegacyId, args.productLegacyId);
     if (!product) return null;
-    await requireProject(ctx, args.actor, product.projectLegacyId);
     return {
       id: product.legacyId,
       proyecto_id: product.projectLegacyId,
@@ -447,12 +467,12 @@ export const listSales = query({
 });
 
 export const getSale = query({
-  args: { ...bridgeArgs, legacyId: v.number() },
+  args: { ...bridgeArgs, projectLegacyId: v.number(), legacyId: v.number() },
   handler: async (ctx, args) => {
     check(args);
-    const sale = await saleByLegacyId(ctx, args.legacyId);
+    await requireProject(ctx, args.actor, args.projectLegacyId);
+    const sale = await saleByLegacyId(ctx, args.projectLegacyId, args.legacyId);
     if (!sale) return null;
-    await requireProject(ctx, args.actor, sale.projectLegacyId);
     return await saleRow(ctx, sale);
   },
 });
@@ -463,8 +483,8 @@ async function insertSaleLines(
   items: Array<{ productId: number; units: number; unitPrice: number; vatRate: number }>,
 ) {
   if (items.length === 0) fail("validation_error", "A sale needs at least one line.");
-  let lineLegacyId = await nextLegacyId(ctx, "saleLines");
-  let movementLegacyId = await nextLegacyId(ctx, "stockMovements");
+  let lineLegacyId = await reserveLegacyIds(ctx, "saleLines", sale.projectLegacyId, items.length);
+  let movementLegacyId = await reserveLegacyIds(ctx, "stockMovements", sale.projectLegacyId, items.length);
 
   for (const item of items) {
     const product = await productByLegacyId(ctx, sale.projectLegacyId, item.productId);
@@ -512,10 +532,10 @@ export const createSale = mutation({
     items: v.array(itemValidator),
   },
   handler: async (ctx, args) => {
-    check(args);
+    await guard(ctx, args);
     const project = await requireProject(ctx, args.actor, args.projectLegacyId);
     if (!args.channel.trim()) fail("validation_error", "Sale channel cannot be empty.");
-    const legacyId = await nextLegacyId(ctx, "sales");
+    const legacyId = await nextLegacyId(ctx, "sales", project.legacyId);
     const saleId = await ctx.db.insert("sales", {
       legacyId,
       projectId: project._id,
@@ -544,7 +564,7 @@ export const importWallapopSale = mutation({
     status: saleStatus,
   },
   handler: async (ctx, args) => {
-    check(args);
+    await guard(ctx, args);
     const project = await requireProject(ctx, args.actor, args.projectLegacyId);
     const originId = args.originId.trim();
     const customerName = args.customerName.trim();
@@ -586,7 +606,7 @@ export const importWallapopSale = mutation({
     if (customer) {
       await ctx.db.patch(customer._id, { name: customerName, updatedAt: now });
     } else {
-      const legacyId = await nextLegacyId(ctx, "customers");
+      const legacyId = await nextLegacyId(ctx, "customers", project.legacyId);
       const customerId = await ctx.db.insert("customers", {
         legacyId,
         projectId: project._id,
@@ -617,7 +637,7 @@ export const importWallapopSale = mutation({
       });
     }
 
-    const legacyId = await nextLegacyId(ctx, "sales");
+    const legacyId = await nextLegacyId(ctx, "sales", project.legacyId);
     const saleId = await ctx.db.insert("sales", {
       legacyId,
       projectId: project._id,
@@ -651,6 +671,7 @@ export const importWallapopSale = mutation({
 export const updateSale = mutation({
   args: {
     ...bridgeArgs,
+    projectLegacyId: v.number(),
     legacyId: v.number(),
     date: v.optional(v.string()),
     channel: v.optional(v.string()),
@@ -658,10 +679,10 @@ export const updateSale = mutation({
     items: v.optional(v.array(itemValidator)),
   },
   handler: async (ctx, args) => {
-    check(args);
-    const existing = await saleByLegacyId(ctx, args.legacyId);
+    await guard(ctx, args);
+    await requireProject(ctx, args.actor, args.projectLegacyId);
+    const existing = await saleByLegacyId(ctx, args.projectLegacyId, args.legacyId);
     if (!existing) fail("not_found", `Sale ${args.legacyId} not found.`);
-    await requireProject(ctx, args.actor, existing.projectLegacyId);
 
     const nextDate = args.date ?? existing.date;
     const nextChannel = args.channel ?? existing.channel;
@@ -695,12 +716,12 @@ export const updateSale = mutation({
 });
 
 export const deleteSale = mutation({
-  args: { ...bridgeArgs, legacyId: v.number() },
+  args: { ...bridgeArgs, projectLegacyId: v.number(), legacyId: v.number() },
   handler: async (ctx, args) => {
-    check(args);
-    const sale = await saleByLegacyId(ctx, args.legacyId);
+    await guard(ctx, args);
+    await requireProject(ctx, args.actor, args.projectLegacyId);
+    const sale = await saleByLegacyId(ctx, args.projectLegacyId, args.legacyId);
     if (!sale) return false;
-    await requireProject(ctx, args.actor, sale.projectLegacyId);
     const lines = await ctx.db
       .query("saleLines")
       .withIndex("by_sale", (q) => q.eq("saleId", sale._id))
@@ -748,12 +769,12 @@ export const listPurchases = query({
 });
 
 export const getPurchase = query({
-  args: { ...bridgeArgs, legacyId: v.number() },
+  args: { ...bridgeArgs, projectLegacyId: v.number(), legacyId: v.number() },
   handler: async (ctx, args) => {
     check(args);
-    const purchase = await purchaseByLegacyId(ctx, args.legacyId);
+    await requireProject(ctx, args.actor, args.projectLegacyId);
+    const purchase = await purchaseByLegacyId(ctx, args.projectLegacyId, args.legacyId);
     if (!purchase) return null;
-    await requireProject(ctx, args.actor, purchase.projectLegacyId);
     return await purchaseRow(ctx, purchase);
   },
 });
@@ -764,8 +785,8 @@ async function insertPurchaseLines(
   items: Array<{ productId: number; units: number; unitPrice: number; vatRate: number }>,
 ) {
   if (items.length === 0) fail("validation_error", "A purchase needs at least one line.");
-  let lineLegacyId = await nextLegacyId(ctx, "purchaseLines");
-  let movementLegacyId = await nextLegacyId(ctx, "stockMovements");
+  let lineLegacyId = await reserveLegacyIds(ctx, "purchaseLines", purchase.projectLegacyId, items.length);
+  let movementLegacyId = await reserveLegacyIds(ctx, "stockMovements", purchase.projectLegacyId, items.length);
 
   for (const item of items) {
     const product = await productByLegacyId(ctx, purchase.projectLegacyId, item.productId);
@@ -819,7 +840,7 @@ async function syncPurchaseStockMovements(
     .query("purchaseLines")
     .withIndex("by_purchase", (q) => q.eq("purchaseId", purchase._id))
     .collect();
-  let movementLegacyId = await nextLegacyId(ctx, "stockMovements");
+  let movementLegacyId = await reserveLegacyIds(ctx, "stockMovements", purchase.projectLegacyId, lines.length);
 
   for (const line of lines) {
     const movements = await ctx.db
@@ -862,9 +883,9 @@ export const createPurchase = mutation({
     items: v.array(itemValidator),
   },
   handler: async (ctx, args) => {
-    check(args);
+    await guard(ctx, args);
     const project = await requireProject(ctx, args.actor, args.projectLegacyId);
-    const legacyId = await nextLegacyId(ctx, "purchases");
+    const legacyId = await nextLegacyId(ctx, "purchases", project.legacyId);
     const purchaseId = await ctx.db.insert("purchases", {
       legacyId,
       projectId: project._id,
@@ -881,16 +902,17 @@ export const createPurchase = mutation({
 export const updatePurchase = mutation({
   args: {
     ...bridgeArgs,
+    projectLegacyId: v.number(),
     legacyId: v.number(),
     date: v.optional(v.string()),
     status: v.optional(purchaseStatus),
     items: v.optional(v.array(itemValidator)),
   },
   handler: async (ctx, args) => {
-    check(args);
-    const existing = await purchaseByLegacyId(ctx, args.legacyId);
+    await guard(ctx, args);
+    await requireProject(ctx, args.actor, args.projectLegacyId);
+    const existing = await purchaseByLegacyId(ctx, args.projectLegacyId, args.legacyId);
     if (!existing) fail("not_found", `Purchase ${args.legacyId} not found.`);
-    await requireProject(ctx, args.actor, existing.projectLegacyId);
     await ctx.db.patch(existing._id, {
       date: args.date ?? existing.date,
       ...(args.status ? { status: args.status } : {}),
@@ -921,12 +943,12 @@ export const updatePurchase = mutation({
 });
 
 export const deletePurchase = mutation({
-  args: { ...bridgeArgs, legacyId: v.number() },
+  args: { ...bridgeArgs, projectLegacyId: v.number(), legacyId: v.number() },
   handler: async (ctx, args) => {
-    check(args);
-    const purchase = await purchaseByLegacyId(ctx, args.legacyId);
+    await guard(ctx, args);
+    await requireProject(ctx, args.actor, args.projectLegacyId);
+    const purchase = await purchaseByLegacyId(ctx, args.projectLegacyId, args.legacyId);
     if (!purchase) return false;
-    await requireProject(ctx, args.actor, purchase.projectLegacyId);
     const lines = await ctx.db
       .query("purchaseLines")
       .withIndex("by_purchase", (q) => q.eq("purchaseId", purchase._id))
@@ -981,12 +1003,12 @@ export const listOtherTransactions = query({
 });
 
 export const getOtherTransaction = query({
-  args: { ...bridgeArgs, legacyId: v.number() },
+  args: { ...bridgeArgs, projectLegacyId: v.number(), legacyId: v.number() },
   handler: async (ctx, args) => {
     check(args);
-    const row = await transactionByLegacyId(ctx, args.legacyId);
+    await requireProject(ctx, args.actor, args.projectLegacyId);
+    const row = await transactionByLegacyId(ctx, args.projectLegacyId, args.legacyId);
     if (!row) return null;
-    await requireProject(ctx, args.actor, row.projectLegacyId);
     return {
       id: row.legacyId,
       proyecto_id: row.projectLegacyId,
@@ -1012,12 +1034,12 @@ export const createOtherTransaction = mutation({
     date: v.string(),
   },
   handler: async (ctx, args) => {
-    check(args);
+    await guard(ctx, args);
     const project = await requireProject(ctx, args.actor, args.projectLegacyId);
     if (!args.concept.trim() || args.amount <= 0) {
       fail("validation_error", "Transaction concept and amount are required.");
     }
-    const legacyId = await nextLegacyId(ctx, "otherTransactions");
+    const legacyId = await nextLegacyId(ctx, "otherTransactions", project.legacyId);
     await ctx.db.insert("otherTransactions", {
       legacyId,
       projectId: project._id,
@@ -1036,6 +1058,7 @@ export const createOtherTransaction = mutation({
 export const updateOtherTransaction = mutation({
   args: {
     ...bridgeArgs,
+    projectLegacyId: v.number(),
     legacyId: v.number(),
     type: v.optional(transactionType),
     concept: v.optional(v.string()),
@@ -1045,10 +1068,10 @@ export const updateOtherTransaction = mutation({
     date: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    check(args);
-    const row = await transactionByLegacyId(ctx, args.legacyId);
+    await guard(ctx, args);
+    await requireProject(ctx, args.actor, args.projectLegacyId);
+    const row = await transactionByLegacyId(ctx, args.projectLegacyId, args.legacyId);
     if (!row) fail("not_found", `Transaction ${args.legacyId} not found.`);
-    await requireProject(ctx, args.actor, row.projectLegacyId);
     if (args.concept !== undefined && !args.concept.trim()) {
       fail("validation_error", "Transaction concept cannot be empty.");
     }
@@ -1072,12 +1095,12 @@ export const updateOtherTransaction = mutation({
 });
 
 export const deleteOtherTransaction = mutation({
-  args: { ...bridgeArgs, legacyId: v.number() },
+  args: { ...bridgeArgs, projectLegacyId: v.number(), legacyId: v.number() },
   handler: async (ctx, args) => {
-    check(args);
-    const row = await transactionByLegacyId(ctx, args.legacyId);
+    await guard(ctx, args);
+    await requireProject(ctx, args.actor, args.projectLegacyId);
+    const row = await transactionByLegacyId(ctx, args.projectLegacyId, args.legacyId);
     if (!row) return false;
-    await requireProject(ctx, args.actor, row.projectLegacyId);
     await ctx.db.delete(row._id);
     return true;
   },
@@ -1274,7 +1297,7 @@ export const adjustStock = mutation({
     date: v.string(),
   },
   handler: async (ctx, args) => {
-    check(args);
+    await guard(ctx, args);
     const product = await requireProduct(
       ctx,
       args.actor,
@@ -1284,7 +1307,7 @@ export const adjustStock = mutation({
     if (!Number.isInteger(args.units) || args.units === 0) {
       fail("validation_error", "Stock adjustment must be a non-zero integer.");
     }
-    const legacyId = await nextLegacyId(ctx, "stockMovements");
+    const legacyId = await nextLegacyId(ctx, "stockMovements", product.projectLegacyId);
     await ctx.db.insert("stockMovements", {
       legacyId,
       productId: product._id,
@@ -1461,11 +1484,11 @@ export const financeEvolution = query({
 
 export async function visibleProjects(ctx: QueryCtx | MutationCtx, actor: Actor) {
   if (actor.kind === "api_key") {
-    if (actor.projectLegacyId !== undefined) {
-      const project = await projectByLegacyId(ctx, actor.projectLegacyId);
-      return project ? [project] : [];
+    if (actor.projectLegacyId === undefined) {
+      fail("forbidden", "This API key is not bound to a project.");
     }
-    return await ctx.db.query("projects").withIndex("by_name").collect();
+    const project = await projectByLegacyId(ctx, actor.projectLegacyId);
+    return project ? [project] : [];
   }
   const userId = await sessionUserId(ctx, actor);
   const memberships = await ctx.db
@@ -1579,7 +1602,7 @@ export const createApiKey = mutation({
   args: {
     bridgeSecret: v.string(),
     name: v.string(),
-    projectLegacyId: v.optional(v.number()),
+    projectLegacyId: v.number(),
     keyHash: v.string(),
     keyPrefix: v.string(),
     scopes: v.array(v.union(v.literal("read"), v.literal("write"))),
@@ -1587,13 +1610,16 @@ export const createApiKey = mutation({
   },
   handler: async (ctx, args) => {
     check(args);
+    // The project has to exist: a key pointing at nothing would otherwise sit
+    // in the table looking valid until the first request failed.
+    const project = await projectByLegacyId(ctx, args.projectLegacyId);
+    if (!project) fail("not_found", `Project ${args.projectLegacyId} not found.`);
+
     const id = await ctx.db.insert("apiKeys", {
       name: args.name,
       keyHash: args.keyHash,
       keyPrefix: args.keyPrefix,
-      ...(args.projectLegacyId !== undefined
-        ? { projectLegacyId: args.projectLegacyId }
-        : {}),
+      projectLegacyId: args.projectLegacyId,
       scopes: args.scopes,
       active: true,
       ...(args.expiresAt ? { expiresAt: args.expiresAt } : {}),
@@ -1602,7 +1628,7 @@ export const createApiKey = mutation({
     return {
       id,
       nombre: args.name,
-      proyecto_id: args.projectLegacyId ?? null,
+      proyecto_id: args.projectLegacyId,
       scopes: args.scopes,
       expira_en: args.expiresAt ?? null,
     };

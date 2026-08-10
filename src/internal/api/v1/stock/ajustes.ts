@@ -1,5 +1,5 @@
 import type { APIRoute } from "@/lib/server-context";
-import { requireBackend } from "../../../../lib/api/auth";
+import { requireBackend, resolveProjectId } from "../../../../lib/api/auth";
 import { ApiError } from "../../../../lib/api/errors";
 import { apiHandler, json, parseBody, withIdempotency } from "../../../../lib/api/handler";
 import { ajustarStockSchema } from "../../../../lib/api/schemas";
@@ -16,8 +16,9 @@ import { ajustarStockSchema } from "../../../../lib/api/schemas";
 export const POST: APIRoute = (context) =>
     apiHandler(context, "write", async (principal) => {
         const body = await parseBody(context.request, ajustarStockSchema);
+        const projectId = resolveProjectId(principal, body.proyecto_id);
 
-        const producto = await requireBackend(principal).getProductGlobal(body.producto_id);
+        const producto = await requireBackend(principal).getProductGlobal(projectId, body.producto_id);
         if (!producto) {
             throw new ApiError("validation_error", `El producto ${body.producto_id} no existe.`, {
                 details: [{ field: "producto_id", message: "No encontrado." }],

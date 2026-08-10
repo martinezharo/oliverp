@@ -39,7 +39,7 @@ export const POST: APIRoute = (context) =>
           vatRate: body.porcentaje_iva,
           status: body.estado,
         });
-        const sale = await requireBackend(principal).getSale(result.id);
+        const sale = await requireBackend(principal).getSale(projectId, result.id);
         if (!sale) {
           throw new ApiError(
             "internal_error",

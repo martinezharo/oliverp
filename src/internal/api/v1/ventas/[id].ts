@@ -1,5 +1,5 @@
-import type { APIRoute } from "@/lib/server-context";
-import { requireBackend, type Principal } from "../../../../lib/api/auth";
+import type { APIRoute, ServerContext } from "@/lib/server-context";
+import { requireBackend, resolveProjectId, type Principal } from "../../../../lib/api/auth";
 import { ApiError } from "../../../../lib/api/errors";
 import { apiHandler, json, parseBody } from "../../../../lib/api/handler";
 import { actualizarVentaSchema } from "../../../../lib/api/schemas";
@@ -13,8 +13,21 @@ function parseId(raw: string | undefined): number {
     return id;
 }
 
-async function fetchVenta(principal: Principal, id: number) {
-    const data = await requireBackend(principal).getSale(id);
+/**
+ * The project a legacy id belongs to. A pinned API key supplies it implicitly;
+ * a browser session has to name it, because ids are only unique per project.
+ */
+function projectOf(context: ServerContext, principal: Principal): number {
+    const raw = context.url.searchParams.get("proyecto_id");
+    const requested = raw === null || raw === "" ? undefined : Number(raw);
+    if (requested !== undefined && (!Number.isInteger(requested) || requested <= 0)) {
+        throw new ApiError("validation_error", "'proyecto_id' debe ser un entero positivo.");
+    }
+    return resolveProjectId(principal, requested);
+}
+
+async function fetchVenta(principal: Principal, projectId: number, id: number) {
+    const data = await requireBackend(principal).getSale(projectId, id);
     if (!data) throw new ApiError("not_found", `Venta ${id} no encontrada.`);
     return data;
 }
@@ -23,7 +36,8 @@ async function fetchVenta(principal: Principal, id: number) {
 export const GET: APIRoute = (context) =>
     apiHandler(context, "read", async (principal) => {
         const id = parseId(context.params.id);
-        return json({ data: serializeVenta(await fetchVenta(principal, id)) });
+        const projectId = projectOf(context, principal);
+        return json({ data: serializeVenta(await fetchVenta(principal, projectId, id)) });
     });
 
 /**
@@ -37,11 +51,12 @@ export const PATCH: APIRoute = (context) =>
     apiHandler(context, "write", async (principal) => {
         const id = parseId(context.params.id);
         const body = await parseBody(context.request, actualizarVentaSchema);
+        const projectId = projectOf(context, principal);
 
         // Resolve first so a key pinned elsewhere gets 404 before anything runs.
-        await fetchVenta(principal, id);
+        await fetchVenta(principal, projectId, id);
 
-        await requireBackend(principal).updateSale(id, {
+        await requireBackend(principal).updateSale(projectId, id, {
             date: body.fecha,
             channel: body.canal,
             status: body.estado,
@@ -53,5 +68,5 @@ export const PATCH: APIRoute = (context) =>
             })),
         });
 
-        return json({ data: serializeVenta(await fetchVenta(principal, id)) });
+        return json({ data: serializeVenta(await fetchVenta(principal, projectId, id)) });
     });

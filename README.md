@@ -105,6 +105,15 @@ Configure these Worker bindings:
 | `NEXT_PUBLIC_CONVEX_URL` | variable | Public Convex cloud URL used by the browser; set in `wrangler.jsonc` |
 | `CONVEX_BRIDGE_SECRET` | secret | Server-only bridge credential, matching Convex |
 
+Convex environment variables:
+
+| Name | Purpose |
+| --- | --- |
+| `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET` | GitHub OAuth App credentials |
+| `SITE_URL` | Canonical post-login origin |
+| `CONVEX_BRIDGE_SECRET` | Must match the Worker secret |
+| `ALLOW_LOCAL_AUTH_ORIGINS` | Development deployments only; allows localhost redirects |
+
 `AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET` belong only to Convex. Convex
 automatically provides `CONVEX_SITE_URL` to its functions for the auth issuer.
 
@@ -113,15 +122,28 @@ defines the Worker, assets, self-reference service, and `nodejs_compat`.
 
 ## Existing data
 
-The Convex backend keeps the legacy numeric ids used by the UI and API. If an
-old Supabase database still needs to be imported, use the one-off migration:
+The Convex backend keeps the legacy numeric ids used by the UI and API, but
+they are unique **per project**, not globally: `/api/v1/ventas/{id}` and its
+siblings resolve the id inside the project of the calling API key. Sequences
+are stored in the `counters` table and initialise themselves from the highest
+existing id the first time a project writes, so an existing deployment needs no
+migration step.
 
-```bash
-SUPABASE_SECRET_KEY=... pnpm migrate:supabase
-```
+The Supabase import is finished and its driver script has been removed together
+with the rest of the Postgres tooling. The import functions themselves remain in
+`convex/migration.ts` as `internal*` functions, runnable only from a trusted
+shell with `npx convex run`.
 
-The Supabase key is only needed for that command and is not an application
-runtime variable.
+### Before opening sign-up
+
+- Every API key must be pinned to a project. `pnpm api:key` now requires
+  `--proyecto`, and the schema rejects a key without one. Delete or re-issue any
+  key created before this rule, otherwise the schema push will fail.
+- Rotate `CONVEX_BRIDGE_SECRET`: it authorises the whole domain surface for
+  every tenant.
+- Do **not** set `ALLOW_LOCAL_AUTH_ORIGINS` on the production deployment. It
+  permits localhost as an OAuth redirect target, which is a development-only
+  convenience.
 
 ## Commands
 

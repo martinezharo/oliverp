@@ -81,3 +81,60 @@ that demonstrate how later purchases must affect earlier profit reports.
 Convex Auth issues the browser session and Convex verifies it with
 `ctx.auth.getUserIdentity()` before resolving project memberships. The bridge
 secret remains only as a server-to-server Worker/API gateway guard.
+
+It is, however, still one static credential that authorises the entire domain
+surface for every tenant. `convex/migration.ts` — which can rewrite any row and
+reassign project membership — was moved to `internal*` functions so it is no
+longer reachable with the secret alone, but `convex/domain.ts` still is.
+
+**Decision required:** whether to keep a shared secret at all now that every
+mutation also proves a per-user or per-key identity, or to replace it with a
+signed, short-lived gateway token. Rotate the secret before opening sign-up
+either way.
+
+## 6. Opening sign-up: what changed — resolved
+
+**Priority:** Resolved
+
+The deployment stopped being single-tenant, which changed the meaning of
+several defaults that had been correct while "every project" and "my projects"
+were the same set:
+
+- **API keys are pinned.** An unbound key used to fall through to unrestricted
+  access in `requireProject`, and `listProjects`/`visibleProjects` returned every
+  project in the deployment. `projectLegacyId` is now required on `apiKeys` and
+  an unbound key is refused.
+- **`requireAdmin` no longer exempts API keys.** It previously returned early
+  for them, so the role check applied to nobody. Administrative operations are
+  now restricted to a signed-in admin member.
+- **Legacy ids are per project.** `nextLegacyId` read the tail of a
+  `by_legacy_id` index, which put every insert in a table into one read set:
+  unrelated tenants conflicted on every write. Ids now come from `counters`
+  rows scoped to a project, and every lookup by legacy id is project-scoped.
+- **Writes are budgeted.** `consumeWriteBudget` applies a fixed-window per-actor
+  limit, which bounds the damage a single account can do through the unbounded
+  reads described in finding 2.
+- **Demo mode is only ever a choice.** It used to switch on whenever Convex was
+  unconfigured, so a misconfigured production deployment served a convincing
+  mock instead of failing.
+- **OAuth redirect origins are opt-in.** Development hosts were allowlisted
+  unconditionally; the redirect carries the authorization code, so they are now
+  gated behind `ALLOW_LOCAL_AUTH_ORIGINS`.
+
+`convex/authorization.test.ts` covers each of these. The Postgres RLS suite that
+used to assert tenant isolation was testing a backend the application no longer
+uses and has been removed with the rest of the Supabase tooling.
+
+## 7. There is still no membership UI
+
+**Priority:** Medium
+
+`projectMembers` supports an `admin`/`miembro` role and `requireAdmin` enforces
+it, but nothing writes a membership except project creation. Every project
+therefore has exactly one member, and the role distinction is not yet
+observable. Inviting, listing and removing members needs a screen, and removing
+the last admin of a project needs a rule.
+
+Users can delete their own projects and their whole account from `/ajustes`.
+Both purge in budgeted rounds and report progress, because a large project can
+exceed the write limit of a single Convex transaction.

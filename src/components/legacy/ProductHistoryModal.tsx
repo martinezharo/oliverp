@@ -30,16 +30,16 @@ export default function ProductHistoryModal({ product, onClose, onChanged }: { p
     if (!dialog) return;
     if (product) {
       if (!dialog.open) dialog.showModal();
-      void loadMovements(product.producto_id);
+      void loadMovements(product.proyecto_id, product.producto_id);
     } else if (dialog.open) {
       dialog.close();
     }
   }, [product]);
 
-  async function loadMovements(productId: number) {
+  async function loadMovements(projectId: number, productId: number) {
     setMovements(null);
     try {
-      const result = await apiJson<{ data: Movement[] }>(`/api/stock/movements?productId=${productId}`);
+      const result = await apiJson<{ data: Movement[] }>(`/api/stock/movements?projectId=${projectId}&productId=${productId}`);
       setMovements(result.data ?? []);
     } catch {
       setMovements([]);
@@ -57,9 +57,9 @@ export default function ProductHistoryModal({ product, onClose, onChanged }: { p
     const form = new FormData(formElement);
     setSaving(true);
     try {
-      await apiJson("/api/stock/adjust", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ productId: product.producto_id, units: Number(form.get("units")), date: String(form.get("date")) }) });
+      await apiJson("/api/stock/adjust", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ projectId: product.proyecto_id, productId: product.producto_id, units: Number(form.get("units")), date: String(form.get("date")) }) });
       formElement.reset();
-      await loadMovements(product.producto_id);
+      await loadMovements(product.proyecto_id, product.producto_id);
       onChanged();
     } catch (cause) {
       window.alert(`${t("common.saveErrorPrefix")} ${apiErrorMessage(cause, t("common.unknown"))}`);

@@ -11,7 +11,11 @@ export type FinanceRow = {
 };
 
 export type StockRow = {
-  proyecto_id?: number;
+  /**
+   * Required: product ids are unique per project, so a stock row cannot be
+   * acted on without knowing which project issued its id.
+   */
+  proyecto_id: number;
   producto_id: number;
   nombre_producto: string;
   stock_actual: number;

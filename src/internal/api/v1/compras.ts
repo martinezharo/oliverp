@@ -66,7 +66,7 @@ export const POST: APIRoute = (context) =>
                     vatRate: item.porcentaje_iva,
                 })),
             });
-            const compra = await principal.backend!.getPurchase(id);
+            const compra = await principal.backend!.getPurchase(projectId, id);
             return json({ data: serializeCompra(compra) }, 201);
         });
     });

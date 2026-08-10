@@ -67,6 +67,21 @@ export class BackendClient {
         return this.mutation(api.domain.createProject, this.args({ name }));
     }
 
+    /**
+     * Both deletions are budgeted server-side and report whether more work is
+     * left, so the caller loops until `done`.
+     */
+    deleteProject(projectId: number): Promise<{ done: boolean; deleted: number }> {
+        return this.mutation(
+            api.account.deleteProject,
+            this.args({ projectLegacyId: projectId }),
+        );
+    }
+
+    deleteAccount(): Promise<{ done: boolean }> {
+        return this.mutation(api.account.deleteAccount, this.args());
+    }
+
     listProducts(values: {
         projectId: number;
         page?: number;
@@ -128,7 +143,7 @@ export class BackendClient {
         );
     }
 
-    getProductGlobal(productId: number) {
+    getProductGlobal(projectId: number, productId: number) {
         return this.query<{
             id: number;
             proyecto_id: number;
@@ -136,7 +151,7 @@ export class BackendClient {
             titulo_wallapop: string | null;
         } | null>(
             api.domain.getProductGlobal,
-            this.args({ productLegacyId: productId }),
+            this.args({ projectLegacyId: projectId, productLegacyId: productId }),
         );
     }
 
@@ -180,8 +195,8 @@ export class BackendClient {
         );
     }
 
-    getSale(id: number): Promise<Record<string, unknown> | null> {
-        return this.query(api.domain.getSale, this.args({ legacyId: id }));
+    getSale(projectId: number, id: number): Promise<Record<string, unknown> | null> {
+        return this.query(api.domain.getSale, this.args({ projectLegacyId: projectId, legacyId: id }));
     }
 
     createSale(values: {
@@ -236,6 +251,7 @@ export class BackendClient {
     }
 
     updateSale(
+        projectId: number,
         id: number,
         values: {
             date?: string;
@@ -246,12 +262,12 @@ export class BackendClient {
     ): Promise<number> {
         return this.mutation(
             api.domain.updateSale,
-            this.args({ legacyId: id, ...values }),
+            this.args({ projectLegacyId: projectId, legacyId: id, ...values }),
         );
     }
 
-    deleteSale(id: number): Promise<boolean> {
-        return this.mutation(api.domain.deleteSale, this.args({ legacyId: id }));
+    deleteSale(projectId: number, id: number): Promise<boolean> {
+        return this.mutation(api.domain.deleteSale, this.args({ projectLegacyId: projectId, legacyId: id }));
     }
 
     listPurchases(values: {
@@ -275,8 +291,8 @@ export class BackendClient {
         );
     }
 
-    getPurchase(id: number): Promise<Record<string, unknown> | null> {
-        return this.query(api.domain.getPurchase, this.args({ legacyId: id }));
+    getPurchase(projectId: number, id: number): Promise<Record<string, unknown> | null> {
+        return this.query(api.domain.getPurchase, this.args({ projectLegacyId: projectId, legacyId: id }));
     }
 
     createPurchase(values: {
@@ -297,17 +313,18 @@ export class BackendClient {
     }
 
     updatePurchase(
+        projectId: number,
         id: number,
         values: { date?: string; status?: string; items?: PurchaseItemInput[] },
     ): Promise<number> {
         return this.mutation(
             api.domain.updatePurchase,
-            this.args({ legacyId: id, ...values }),
+            this.args({ projectLegacyId: projectId, legacyId: id, ...values }),
         );
     }
 
-    deletePurchase(id: number): Promise<boolean> {
-        return this.mutation(api.domain.deletePurchase, this.args({ legacyId: id }));
+    deletePurchase(projectId: number, id: number): Promise<boolean> {
+        return this.mutation(api.domain.deletePurchase, this.args({ projectLegacyId: projectId, legacyId: id }));
     }
 
     listTransactions(values: {
@@ -331,8 +348,8 @@ export class BackendClient {
         );
     }
 
-    getTransaction(id: number): Promise<Record<string, unknown> | null> {
-        return this.query(api.domain.getOtherTransaction, this.args({ legacyId: id }));
+    getTransaction(projectId: number, id: number): Promise<Record<string, unknown> | null> {
+        return this.query(api.domain.getOtherTransaction, this.args({ projectLegacyId: projectId, legacyId: id }));
     }
 
     createTransaction(values: {
@@ -359,6 +376,7 @@ export class BackendClient {
     }
 
     updateTransaction(
+        projectId: number,
         id: number,
         values: {
             type?: string;
@@ -371,12 +389,12 @@ export class BackendClient {
     ): Promise<number> {
         return this.mutation(
             api.domain.updateOtherTransaction,
-            this.args({ legacyId: id, ...values }),
+            this.args({ projectLegacyId: projectId, legacyId: id, ...values }),
         );
     }
 
-    deleteTransaction(id: number): Promise<boolean> {
-        return this.mutation(api.domain.deleteOtherTransaction, this.args({ legacyId: id }));
+    deleteTransaction(projectId: number, id: number): Promise<boolean> {
+        return this.mutation(api.domain.deleteOtherTransaction, this.args({ projectLegacyId: projectId, legacyId: id }));
     }
 
     listStock(values: {
@@ -485,7 +503,7 @@ export class BackendClient {
     apiKeyByHash(keyHash: string) {
         return this.query<{
             id: string;
-            proyecto_id: number | null;
+            proyecto_id: number;
             scopes: Array<"read" | "write">;
             activa: boolean;
             expira_en: string | null;
@@ -506,7 +524,7 @@ export class BackendClient {
 
     createApiKey(values: {
         name: string;
-        projectId?: number;
+        projectId: number;
         keyHash: string;
         keyPrefix: string;
         scopes: Array<"read" | "write">;
@@ -515,7 +533,7 @@ export class BackendClient {
         return this.mutation(api.domain.createApiKey, {
             bridgeSecret: this.config.bridgeSecret,
             name: values.name,
-            ...(values.projectId !== undefined ? { projectLegacyId: values.projectId } : {}),
+            projectLegacyId: values.projectId,
             keyHash: values.keyHash,
             keyPrefix: values.keyPrefix,
             scopes: values.scopes,

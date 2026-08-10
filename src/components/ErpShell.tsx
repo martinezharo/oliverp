@@ -20,6 +20,7 @@ const titles: Record<string, string> = {
   "/stock": "title.stock",
   "/transacciones": "title.transactions",
   "/historial": "title.history",
+  "/ajustes": "title.settings",
 };
 
 /**

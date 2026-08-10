@@ -120,8 +120,17 @@ const proyectoIdParam = {
     in: "query",
     schema: { type: "integer" },
     description:
-        "Obligatorio salvo que la API key esté fijada a un proyecto, en cuyo caso se ignora si coincide y se rechaza si no.",
+        "Opcional para una API key, que ya está fijada a un proyecto: se acepta si coincide y se rechaza si no.",
 } as const;
+
+/**
+ * Legacy ids are unique per project, so a `/{id}` route needs to know which
+ * project the id belongs to. An API key supplies it implicitly.
+ */
+const idPathParams = [
+    { name: "id", in: "path", required: true, schema: { type: "integer" } },
+    proyectoIdParam,
+] as const;
 
 const paginacionParams = [
     { name: "page", in: "query", schema: { type: "integer", minimum: 1, default: 1 } },
@@ -281,8 +290,11 @@ export function buildOpenApiDocument(serverUrl: string) {
                 "API para automatizar OlivERP desde agentes de IA y herramientas de automatización.",
                 "",
                 "**Autenticación.** Envía `Authorization: Bearer erp_sk_...` (también se acepta `X-API-Key`).",
-                "Una key puede estar fijada a un proyecto; en ese caso `proyecto_id` es opcional y no puede",
-                "apuntar a otro proyecto.",
+                "Cada key está fijada a un proyecto: `proyecto_id` es opcional y solo puede coincidir con el",
+                "proyecto de la key. Una key nunca puede leer ni escribir en otro proyecto.",
+                "",
+                "**Ids.** Los ids de ventas, compras, productos y transacciones son únicos *dentro de cada",
+                "proyecto*, no globalmente. Las rutas `/{id}` resuelven el id en el proyecto de la key.",
                 "",
                 "**Reintentos.** Las escrituras aceptan la cabecera `Idempotency-Key`. Reintentar con la misma",
                 "clave devuelve la respuesta original en lugar de duplicar el registro.",
@@ -512,7 +524,7 @@ export function buildOpenApiDocument(serverUrl: string) {
                 get: {
                     operationId: "obtenerVenta",
                     summary: "Obtiene una venta",
-                    parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+                    parameters: [...idPathParams],
                     responses: { ...itemResponse(ventaSchema), ...errorResponses },
                 },
                 patch: {
@@ -520,7 +532,7 @@ export function buildOpenApiDocument(serverUrl: string) {
                     summary: "Modifica una venta",
                     description:
                         "Omitir 'items' modifica solo la cabecera, que es lo habitual para cambiar el estado (por ejemplo a 'devuelta'). Enviar 'items' sustituye todas las líneas.",
-                    parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+                    parameters: [...idPathParams],
                     requestBody: {
                         required: true,
                         content: {
@@ -590,13 +602,13 @@ export function buildOpenApiDocument(serverUrl: string) {
                 get: {
                     operationId: "obtenerCompra",
                     summary: "Obtiene una compra",
-                    parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+                    parameters: [...idPathParams],
                     responses: { ...itemResponse(compraSchema), ...errorResponses },
                 },
                 patch: {
                     operationId: "actualizarCompra",
                     summary: "Modifica una compra",
-                    parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+                    parameters: [...idPathParams],
                     requestBody: {
                         required: true,
                         content: {
@@ -669,13 +681,13 @@ export function buildOpenApiDocument(serverUrl: string) {
                 get: {
                     operationId: "obtenerTransaccion",
                     summary: "Obtiene un ingreso o gasto",
-                    parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+                    parameters: [...idPathParams],
                     responses: { ...itemResponse(transaccionSchema), ...errorResponses },
                 },
                 patch: {
                     operationId: "actualizarTransaccion",
                     summary: "Modifica un ingreso o gasto",
-                    parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+                    parameters: [...idPathParams],
                     requestBody: {
                         required: true,
                         content: {
@@ -700,7 +712,7 @@ export function buildOpenApiDocument(serverUrl: string) {
                 delete: {
                     operationId: "borrarTransaccion",
                     summary: "Borra un ingreso o gasto",
-                    parameters: [{ name: "id", in: "path", required: true, schema: { type: "integer" } }],
+                    parameters: [...idPathParams],
                     responses: { ...itemResponse({ type: "object" }), ...errorResponses },
                 },
             },

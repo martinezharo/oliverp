@@ -51,9 +51,15 @@ async function main() {
     const invalid = scopes.filter((scope) => !VALID_SCOPES.includes(scope));
     if (invalid.length) fail(`Scopes no validos: ${invalid.join(", ")}. Acepta: read, write.`);
 
+    // A key is always bound to one project. It used to be optional, and an
+    // omitted value meant "every project in the deployment" — which, with open
+    // sign-up, means every project of every user.
     const projectRaw = args.proyecto ?? args.project;
-    const projectId = projectRaw && projectRaw !== "true" ? Number(projectRaw) : undefined;
-    if (projectId !== undefined && (!Number.isInteger(projectId) || projectId <= 0)) {
+    if (!projectRaw || projectRaw === "true") {
+        fail('Falta --proyecto. Ejemplo: "pnpm api:key --nombre n8n --proyecto 1"');
+    }
+    const projectId = Number(projectRaw);
+    if (!Number.isInteger(projectId) || projectId <= 0) {
         fail("--proyecto debe ser un id entero positivo.");
     }
 
@@ -78,14 +84,14 @@ async function main() {
     const data = await convex.mutation(api.domain.createApiKey, {
         bridgeSecret,
         name,
-        ...(projectId !== undefined ? { projectLegacyId: projectId } : {}),
+        projectLegacyId: projectId,
         keyHash,
         keyPrefix: key.slice(0, KEY_PREFIX.length + 6),
         scopes,
         ...(expiresAt ? { expiresAt } : {}),
     });
 
-    console.log(`\n✔ API key creada en Convex\n\n  Nombre    : ${data.nombre}\n  Id        : ${data.id}\n  Proyecto  : ${data.proyecto_id ?? "todos"}\n  Permisos  : ${data.scopes.join(", ")}\n  Expira    : ${data.expira_en ?? "nunca"}\n\n  Key       : ${key}\n\n  Guardala ahora: no se puede volver a mostrar.\n`);
+    console.log(`\n✔ API key creada en Convex\n\n  Nombre    : ${data.nombre}\n  Id        : ${data.id}\n  Proyecto  : ${data.proyecto_id}\n  Permisos  : ${data.scopes.join(", ")}\n  Expira    : ${data.expira_en ?? "nunca"}\n\n  Key       : ${key}\n\n  Guardala ahora: no se puede volver a mostrar.\n`);
 }
 
 main().catch((error) => {

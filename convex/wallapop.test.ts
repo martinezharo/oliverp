@@ -87,6 +87,7 @@ describe("importWallapopSale", () => {
     const sale = await t.query(api.domain.getSale, {
       bridgeSecret: SECRET,
       actor,
+      projectLegacyId: 7,
       legacyId: 1,
     });
     expect(sale).toMatchObject({
@@ -171,6 +172,7 @@ describe("updatePurchase", () => {
       t.mutation(api.domain.updatePurchase, {
         bridgeSecret: SECRET,
         actor,
+        projectLegacyId: 7,
         legacyId: purchaseId,
         date: "2026-08-04T00:00:00",
         status: "recibida",
@@ -181,6 +183,7 @@ describe("updatePurchase", () => {
     const purchase = await t.query(api.domain.getPurchase, {
       bridgeSecret: SECRET,
       actor,
+      projectLegacyId: 7,
       legacyId: purchaseId,
     });
     expect(purchase?.compra_detalle).toMatchObject([

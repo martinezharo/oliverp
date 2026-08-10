@@ -35,7 +35,13 @@ RLS, the RPC/trigger tests, the VAT arithmetic and the pre-push hook are done
       rows, rejects row-dependent membership predicates on high-volume tables,
       and runs `EXPLAIN ANALYZE` under the production timeout.
 
-- [ ] **A membership UI.** `proyecto_usuarios` is currently only writable with
-      the service role (see README). Adding and removing members from the app
-      needs a screen, and creating a project needs an RPC that writes the
-      project and its first admin in one transaction.
+- [ ] **A membership UI.** Creating a project now writes the project and its
+      first admin in one Convex mutation, and `requireAdmin` enforces the role.
+      What is still missing is the screen: inviting, listing and removing
+      members, plus a rule for removing the last admin. Until it exists every
+      project has exactly one member. See `docs/AUDIT.md` #7.
+
+- [x] **Project and account deletion.** `/ajustes` lets a user delete a project
+      they administer, or their whole account. Both purge in budgeted rounds
+      (`convex/account.ts`) because a large project exceeds the write limit of a
+      single Convex transaction.

@@ -72,6 +72,7 @@ export default defineSchema({
   })
     .index("by_legacy_id", ["legacyId"])
     .index("by_project_name", ["projectId", "name"])
+    .index("by_project_legacy", ["projectLegacyId", "legacyId"])
     .index("by_project_normalized_name", ["projectId", "normalizedName"]),
 
   customerCounts: defineTable({
@@ -110,7 +111,8 @@ export default defineSchema({
     .index("by_legacy_id", ["legacyId"])
     .index("by_sale", ["saleId"])
     .index("by_product", ["productId"])
-    .index("by_project", ["projectId"]),
+    .index("by_project", ["projectId"])
+    .index("by_project_legacy", ["projectLegacyId", "legacyId"]),
 
   purchases: defineTable({
     legacyId: v.number(),
@@ -137,7 +139,8 @@ export default defineSchema({
     .index("by_legacy_id", ["legacyId"])
     .index("by_purchase", ["purchaseId"])
     .index("by_product", ["productId"])
-    .index("by_project", ["projectId"]),
+    .index("by_project", ["projectId"])
+    .index("by_project_legacy", ["projectLegacyId", "legacyId"]),
 
   stockMovements: defineTable({
     legacyId: v.number(),
@@ -154,6 +157,7 @@ export default defineSchema({
     .index("by_legacy_id", ["legacyId"])
     .index("by_product", ["productId"])
     .index("by_project_date", ["projectId", "date"])
+    .index("by_project_legacy", ["projectLegacyId", "legacyId"])
     .index("by_purchase_line", ["purchaseLineId"])
     .index("by_sale_line", ["saleLineId"]),
 
@@ -170,19 +174,46 @@ export default defineSchema({
   })
     .index("by_legacy_id", ["legacyId"])
     .index("by_project_date", ["projectId", "date"])
+    .index("by_project_legacy", ["projectLegacyId", "legacyId"])
     .index("by_project_type_date", ["projectId", "type", "date"]),
 
+  /**
+   * Every key is pinned to exactly one project. An unpinned key used to mean
+   * "all of my projects"; with public sign-up it would mean "every project of
+   * every user", so the field is required and enforced in `requireProject`.
+   */
   apiKeys: defineTable({
     name: v.string(),
     keyHash: v.string(),
     keyPrefix: v.string(),
-    projectLegacyId: v.optional(v.number()),
+    projectLegacyId: v.number(),
     scopes: v.array(v.union(v.literal("read"), v.literal("write"))),
     active: v.boolean(),
     expiresAt: v.optional(v.string()),
     lastUsedAt: v.optional(v.string()),
     createdAt: v.string(),
-  }).index("by_hash", ["keyHash"]),
+  })
+    .index("by_hash", ["keyHash"])
+    .index("by_project", ["projectLegacyId"]),
+
+  /**
+   * Legacy id sequences. Reading the tail of a `by_legacy_id` index to find the
+   * next id made every insert in a table conflict with every other insert in
+   * that table, across unrelated projects. A counter row per (scope, name)
+   * confines that contention to one project.
+   */
+  counters: defineTable({
+    scope: v.string(),
+    name: v.string(),
+    value: v.number(),
+  }).index("by_scope_name", ["scope", "name"]),
+
+  /** Fixed-window write budgets, keyed by actor. */
+  rateLimits: defineTable({
+    key: v.string(),
+    windowStart: v.number(),
+    count: v.number(),
+  }).index("by_key", ["key"]),
 
   idempotencyKeys: defineTable({
     key: v.string(),

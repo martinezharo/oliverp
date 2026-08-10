@@ -50,7 +50,7 @@ async function handleSave(context: ServerContext, method: string) {
             date: body.fecha,
         };
         const savedId = method === "PUT"
-            ? await session.backend.updateTransaction(id!, values)
+            ? await session.backend.updateTransaction(projectId, id!, values)
             : await session.backend.createTransaction({ projectId, ...values });
 
         return jsonResponse({ success: true, id: savedId });

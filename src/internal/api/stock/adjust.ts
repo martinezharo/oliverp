@@ -9,14 +9,15 @@ export const POST: APIRoute = async (context) => {
 
     try {
         const body = await context.request.json() as {
+            projectId?: number;
             productId?: number;
             units?: number;
             date?: string;
         };
-        if (!body.productId || body.units === undefined || !body.date) {
+        if (!body.projectId || !body.productId || body.units === undefined || !body.date) {
             return jsonResponse({ error: "Missing required fields" }, 400);
         }
-        const product = await session.backend.getProductGlobal(body.productId);
+        const product = await session.backend.getProductGlobal(body.projectId, body.productId);
         if (!product) return jsonResponse({ error: "Product not found" }, 404);
         const data = await session.backend.adjustStock({
             projectId: product.proyecto_id,
