@@ -44,7 +44,7 @@ function check(args: { bridgeSecret: string }): void {
   assertBridgeSecret(args.bridgeSecret);
 }
 
-function legacyProject(project: Doc<"projects">) {
+export function legacyProject(project: Doc<"projects">) {
   return {
     id: project.legacyId,
     nombre: project.name,
@@ -59,7 +59,7 @@ async function productsForProject(ctx: QueryCtx | MutationCtx, projectId: Id<"pr
     .collect();
 }
 
-async function salesForProject(ctx: QueryCtx | MutationCtx, projectId: Id<"projects">) {
+export async function salesForProject(ctx: QueryCtx | MutationCtx, projectId: Id<"projects">) {
   return await ctx.db
     .query("sales")
     .withIndex("by_project_date", (q) => q.eq("projectId", projectId))
@@ -67,7 +67,7 @@ async function salesForProject(ctx: QueryCtx | MutationCtx, projectId: Id<"proje
     .collect();
 }
 
-async function purchasesForProject(ctx: QueryCtx | MutationCtx, projectId: Id<"projects">) {
+export async function purchasesForProject(ctx: QueryCtx | MutationCtx, projectId: Id<"projects">) {
   return await ctx.db
     .query("purchases")
     .withIndex("by_project_date", (q) => q.eq("projectId", projectId))
@@ -75,7 +75,7 @@ async function purchasesForProject(ctx: QueryCtx | MutationCtx, projectId: Id<"p
     .collect();
 }
 
-async function otherTransactionsForProject(
+export async function otherTransactionsForProject(
   ctx: QueryCtx | MutationCtx,
   projectId: Id<"projects">,
 ) {
@@ -116,7 +116,7 @@ async function saleByOrigin(
     .first();
 }
 
-async function saleRow(ctx: QueryCtx | MutationCtx, sale: Doc<"sales">) {
+export async function saleRow(ctx: QueryCtx | MutationCtx, sale: Doc<"sales">) {
   const customer = sale.customerId ? await ctx.db.get(sale.customerId) : null;
   const lines = await ctx.db
     .query("saleLines")
@@ -151,7 +151,7 @@ async function saleRow(ctx: QueryCtx | MutationCtx, sale: Doc<"sales">) {
   };
 }
 
-async function purchaseRow(ctx: QueryCtx | MutationCtx, purchase: Doc<"purchases">) {
+export async function purchaseRow(ctx: QueryCtx | MutationCtx, purchase: Doc<"purchases">) {
   const lines = await ctx.db
     .query("purchaseLines")
     .withIndex("by_purchase", (q) => q.eq("purchaseId", purchase._id))
@@ -1051,7 +1051,7 @@ function dateMillis(value: string): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-async function stockRowsForProject(
+export async function stockRowsForProject(
   ctx: QueryCtx | MutationCtx,
   project: Doc<"projects">,
 ): Promise<StockRow[]> {
@@ -1265,20 +1265,24 @@ type FinanceRow = {
   saldo_iva: number;
 };
 
-function dayOf(value: string): string {
+export function dayOf(value: string): string {
   return value.slice(0, 10);
 }
 
 type DailyFinanceArgs = {
-  bridgeSecret: string;
   actor: Actor;
   projectLegacyId: number;
   fromDate?: string;
   toDate?: string;
 };
 
-async function computeDailyFinances(ctx: QueryCtx, args: DailyFinanceArgs) {
-  check(args);
+/**
+ * The daily read model. Callers own the authentication gate: the bridge
+ * entry points below check the shared secret, while the session queries in
+ * `session.ts` rely on `requireProject` alone, which resolves the user from
+ * Convex's verified JWT.
+ */
+export async function computeDailyFinances(ctx: QueryCtx, args: DailyFinanceArgs) {
   const project = await requireProject(ctx, args.actor, args.projectLegacyId);
   const sales = await salesForProject(ctx, project._id);
   const purchases = await purchasesForProject(ctx, project._id);
@@ -1382,12 +1386,16 @@ export const listDailyFinances = query({
     fromDate: v.optional(v.string()),
     toDate: v.optional(v.string()),
   },
-  handler: computeDailyFinances,
+  handler: async (ctx, args) => {
+    check(args);
+    return await computeDailyFinances(ctx, args);
+  },
 });
 
 export const financeEvolution = query({
   args: { ...bridgeArgs, projectLegacyId: v.number(), fromDate: v.string() },
   handler: async (ctx, args) => {
+    check(args);
     const rows = await computeDailyFinances(ctx, {
       ...args,
       toDate: undefined,
@@ -1398,7 +1406,7 @@ export const financeEvolution = query({
   },
 });
 
-async function visibleProjects(ctx: QueryCtx | MutationCtx, actor: Actor) {
+export async function visibleProjects(ctx: QueryCtx | MutationCtx, actor: Actor) {
   if (actor.kind === "api_key") {
     if (actor.projectLegacyId !== undefined) {
       const project = await projectByLegacyId(ctx, actor.projectLegacyId);

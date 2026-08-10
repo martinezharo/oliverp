@@ -2,13 +2,12 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
-import { apiJson } from "@/lib/client-api";
-import { mockFinanzas } from "@/lib/mock-data";
 import { ui } from "@/i18n/ui";
+import { useErpContext } from "@/hooks/useErpContext";
+import { useFinanceRows } from "@/hooks/useErpData";
 
-import { toFinanceRow, type FinanceApiRow } from "./apiRows";
 import type { FinanceRow } from "./types";
 
 const t = (key: string, values?: Record<string, string | number>) => { let value = ui.en[key] ?? key; for (const [name, replacement] of Object.entries(values ?? {})) value = value.replace(`{${name}}`, String(replacement)); return value; };
@@ -17,16 +16,16 @@ const currency = (value: number) => new Intl.NumberFormat(locale, { style: "curr
 type Grouping = "month" | "quarter" | "year" | "total";
 type Group = { key: string; label: string; sortKey: string; ingresos: number; gastos: number; balance: number; urp: number; iva_soportado: number; iva_repercutido: number; saldo_iva: number };
 
-export default function HistoryPage({ projectId, demo, reloadKey }: { projectId: number; demo: boolean; reloadKey: number }) {
-  const [rows, setRows] = useState<FinanceRow[]>([]);
+export default function HistoryPage() {
+  const { projectId } = useErpContext();
+  const rows = useFinanceRows();
   const searchParams = useSearchParams();
   const view = parseGrouping(searchParams?.get("view") ?? null);
-  useEffect(() => { let cancelled = false; void (demo ? Promise.resolve(mockFinanzas.filter((row) => row.proyecto_id === projectId).sort((a, b) => b.dia.localeCompare(a.dia))) : apiJson<{ data: FinanceApiRow[] }>(`/api/v1/finanzas?proyecto_id=${projectId}`).then((body) => (body.data ?? []).map(toFinanceRow))).then((data) => { if (!cancelled) setRows(data); }).catch(() => { if (!cancelled) setRows([]); }); return () => { cancelled = true; }; }, [demo, projectId, reloadKey]);
-  const groups = useMemo(() => groupRows(rows, view), [rows, view]);
+  const groups = useMemo(() => groupRows(rows ?? [], view), [rows, view]);
   const options: Array<{ value: Grouping; label: string }> = [{ value: "month", label: t("history.viewMonths") }, { value: "quarter", label: t("history.viewQuarters") }, { value: "year", label: t("history.viewYears") }, { value: "total", label: t("history.viewTotal") }];
   return <>
     <div className="mb-8 flex flex-col items-start justify-between gap-4 md:flex-row md:items-center"><div><h1 className="mb-2 text-2xl font-bold text-white">{t("history.title")}</h1><p className="text-sm text-slate-400">{t("history.subtitle")}</p></div><div className="flex rounded-xl border border-white/5 bg-[#14151a] p-1">{options.map((option) => <Link key={option.value} href={`/historial?projectId=${projectId}&view=${option.value}`} className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${view === option.value ? "bg-blue-500/10 text-blue-400 shadow-sm" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}>{option.label}</Link>)}</div></div>
-    {!projectId ? <div className="py-20 text-center"><p className="text-slate-500">{t("history.selectProject")}</p></div> : <div className="flex flex-col gap-4"><div className="hidden rounded-xl border border-white/5 bg-[#14151a]/50 px-6 py-3 text-xs font-bold uppercase tracking-wider text-slate-500 md:grid md:grid-cols-6 md:gap-4"><div>{t("history.period")}</div><div className="text-right">{t("finance.income")}</div><div className="text-right">{t("finance.expenses")}</div><div className="text-right">{t("finance.balance")}</div><div className="text-right">{t("finance.vatBalance")}</div><div className="text-right">{t("finance.urp")}</div></div>{groups.map((group) => <HistoryRow key={group.key} group={group} />)}</div>}
+    {!projectId ? <div className="py-20 text-center"><p className="text-slate-500">{t("history.selectProject")}</p></div> : rows === undefined ? <div className="flex animate-pulse flex-col gap-4" aria-busy="true">{[0, 1, 2, 3, 4].map((slot) => <div key={slot} className="h-20 rounded-2xl bg-white/5" />)}</div> : <div className="flex flex-col gap-4"><div className="hidden rounded-xl border border-white/5 bg-[#14151a]/50 px-6 py-3 text-xs font-bold uppercase tracking-wider text-slate-500 md:grid md:grid-cols-6 md:gap-4"><div>{t("history.period")}</div><div className="text-right">{t("finance.income")}</div><div className="text-right">{t("finance.expenses")}</div><div className="text-right">{t("finance.balance")}</div><div className="text-right">{t("finance.vatBalance")}</div><div className="text-right">{t("finance.urp")}</div></div>{groups.map((group) => <HistoryRow key={group.key} group={group} />)}</div>}
   </>;
 }
 

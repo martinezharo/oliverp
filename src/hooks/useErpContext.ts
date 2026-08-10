@@ -1,0 +1,36 @@
+"use client";
+
+import { createContext, useContext } from "react";
+
+export type Project = { id: number; nombre: string; activo?: boolean };
+export type ModalKind = "sale" | "purchase" | "other" | "product" | null;
+
+export interface ErpContextValue {
+  /** The project every view reads, or null while none is selected. */
+  projectId: number | null;
+  projects: Project[];
+  demo: boolean;
+  /** False only while the very first project list is in flight. */
+  ready: boolean;
+  openModal: (kind: Exclude<ModalKind, null>) => void;
+}
+
+const defaultContext: ErpContextValue = {
+  projectId: null,
+  projects: [],
+  demo: false,
+  ready: false,
+  openModal: () => undefined,
+};
+
+export const ErpContext = createContext<ErpContextValue>(defaultContext);
+
+/**
+ * The shell owns the project selection and the modal stack, and it now lives
+ * in a layout that survives navigation. Views read it from context instead of
+ * receiving props from a page component that gets remounted on every route
+ * change.
+ */
+export function useErpContext(): ErpContextValue {
+  return useContext(ErpContext);
+}

@@ -1,13 +1,15 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { apiErrorMessage, apiFetch, apiJson } from "@/lib/client-api";
-import { mockFinanzas } from "@/lib/mock-data";
+import { apiFetch } from "@/lib/client-api";
 import { ui } from "@/i18n/ui";
+import { useErpContext } from "@/hooks/useErpContext";
+import { useFinanceRows, useTransactions } from "@/hooks/useErpData";
+import { filterTransactions } from "@/lib/transactions";
 
-import { toFinanceRow, type FinanceApiRow } from "./apiRows";
+import EmptyProject from "./EmptyProject";
 import Pagination from "./Pagination";
 import TransactionFilters, { type FilterState } from "./TransactionFilters";
 import type { FinanceRow, Transaction } from "./types";
@@ -20,17 +22,29 @@ const t = (key: string, values?: Record<string, string | number>) => {
 const locale = "en-GB";
 const currency = (value: number) => new Intl.NumberFormat(locale, { style: "currency", currency: "EUR" }).format(value);
 
-export default function TransactionsPage({ projectId, demo, reloadKey, onOpenModal }: { projectId: number; demo: boolean; reloadKey: number; onOpenModal: (kind: "sale" | "purchase" | "other") => void }) {
-  const [daily, setDaily] = useState<FinanceRow[]>([]);
-  const [dailyTotal, setDailyTotal] = useState(0);
+const PAGE_SIZE_DAILY = 15;
+const PAGE_SIZE_FLAT = 20;
+
+function optionalAmount(value: string): number | undefined {
+  if (value.trim() === "") return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+export default function TransactionsPage() {
+  const { projectId, demo, openModal } = useErpContext();
+  const onOpenModal = openModal;
   const searchParams = useSearchParams();
   const page = Math.max(1, Number.parseInt(searchParams?.get("page") || "1", 10));
   const [mode, setMode] = useState<"daily" | "list">("daily");
   const [filters, setFilters] = useState<FilterState>({ search: "", type: "", channel: "", dateFrom: "", dateTo: "", amountMin: "", amountMax: "" });
-  const [flat, setFlat] = useState<Transaction[]>([]);
-  const [flatTotal, setFlatTotal] = useState(0);
   const [flatPage, setFlatPage] = useState(1);
-  const [error, setError] = useState<string | null>(null);
+
+  const financeRows = useFinanceRows();
+  // The list view subscribes to the project's transactions once; filtering and
+  // paging then happen locally, so a keystroke in the filters no longer costs
+  // a request.
+  const allTransactions = useTransactions();
 
   useEffect(() => {
     try {
@@ -46,31 +60,25 @@ export default function TransactionsPage({ projectId, demo, reloadKey, onOpenMod
     }
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const rows = demo ? mockFinanzas.filter((row) => row.proyecto_id === projectId).sort((a, b) => b.dia.localeCompare(a.dia)) : ((await apiJson<{ data: FinanceApiRow[] }>(`/api/v1/finanzas?proyecto_id=${projectId}`)).data ?? []).map(toFinanceRow);
-        const ordered = [...rows].sort((a, b) => b.dia.localeCompare(a.dia));
-        if (!cancelled) { setDailyTotal(ordered.length); setDaily(ordered.slice((page - 1) * 15, page * 15)); }
-      } catch (cause) { if (!cancelled) setError(apiErrorMessage(cause, t("common.errorLoadingData"))); }
-    })();
-    return () => { cancelled = true; };
-  }, [demo, projectId, reloadKey, page]);
+  const daily = useMemo(
+    () => (financeRows ?? []).slice((page - 1) * PAGE_SIZE_DAILY, page * PAGE_SIZE_DAILY),
+    [financeRows, page],
+  );
+  const dailyTotal = financeRows?.length ?? 0;
 
-  useEffect(() => {
-    if (mode !== "list") return;
-    let cancelled = false;
-    void (async () => {
-      try {
-        const params = new URLSearchParams({ projectId: String(projectId), page: String(flatPage), pageSize: "20" });
-        for (const [key, value] of Object.entries(filters)) if (value) params.set(key, value);
-        const result = await apiJson<{ items: Transaction[]; total: number }>(`/api/transactions/list?${params}`);
-        if (!cancelled) { setFlat(result.items ?? []); setFlatTotal(result.total ?? 0); }
-      } catch (cause) { if (!cancelled) { setFlat([]); setFlatTotal(0); setError(apiErrorMessage(cause, t("common.errorLoadingData"))); } }
-    })();
-    return () => { cancelled = true; };
-  }, [demo, filters, flatPage, mode, projectId, reloadKey]);
+  const filtered = useMemo(
+    () => filterTransactions(allTransactions ?? [], {
+      ...filters,
+      amountMin: optionalAmount(filters.amountMin),
+      amountMax: optionalAmount(filters.amountMax),
+    }),
+    [allTransactions, filters],
+  );
+  const flat = useMemo(
+    () => filtered.slice((flatPage - 1) * PAGE_SIZE_FLAT, flatPage * PAGE_SIZE_FLAT),
+    [filtered, flatPage],
+  );
+  const flatTotal = filtered.length;
 
   function changeMode(next: "daily" | "list") {
     setMode(next);
@@ -81,36 +89,42 @@ export default function TransactionsPage({ projectId, demo, reloadKey, onOpenMod
   function clearFilters() { setFilters({ search: "", type: "", channel: "", dateFrom: "", dateTo: "", amountMin: "", amountMax: "" }); setFlatPage(1); }
 
   const channels = demo ? [] : ["Proveedor", "Manual"];
+  const loading = mode === "daily" ? financeRows === undefined : allTransactions === undefined;
+
+  if (!projectId) return <EmptyProject />;
+
   return <>
     <div className="mb-6 lg:mb-8"><h1 className="bg-gradient-to-r from-white to-slate-400 bg-clip-text text-2xl font-bold text-transparent lg:text-3xl">{t("transactions.title")}</h1><p className="mt-1 text-sm text-slate-400 lg:text-base">{t("transactions.subtitle")}</p></div>
     <TransactionFilters mode={mode} setMode={changeMode} channels={channels} filters={filters} onChange={changeFilter} onClear={clearFilters} />
-    {error && <div className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-400">{t("common.errorLoadingData")}: {error}</div>}
-    {mode === "daily" ? <DailyView daily={daily} projectId={projectId} /> : <FlatView rows={flat} projectId={projectId} demo={demo} onOpenModal={onOpenModal} />}
-    {mode === "daily" ? <div id="daily-pagination" className="mt-8"><Pagination currentPage={page} totalPages={Math.ceil(dailyTotal / 15)} baseUrl={`/transacciones?projectId=${projectId}`} /></div> : <FlatPager page={flatPage} total={flatTotal} onPageChange={setFlatPage} />}
+    {loading ? <ListSkeleton /> : mode === "daily" ? <DailyView daily={daily} transactions={allTransactions ?? []} /> : <FlatView rows={flat} projectId={projectId} demo={demo} onOpenModal={onOpenModal} />}
+    {loading ? null : mode === "daily" ? <div id="daily-pagination" className="mt-8"><Pagination currentPage={page} totalPages={Math.ceil(dailyTotal / PAGE_SIZE_DAILY)} baseUrl={`/transacciones?projectId=${projectId}`} /></div> : <FlatPager page={flatPage} total={flatTotal} onPageChange={setFlatPage} />}
   </>;
 }
 
-function DailyView({ daily, projectId }: { daily: FinanceRow[]; projectId: number }) {
-  return <div id="daily-view" className="space-y-4">{daily.length === 0 ? <div className="rounded-2xl border border-white/5 bg-white/5 p-8 text-center italic text-slate-500">{t("txn.noTransactions")}</div> : daily.map((row) => <DayCard key={row.dia} row={row} projectId={projectId} />)}</div>;
+function ListSkeleton() {
+  return <div className="animate-pulse space-y-4" aria-busy="true" aria-label={t("common.loadingData")}>{[0, 1, 2, 3, 4, 5].map((slot) => <div key={slot} className="h-24 rounded-2xl bg-white/5" />)}</div>;
 }
 
-function DayCard({ row, projectId }: { row: FinanceRow; projectId: number }) {
+function DailyView({ daily, transactions }: { daily: FinanceRow[]; transactions: Transaction[] }) {
+  return <div id="daily-view" className="space-y-4">{daily.length === 0 ? <div className="rounded-2xl border border-white/5 bg-white/5 p-8 text-center italic text-slate-500">{t("txn.noTransactions")}</div> : daily.map((row) => <DayCard key={row.dia} row={row} transactions={transactions} />)}</div>;
+}
+
+function DayCard({ row, transactions }: { row: FinanceRow; transactions: Transaction[] }) {
   const [open, setOpen] = useState(false);
-  const [details, setDetails] = useState<Transaction[] | null>(null);
   const date = new Date(row.dia);
-  async function toggle() {
-    const next = !open;
-    setOpen(next);
-    if (next && details === null) {
-      try { setDetails(await apiJson<Transaction[]>(`/api/transactions/details?date=${encodeURIComponent(row.dia)}&projectId=${projectId}`)); } catch { setDetails([]); }
-    }
-  }
+  // The project's transactions are already subscribed to, so expanding a day
+  // is a local filter instead of a request that used to spin for a moment.
+  const details = useMemo(
+    () => transactions.filter((item) => item.date.slice(0, 10) === row.dia).sort((a, b) => b.id - a.id),
+    [row.dia, transactions],
+  );
+  function toggle() { setOpen((current) => !current); }
   return <div className={`transaction-day-card group cursor-pointer overflow-hidden rounded-2xl border border-white/5 bg-[#1a1b23] p-0 transition-all hover:border-white/10 ${open ? "open" : ""}`} data-date={row.dia} data-project-id={row.proyecto_id}>
-    <button type="button" onClick={() => void toggle()} className="block w-full p-4 text-left lg:p-6">
+    <button type="button" onClick={toggle} className="block w-full p-4 text-left lg:p-6">
       <div className="flex items-start justify-between gap-3"><div className="flex min-w-0 items-center gap-3"><div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/5 text-slate-400 transition-colors group-hover:text-white lg:h-12 lg:w-12"><span className="font-mono text-base font-bold lg:text-lg">{date.getDate()}</span></div><div className="min-w-0"><h4 className="text-sm font-medium leading-tight text-white lg:text-base"><span className="block sm:hidden">{date.toLocaleDateString(locale, { month: "long", year: "numeric" })}<span className="block font-semibold">{date.toLocaleDateString(locale, { weekday: "long" })}</span></span><span className="hidden sm:block">{date.toLocaleDateString(locale, { weekday: "long", month: "long", year: "numeric" })}</span></h4><div className="mt-1 flex flex-wrap gap-2 text-xs lg:gap-3"><span className="text-emerald-400">{t("finance.income")}: +{currency(row.ingresos)}</span><span className="text-red-400">{t("finance.expenses")}: -{currency(row.gastos)}</span></div></div></div><div className="flex shrink-0 items-center gap-4 lg:gap-6"><div className="hidden text-right lg:block"><div className="text-sm text-slate-400">{t("finance.urp")}</div><div className="font-mono text-lg font-bold text-white">{currency(row.urp)}</div></div><div className="hidden text-right lg:block"><div className="text-sm text-slate-400">{t("finance.balance")}</div><div className={`text-lg font-bold ${row.balance >= 0 ? "text-emerald-400" : "text-red-400"}`}>{row.balance >= 0 ? "+" : ""}{currency(row.balance)}</div></div><div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-slate-400 transition-colors group-hover:bg-white/10"><svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 transform transition-transform duration-300 ${open ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg></div></div></div>
       <div className="mt-3 grid grid-cols-2 gap-2 border-t border-white/5 pt-3 lg:hidden"><div className="rounded-xl bg-white/5 px-3 py-2"><div className="mb-0.5 text-[10px] uppercase tracking-wider text-slate-500">{t("finance.urp")}</div><div className="font-mono text-sm font-bold text-white">{currency(row.urp)}</div></div><div className={`rounded-xl px-3 py-2 ${row.balance >= 0 ? "bg-emerald-500/10" : "bg-red-500/10"}`}><div className="mb-0.5 text-[10px] uppercase tracking-wider text-slate-500">{t("finance.balance")}</div><div className={`font-mono text-sm font-bold ${row.balance >= 0 ? "text-emerald-400" : "text-red-400"}`}>{row.balance >= 0 ? "+" : ""}{currency(row.balance)}</div></div></div>
     </button>
-    {open && <div className="details-container border-t border-white/5 bg-[#14151a]/50"><div className="p-3 lg:p-4">{details === null ? <div className="py-4 text-center text-slate-500">{t("common.loadingMovements")}</div> : <DetailsTable items={details} />}</div></div>}
+    {open && <div className="details-container border-t border-white/5 bg-[#14151a]/50"><div className="p-3 lg:p-4"><DetailsTable items={details} /></div></div>}
   </div>;
 }
 
@@ -133,7 +147,9 @@ function MobileTransaction({ item, demo, onOpenModal }: { item: Transaction; dem
 
 function ActionButtons({ item, onOpenModal }: { item: Transaction; onOpenModal: (kind: "sale" | "purchase" | "other") => void }) {
   const edit = item.type === "venta" ? "sale" : item.type === "compra" ? "purchase" : "other";
-  return <div className="flex items-center justify-end gap-2"><button type="button" onClick={() => onOpenModal(edit)} className="rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white" title={t("common.edit")}><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg></button><button type="button" onClick={() => { if (window.confirm(t("txn.confirmDelete"))) void apiFetch(`/api/transactions/delete?id=${item.id}&type=${item.type}`, { method: "DELETE" }).then(() => window.location.reload()); }} className="rounded-lg p-1.5 text-slate-400 hover:bg-red-500/20 hover:text-red-400" title={t("common.delete")}><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg></button></div>;
+  return <div className="flex items-center justify-end gap-2"><button type="button" onClick={() => onOpenModal(edit)} className="rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white" title={t("common.edit")}><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" /></svg></button><button type="button" // Convex pushes the deletion to every open subscription, so the full page
+// reload this used to trigger is no longer needed.
+onClick={() => { if (window.confirm(t("txn.confirmDelete"))) void apiFetch(`/api/transactions/delete?id=${item.id}&type=${item.type}`, { method: "DELETE" }); }} className="rounded-lg p-1.5 text-slate-400 hover:bg-red-500/20 hover:text-red-400" title={t("common.delete")}><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" /></svg></button></div>;
 }
 
 function FlatPager({ page, total, onPageChange }: { page: number; total: number; onPageChange: (page: number) => void }) {

@@ -1,38 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-import { apiErrorMessage, apiJson } from "@/lib/client-api";
-import { mockFinanzas } from "@/lib/mock-data";
 import { ui } from "@/i18n/ui";
+import { useErpContext } from "@/hooks/useErpContext";
+import { useFinanceRows } from "@/hooks/useErpData";
 
-import { toFinanceRow, type FinanceApiRow } from "./apiRows";
 import DashboardStats from "./DashboardStats";
+import EmptyProject from "./EmptyProject";
 import RevenueChart from "./RevenueChart";
-import type { FinanceRow } from "./types";
 
 const t = (key: string) => ui.en[key] ?? key;
 
-export default function Dashboard({ projectId, demo, reloadKey, onOpenModal }: { projectId: number; demo: boolean; reloadKey: number; onOpenModal: (kind: "sale" | "purchase" | "other") => void }) {
-  const [transactions, setTransactions] = useState<FinanceRow[]>([]);
-  const [error, setError] = useState<string | null>(null);
+export default function Dashboard() {
+  const { projectId, openModal } = useErpContext();
+  const rows = useFinanceRows();
+  const onOpenModal = openModal;
 
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const rows = demo ? mockFinanzas.filter((row) => row.proyecto_id === projectId) : ((await apiJson<{ data: FinanceApiRow[] }>(`/api/v1/finanzas?proyecto_id=${projectId}`)).data ?? []).map(toFinanceRow);
-        if (!cancelled) setTransactions(rows);
-      } catch (cause) {
-        if (!cancelled) setError(apiErrorMessage(cause, t("common.errorLoadingData")));
-      }
-    })();
-    return () => { cancelled = true; };
-  }, [demo, projectId, reloadKey]);
+  if (!projectId) return <EmptyProject />;
 
   return (
     <>
-      {error && <div role="alert" className="mb-6 rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-red-300">{error}</div>}
       <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
         <button id="btn-open-venta" type="button" onClick={() => onOpenModal("sale")} className="group relative overflow-hidden rounded-3xl border border-white/5 bg-linear-to-br from-indigo-500/10 to-purple-500/10 p-8 text-left transition-all hover:scale-[1.02] hover:shadow-2xl hover:shadow-indigo-500/20">
           <div className="absolute right-0 top-0 p-6 opacity-10 transition-opacity duration-500 group-hover:scale-110 group-hover:opacity-20"><svg xmlns="http://www.w3.org/2000/svg" width="96" height="96" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-400"><path d="M3 3v18h18" /><path d="m19 9-5 5-4-4-3 3" /></svg></div>
@@ -47,9 +33,17 @@ export default function Dashboard({ projectId, demo, reloadKey, onOpenModal }: {
           <div className="relative z-10"><div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-pink-500/20 transition-colors group-hover:bg-pink-500/30"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-pink-400"><path d="M12 2v20" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg></div><h3 className="mb-2 text-2xl font-bold text-white">{t("index.incomeExpense")}</h3><p className="max-w-[180px] text-sm leading-relaxed text-pink-200/60">{t("index.incomeExpenseDesc")}</p><div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-pink-400 transition-all group-hover:gap-3"><span>{t("common.start")}</span><Arrow /></div></div>
         </button>
       </div>
-      <DashboardStats transactions={transactions} />
+      {rows === undefined ? <StatsSkeleton /> : <DashboardStats transactions={rows} />}
       <RevenueChart projectId={projectId} />
     </>
+  );
+}
+
+function StatsSkeleton() {
+  return (
+    <div className="mb-8 grid animate-pulse grid-cols-1 gap-6 md:grid-cols-4" aria-busy="true" aria-label={t("common.loadingData")}>
+      {[0, 1, 2, 3].map((slot) => <div key={slot} className="h-28 rounded-2xl bg-white/5" />)}
+    </div>
   );
 }
 
