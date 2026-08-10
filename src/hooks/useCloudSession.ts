@@ -12,6 +12,14 @@ export interface CloudUser {
 export interface CloudSession {
   user: CloudUser | null;
   ready: boolean;
+  /**
+   * Whether the token has been resolved, which happens well before the user
+   * profile arrives. Gating the app shell on this — instead of on `user` —
+   * keeps a signed-out visitor from ever seeing the application render.
+   */
+  authKnown: boolean;
+  /** A valid token exists; the profile behind it may still be loading. */
+  authenticated: boolean;
   configured: boolean;
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
@@ -20,6 +28,8 @@ export interface CloudSession {
 const defaultSession: CloudSession = {
   user: null,
   ready: true,
+  authKnown: true,
+  authenticated: false,
   configured: false,
   signIn: async () => undefined,
   signOut: async () => undefined,

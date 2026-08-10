@@ -1,7 +1,8 @@
 "use client";
 
 import { api } from "@convex/_generated/api";
-import { ConvexAuthProvider, useAuthActions, useAuthToken } from "@convex-dev/auth/react";
+import { useAuthActions, useAuthToken } from "@convex-dev/auth/react";
+import { ConvexAuthNextjsProvider } from "@convex-dev/auth/nextjs";
 import { useConvexAuth, useQuery } from "convex/react";
 import { useCallback, useEffect, useMemo } from "react";
 import { CloudSessionContext, type CloudSession } from "@/hooks/useCloudSession";
@@ -30,6 +31,8 @@ function CloudSessionBridge({ children }: { children: React.ReactNode }) {
     () => ({
       user: viewer ?? null,
       ready: !isLoading && (!isAuthenticated || viewer !== undefined),
+      authKnown: !isLoading,
+      authenticated: isAuthenticated,
       configured: true,
       signIn: handleSignIn,
       signOut: handleSignOut,
@@ -44,9 +47,13 @@ export function ConvexClientProvider({ children, convexUrl }: { children: React.
   const client = getConvexBrowserClient(convexUrl);
   if (!client) return children;
 
+  // The Next.js flavour of the provider takes its initial token from the
+  // cookies read in the root layout and proxies sign-in/out through
+  // `/api/auth`, which is what keeps the server and the browser in agreement
+  // about the session.
   return (
-    <ConvexAuthProvider client={client}>
+    <ConvexAuthNextjsProvider client={client}>
       <CloudSessionBridge>{children}</CloudSessionBridge>
-    </ConvexAuthProvider>
+    </ConvexAuthNextjsProvider>
   );
 }

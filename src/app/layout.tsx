@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Outfit } from "next/font/google";
+import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { ConvexClientProvider } from "@/components/ConvexClientProvider";
 import "@/styles/global.css";
@@ -38,10 +39,14 @@ function runtimeConvexUrl(): string | undefined {
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const convexUrl = runtimeConvexUrl();
   return (
-    <html lang="en" className={`dark ${outfit.variable} ${jetbrainsMono.variable}`}>
-      <body className="min-h-screen overflow-x-hidden bg-[#0f1016] text-slate-300">
-        <ConvexClientProvider convexUrl={convexUrl}>{children}</ConvexClientProvider>
-      </body>
-    </html>
+    // The server provider hands the cookie-borne token to the client, so the
+    // first render already knows whether there is a session.
+    <ConvexAuthNextjsServerProvider>
+      <html lang="en" className={`dark ${outfit.variable} ${jetbrainsMono.variable}`}>
+        <body className="min-h-screen overflow-x-hidden bg-[#0f1016] text-slate-300">
+          <ConvexClientProvider convexUrl={convexUrl}>{children}</ConvexClientProvider>
+        </body>
+      </html>
+    </ConvexAuthNextjsServerProvider>
   );
 }

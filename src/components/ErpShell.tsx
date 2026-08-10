@@ -55,10 +55,13 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
     return valid ? requested : projects[0]?.id ?? null;
   }, [projects, requested]);
 
-  // Signed out and not in demo: the app has nothing to render.
+  // Signed out and not in demo: the app has nothing to render. The decision is
+  // taken from the token (`authKnown`), which resolves before the profile
+  // query, so the redirect fires as early as possible.
+  const signedOut = !demo && ((session.authKnown && !session.authenticated) || (session.ready && !authenticated));
   useEffect(() => {
-    if (session.ready && !demo && !authenticated) router.replace("/login");
-  }, [authenticated, demo, router, session.ready]);
+    if (signedOut) router.replace("/login");
+  }, [router, signedOut]);
 
   // Without a project the app has nothing to show, so the creation dialog is
   // opened on every visit until one exists.
@@ -74,6 +77,11 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
   }
 
   const context = { projectId, projects, demo, ready, openModal };
+
+  // While the redirect above is in flight the visitor gets a bare background
+  // rather than a glimpse of the application. The common case never gets here:
+  // the middleware already turned the request away before it was rendered.
+  if (signedOut) return <div className="min-h-screen bg-[#0f1016]" />;
 
   return (
     <ErpContext.Provider value={context}>

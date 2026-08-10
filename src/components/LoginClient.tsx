@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-import AppLayout from "@/components/legacy/AppLayout";
 import { useCloudSession } from "@/hooks/useCloudSession";
 import { ui } from "@/i18n/ui";
 
@@ -16,8 +15,8 @@ export default function LoginClient() {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (session.ready && session.user) router.replace("/");
-  }, [router, session.ready, session.user]);
+    if (session.authenticated) router.replace("/");
+  }, [router, session.authenticated]);
 
   async function signIn() {
     if (busy) return;
@@ -32,8 +31,9 @@ export default function LoginClient() {
     }
   }
 
-  return <AppLayout title={t("title.login")} currentPath="/login" projects={[]} projectId={null} demo={false}>
-    <div className="flex min-h-[80vh] items-center justify-center">
+  // The login screen deliberately skips AppLayout: no sidebar or header should
+  // frame a screen where there is no session to navigate with.
+  return <main className="flex min-h-screen items-center justify-center bg-[#0f1016] p-6">
       <div className="group relative w-full max-w-md overflow-hidden rounded-2xl border border-white/5 bg-[#14151a]/50 p-8 shadow-2xl backdrop-blur-xl">
         <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-primary-500/20 blur-3xl transition-all duration-500 group-hover:bg-primary-500/30" />
         <div className="absolute -bottom-20 -left-20 h-40 w-40 rounded-full bg-purple-500/20 blur-3xl transition-all duration-500 group-hover:bg-purple-500/30" />
@@ -48,6 +48,5 @@ export default function LoginClient() {
           <a href="/api/demo/start" className="mt-4 flex w-full items-center gap-3 rounded-xl border border-amber-400/20 bg-amber-400/5 px-4 py-3 text-left transition-all hover:border-amber-300/40 hover:bg-amber-400/10 focus:outline-none focus:ring-2 focus:ring-amber-300/40"><span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-400/10 text-amber-300"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" /><circle cx="12" cy="12" r="2.5" /></svg></span><span className="min-w-0 flex-1"><span className="block text-sm font-semibold text-amber-100">{t("login.demoCta")}</span><span className="mt-0.5 block text-xs text-slate-500">{t("login.demoDescription")}</span></span><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 shrink-0 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg></a>
         </div>
       </div>
-    </div>
-  </AppLayout>;
+  </main>;
 }
