@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 import { ui } from "@/i18n/ui";
 import { useCloudSession } from "@/hooks/useCloudSession";
@@ -31,8 +31,16 @@ export default function AppLayout({
   children: ReactNode;
 }) {
   const session = useCloudSession();
+  const mainRef = useRef<HTMLElement>(null);
   const search = projectId ? `?projectId=${projectId}` : "";
   const userAvailable = demo || Boolean(session.user);
+
+  // The shell intentionally survives route changes, so its scrolling element
+  // survives too. Reset it explicitly or a document opened from a lower card
+  // starts half-way down the next page.
+  useEffect(() => {
+    mainRef.current?.scrollTo({ top: 0 });
+  }, [currentPath]);
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -71,7 +79,7 @@ export default function AppLayout({
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto scroll-smooth p-6 pb-20 lg:pb-6">
+        <main ref={mainRef} className="flex-1 overflow-y-auto scroll-smooth p-6 pb-20 lg:pb-6">
           <div className="mx-auto max-w-7xl pb-10">{children}</div>
         </main>
       </div>

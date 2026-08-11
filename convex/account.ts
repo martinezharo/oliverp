@@ -138,6 +138,14 @@ async function purgeProjectChildren(
   if (remaining > 0) {
     await drop(
       await ctx.db
+        .query("pluginInstallations")
+        .withIndex("by_project", (q) => q.eq("projectId", project._id))
+        .take(remaining),
+    );
+  }
+  if (remaining > 0) {
+    await drop(
+      await ctx.db
         .query("counters")
         .withIndex("by_scope_name", (q) => q.eq("scope", `project:${project.legacyId}`))
         .take(remaining),

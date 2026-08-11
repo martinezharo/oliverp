@@ -14,6 +14,7 @@ import type * as domain from "../domain.js";
 import type * as http from "../http.js";
 import type * as lib_bridge from "../lib/bridge.js";
 import type * as migration from "../migration.js";
+import type * as plugins from "../plugins.js";
 import type * as session from "../session.js";
 
 import type {
@@ -29,6 +30,7 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   "lib/bridge": typeof lib_bridge;
   migration: typeof migration;
+  plugins: typeof plugins;
   session: typeof session;
 }>;
 

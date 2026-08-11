@@ -315,6 +315,10 @@ const es: Dict = {
 
   // Settings
   "nav.settings": "Ajustes",
+  "nav.plugins": "Plugins",
+  "nav.documentation": "Documentación",
+  "title.plugins": "OlivERP | Plugins",
+  "title.documentation": "OlivERP | Documentación",
   "title.settings": "OlivERP | Ajustes",
   "settings.heading": "Ajustes",
   "settings.subtitle": "Gestiona tus proyectos y tu cuenta.",
@@ -655,6 +659,10 @@ const en: Dict = {
 
   // Settings
   "nav.settings": "Settings",
+  "nav.plugins": "Plugins",
+  "nav.documentation": "Documentation",
+  "title.plugins": "OlivERP | Plugins",
+  "title.documentation": "OlivERP | Documentation",
   "title.settings": "OlivERP | Settings",
   "settings.heading": "Settings",
   "settings.subtitle": "Manage your projects and your account.",

@@ -22,6 +22,9 @@ const movementType = v.union(
   v.literal("ajuste manual"),
   v.literal("devolucion_com"),
 );
+const pluginEffect = v.union(
+  v.literal("dashboard.solo_iva"),
+);
 
 /**
  * Convex's _id is intentionally not exposed as the public API id. The
@@ -197,6 +200,28 @@ export default defineSchema({
   })
     .index("by_hash", ["keyHash"])
     .index("by_project", ["projectLegacyId"]),
+
+  /**
+   * Plugins are declarative, project-scoped feature extensions. OlivERP reads
+   * their enabled effects and applies them inside its normal screens; no
+   * repository code is executed in the application process or browser.
+   */
+  pluginInstallations: defineTable({
+    projectId: v.id("projects"),
+    projectLegacyId: v.number(),
+    pluginId: v.string(),
+    name: v.string(),
+    description: v.string(),
+    version: v.string(),
+    repositoryUrl: v.string(),
+    sourceSha: v.string(),
+    effects: v.array(pluginEffect),
+    enabled: v.boolean(),
+    installedBy: v.string(),
+    installedAt: v.string(),
+  })
+    .index("by_project", ["projectId"])
+    .index("by_project_plugin", ["projectId", "pluginId"]),
 
   /**
    * Legacy id sequences. Reading the tail of a `by_legacy_id` index to find the

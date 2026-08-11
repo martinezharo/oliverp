@@ -20,7 +20,9 @@ const titles: Record<string, string> = {
   "/stock": "title.stock",
   "/transacciones": "title.transactions",
   "/historial": "title.history",
+  "/plugins": "title.plugins",
   "/ajustes": "title.settings",
+  "/documentacion": "title.documentation",
 };
 
 /**
@@ -54,6 +56,14 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
     const valid = Number.isInteger(requested) && projects.some((project) => project.id === requested);
     return valid ? requested : projects[0]?.id ?? null;
   }, [projects, requested]);
+  const pluginInstallations = useQuery(
+    api.plugins.list,
+    !demo && authenticated && projectId ? { projectLegacyId: projectId } : "skip",
+  );
+  const pluginEffects = useMemo(
+    () => Array.from(new Set((pluginInstallations ?? []).filter((plugin) => plugin.enabled).flatMap((plugin) => plugin.effects))),
+    [pluginInstallations],
+  );
 
   // Signed out and not in demo: the app has nothing to render. The decision is
   // taken from the token (`authKnown`), which resolves before the profile
@@ -76,7 +86,7 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
     setModal({ kind, ...(id === undefined ? {} : { id }) });
   }
 
-  const context = { projectId, projects, demo, ready, openModal };
+  const context = { projectId, projects, demo, ready, pluginEffects, openModal };
 
   // While the redirect above is in flight the visitor gets a bare background
   // rather than a glimpse of the application. The common case never gets here:
@@ -86,7 +96,7 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
   return (
     <ErpContext.Provider value={context}>
       <AppLayout
-        title={t(titles[pathname] ?? "title.dashboard")}
+        title={t(titles[pathname] ?? (pathname.startsWith("/plugins/") ? "title.plugins" : pathname.startsWith("/documentacion/") ? "title.documentation" : "title.dashboard"))}
         currentPath={pathname}
         projects={projects}
         projectId={projectId}
