@@ -44,7 +44,10 @@ export const POST: APIRoute = async (context) => {
     const finances = (await session.backend.listDailyFinances({ projectId: input.projectId })).slice(0, 4_000);
     const response = await fetch(endpoint, {
       method: "POST",
-      redirect: "error",
+      // Cloudflare Workers supports only `follow` and `manual`. Keep redirects
+      // manual so an installed runtime cannot move a finance payload to an
+      // unreviewed host after installation.
+      redirect: "manual",
       signal: AbortSignal.timeout(10_000),
       headers: {
         "Content-Type": "application/json",
@@ -59,6 +62,9 @@ export const POST: APIRoute = async (context) => {
         data: { finances },
       }),
     });
+    if (response.status >= 300 && response.status < 400) {
+      return jsonResponse({ error: "The plugin runtime attempted an unapproved redirect." }, 502);
+    }
     if (!response.ok) return jsonResponse({ error: `The plugin runtime returned HTTP ${response.status}.` }, 502);
     const declaredLength = Number(response.headers.get("content-length") ?? 0);
     if (declaredLength > 128_000) return jsonResponse({ error: "The plugin response is too large." }, 502);

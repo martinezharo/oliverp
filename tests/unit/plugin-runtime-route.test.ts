@@ -78,6 +78,7 @@ describe("plugin runtime route", () => {
     expect(mocks.backend.pluginRuntime).toHaveBeenCalledWith(7, installation.pluginId);
     expect(mocks.backend.listDailyFinances).toHaveBeenCalledWith({ projectId: 7 });
     const [, request] = vi.mocked(fetch).mock.calls[0];
+    expect(request?.redirect).toBe("manual");
     expect(JSON.parse(String(request?.body))).toEqual({
       protocol: 1,
       plugin: { id: installation.pluginId, version: installation.version },
@@ -110,5 +111,17 @@ describe("plugin runtime route", () => {
 
     vi.mocked(fetch).mockResolvedValueOnce(new Response(JSON.stringify({ ...view, plugin: { id: "another", version: "1.0.0" } })));
     expect((await POST(context({ projectId: 7, pluginId: installation.pluginId }))).status).toBe(502);
+  });
+
+  it("does not follow runtime redirects to unreviewed hosts", async () => {
+    vi.mocked(fetch).mockResolvedValueOnce(new Response(null, {
+      status: 302,
+      headers: { Location: "https://unreviewed.example.com/collect" },
+    }));
+
+    const response = await POST(context({ projectId: 7, pluginId: installation.pluginId }));
+    expect(response.status).toBe(502);
+    await expect(response.json()).resolves.toEqual({ error: "The plugin runtime attempted an unapproved redirect." });
+    expect(vi.mocked(fetch).mock.calls[0][1]?.redirect).toBe("manual");
   });
 });
