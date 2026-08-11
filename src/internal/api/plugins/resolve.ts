@@ -1,4 +1,5 @@
 import type { APIRoute } from "@/lib/server-context";
+import { githubAppPrivateKeyBytes } from "@/lib/github-app-key";
 import { githubRepository, pluginManifestSchema } from "@/lib/plugins";
 import { jsonResponse, sessionBackend, unauthorizedResponse } from "@/lib/legacy-api";
 
@@ -19,19 +20,13 @@ function base64Url(bytes: Uint8Array): string {
   return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
 }
 
-function pemBytes(pem: string): ArrayBuffer {
-  const body = pem.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s/g, "");
-  const binary = atob(body);
-  return Uint8Array.from(binary, (character) => character.charCodeAt(0)).buffer as ArrayBuffer;
-}
-
 async function appJwt(appId: string, privateKey: string): Promise<string> {
   const now = Math.floor(Date.now() / 1_000);
   const header = base64Url(new TextEncoder().encode(JSON.stringify({ alg: "RS256", typ: "JWT" })));
   const payload = base64Url(new TextEncoder().encode(JSON.stringify({ iat: now - 60, exp: now + 540, iss: appId })));
   const key = await crypto.subtle.importKey(
     "pkcs8",
-    pemBytes(privateKey),
+    githubAppPrivateKeyBytes(privateKey),
     { name: "RSASSA-PKCS1-v1_5", hash: "SHA-256" },
     false,
     ["sign"],
