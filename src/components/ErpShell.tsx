@@ -60,10 +60,6 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
     api.plugins.list,
     !demo && authenticated && projectId ? { projectLegacyId: projectId } : "skip",
   );
-  const pluginEffects = useMemo(
-    () => Array.from(new Set((pluginInstallations ?? []).filter((plugin) => plugin.enabled).flatMap((plugin) => plugin.effects))),
-    [pluginInstallations],
-  );
 
   // Signed out and not in demo: the app has nothing to render. The decision is
   // taken from the token (`authKnown`), which resolves before the profile
@@ -86,7 +82,7 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
     setModal({ kind, ...(id === undefined ? {} : { id }) });
   }
 
-  const context = { projectId, projects, demo, ready, pluginEffects, openModal };
+  const context = { projectId, projects, demo, ready, plugins: demo ? [] : pluginInstallations, openModal };
 
   // While the redirect above is in flight the visitor gets a bare background
   // rather than a glimpse of the application. The common case never gets here:

@@ -536,6 +536,20 @@ export class BackendClient {
         );
     }
 
+    pluginRuntime(projectId: number, pluginId: string) {
+        return this.query<{
+            pluginId: string;
+            name: string;
+            version: string;
+            sourceSha: string;
+            runtimeProtocol: 1;
+            runtimeEndpoint: string;
+            slots: Array<"dashboard.summary">;
+            permissions: Array<"finances:read">;
+            enabled: boolean;
+        } | null>(api.plugins.runtime, { projectLegacyId: projectId, pluginId });
+    }
+
     salesInitData(projectId?: number) {
         return this.query<{
             products: Array<Record<string, unknown>>;

@@ -12,7 +12,7 @@ export type DocumentationEntry = {
 
 export const documentationEntries: DocumentationEntry[] = [
   { slug: "overview", title: "Project overview", description: "Setup, architecture, development, and deployment.", file: "README.md", accent: "indigo" },
-  { slug: "plugins", title: "Plugin development", description: "Private repositories, declarative effects, and the plugin manifest.", file: "docs/PLUGINS.md", accent: "violet" },
+  { slug: "plugins", title: "Plugin development", description: "Private repositories, runtime permissions, and native plugin views.", file: "docs/PLUGINS.md", accent: "violet" },
   { slug: "api", title: "Public API", description: "Authentication, endpoints, request formats, and conventions.", file: "docs/API.md", accent: "sky" },
   { slug: "database", title: "Database", description: "Core data model and persistence conventions.", file: "docs/DATABASE.md", accent: "emerald" },
   { slug: "audit", title: "Engineering audit", description: "Security, performance, and maintainability decisions.", file: "docs/AUDIT.md", accent: "amber" },

@@ -29,7 +29,10 @@ const manifest = {
   version: "1.0.0",
   repositoryUrl: "https://github.com/martinezharo/oliverp-plugin-solo-iva",
   sourceSha: "0123456789abcdef0123456789abcdef01234567",
-  effects: ["dashboard.solo_iva" as const],
+  runtimeProtocol: 1 as const,
+  runtimeEndpoint: "https://oliverp-plugin-solo-iva.example.workers.dev/render",
+  slots: ["dashboard.summary" as const],
+  permissions: ["finances:read" as const],
 };
 
 describe("plugin installations", () => {
@@ -37,11 +40,11 @@ describe("plugin installations", () => {
     const t = convexTest(schema, modules);
     const { admin } = await seed(t);
     const installed = await asUser(t, admin).mutation(api.plugins.install, manifest);
-    expect(installed).toMatchObject({ pluginId: manifest.pluginId, effects: ["dashboard.solo_iva"], enabled: true });
+    expect(installed).toMatchObject({ pluginId: manifest.pluginId, slots: ["dashboard.summary"], permissions: ["finances:read"], enabled: true });
     await expect(asUser(t, admin).query(api.plugins.list, { projectLegacyId: 7 })).resolves.toHaveLength(1);
   });
 
-  it("allows members to receive installed effects but not manage plugins", async () => {
+  it("allows members to receive installed plugins but not manage them", async () => {
     const t = convexTest(schema, modules);
     const { admin, member } = await seed(t);
     await asUser(t, admin).mutation(api.plugins.install, manifest);
@@ -62,12 +65,33 @@ describe("plugin installations", () => {
     await expect(asUser(t, admin).mutation(api.plugins.install, { ...manifest, repositoryUrl: "http://github.invalid/plugin" })).rejects.toThrow(/HTTPS/i);
   });
 
-  it("lets an admin activate and deactivate an installed effect", async () => {
+  it("lets an admin activate and deactivate an installed plugin", async () => {
     const t = convexTest(schema, modules);
     const { admin } = await seed(t);
     await asUser(t, admin).mutation(api.plugins.install, manifest);
     await expect(asUser(t, admin).mutation(api.plugins.setEnabled, { projectLegacyId: 7, pluginId: manifest.pluginId, enabled: false })).resolves.toEqual({ enabled: false });
     await expect(asUser(t, admin).query(api.plugins.list, { projectLegacyId: 7 })).resolves.toMatchObject([{ enabled: false }]);
+  });
+
+  it("keeps only one enabled plugin in each host slot", async () => {
+    const t = convexTest(schema, modules);
+    const { admin } = await seed(t);
+    await asUser(t, admin).mutation(api.plugins.install, manifest);
+    await asUser(t, admin).mutation(api.plugins.install, {
+      ...manifest,
+      pluginId: "com.example.alternative",
+      name: "Alternative dashboard",
+      repositoryUrl: "https://github.com/example/alternative",
+    });
+    await expect(asUser(t, admin).query(api.plugins.list, { projectLegacyId: 7 })).resolves.toMatchObject([
+      { pluginId: "com.example.alternative", enabled: true },
+      { pluginId: manifest.pluginId, enabled: false },
+    ]);
+    await asUser(t, admin).mutation(api.plugins.setEnabled, { projectLegacyId: 7, pluginId: manifest.pluginId, enabled: true });
+    await expect(asUser(t, admin).query(api.plugins.list, { projectLegacyId: 7 })).resolves.toMatchObject([
+      { pluginId: "com.example.alternative", enabled: false },
+      { pluginId: manifest.pluginId, enabled: true },
+    ]);
   });
 
   it("revokes the installation without changing project records", async () => {
