@@ -56,11 +56,6 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
     const valid = Number.isInteger(requested) && projects.some((project) => project.id === requested);
     return valid ? requested : projects[0]?.id ?? null;
   }, [projects, requested]);
-  const pluginInstallations = useQuery(
-    api.plugins.list,
-    !demo && authenticated && projectId ? { projectLegacyId: projectId } : "skip",
-  );
-
   // Signed out and not in demo: the app has nothing to render. The decision is
   // taken from the token (`authKnown`), which resolves before the profile
   // query, so the redirect fires as early as possible.
@@ -82,7 +77,7 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
     setModal({ kind, ...(id === undefined ? {} : { id }) });
   }
 
-  const context = { projectId, projects, demo, ready, plugins: demo ? [] : pluginInstallations, openModal };
+  const context = { projectId, projects, demo, ready, openModal };
 
   // While the redirect above is in flight the visitor gets a bare background
   // rather than a glimpse of the application. The common case never gets here:

@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { PluginInstallation } from "@/lib/plugins";
 
 export type Project = { id: number; nombre: string; activo?: boolean };
 export type ModalKind = "sale" | "purchase" | "other" | "product" | null;
@@ -14,8 +13,6 @@ export interface ErpContextValue {
   demo: boolean;
   /** False only while the very first project list is in flight. */
   ready: boolean;
-  /** Installed runtimes for the selected project; undefined during the first read. */
-  plugins: PluginInstallation[] | undefined;
   openModal: (kind: Exclude<ModalKind, null>, id?: number) => void;
 }
 
@@ -24,7 +21,6 @@ const defaultContext: ErpContextValue = {
   projects: [],
   demo: false,
   ready: false,
-  plugins: [],
   openModal: () => undefined,
 };
 

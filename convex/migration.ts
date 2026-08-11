@@ -28,6 +28,11 @@ const importArgs = {
   rows: v.array(v.any()),
 };
 
+const pluginHook = v.object({
+  type: v.literal("finance.other_transaction.vat_only"),
+  concept: v.string(),
+});
+
 function numberValue(value: unknown, fallback = 0): number {
   const result = typeof value === "number" ? value : Number(value);
   return Number.isFinite(result) ? result : fallback;
@@ -436,6 +441,42 @@ export const importApiKeys = internalMutation({
     }
 
     return { imported, skippedUnpinned: skipped };
+  },
+});
+
+/**
+ * Upgrade an already-installed plugin after its private manifest moves from
+ * the retired dashboard runtime contract to validated data hooks. This keeps
+ * the project installation active without impersonating its administrator.
+ */
+export const upgradePluginInstallation = internalMutation({
+  args: {
+    projectLegacyId: v.number(),
+    pluginId: v.string(),
+    version: v.string(),
+    sourceSha: v.string(),
+    hooks: v.array(pluginHook),
+  },
+  handler: async (ctx, args) => {
+    const project = await projectByLegacyId(ctx, args.projectLegacyId);
+    if (!project) fail("not_found", `Project ${args.projectLegacyId} is missing.`);
+    const installation = await ctx.db
+      .query("pluginInstallations")
+      .withIndex("by_project_plugin", (q) =>
+        q.eq("projectId", project._id).eq("pluginId", args.pluginId),
+      )
+      .unique();
+    if (!installation) fail("not_found", `Plugin ${args.pluginId} is not installed.`);
+    await ctx.db.patch(installation._id, {
+      version: args.version,
+      sourceSha: args.sourceSha,
+      hooks: args.hooks,
+      runtimeProtocol: undefined,
+      runtimeEndpoint: undefined,
+      slots: undefined,
+      permissions: undefined,
+    });
+    return { upgraded: true, enabled: installation.enabled };
   },
 });
 

@@ -1473,6 +1473,17 @@ type DailyFinanceArgs = {
  */
 export async function computeDailyFinances(ctx: QueryCtx, args: DailyFinanceArgs) {
   const project = await requireProject(ctx, args.actor, args.projectLegacyId);
+  const enabledPlugins = await ctx.db
+    .query("pluginInstallations")
+    .withIndex("by_project", (q) => q.eq("projectId", project._id))
+    .collect();
+  const vatOnlyConcepts = new Set(
+    enabledPlugins
+      .filter((plugin) => plugin.enabled)
+      .flatMap((plugin) => plugin.hooks ?? [])
+      .filter((hook) => hook.type === "finance.other_transaction.vat_only")
+      .map((hook) => hook.concept),
+  );
   const sales = await salesForProject(ctx, project._id);
   const purchases = await purchasesForProject(ctx, project._id);
   const others = await otherTransactionsForProject(ctx, project._id);
@@ -1540,12 +1551,15 @@ export async function computeDailyFinances(ctx: QueryCtx, args: DailyFinanceArgs
   for (const other of others) {
     const row = get(dayOf(other.date));
     const gross = other.amountCents;
+    const vatOnly = vatOnlyConcepts.has(other.concept);
     if (other.type === "ingreso") {
-      row.ingresos += gross;
+      if (!vatOnly) row.ingresos += gross;
       row.iva_repercutido += vatPart(gross, other.vatRate);
     } else {
-      row.gastos += gross;
-      row.urp -= gross;
+      if (!vatOnly) {
+        row.gastos += gross;
+        row.urp -= gross;
+      }
       row.iva_soportado += vatPart(gross, other.vatRate);
     }
   }

@@ -2,7 +2,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import schema from "./schema";
 
 const modules = import.meta.glob("./**/*.ts");
@@ -29,10 +29,7 @@ const manifest = {
   version: "1.0.0",
   repositoryUrl: "https://github.com/martinezharo/oliverp-plugin-solo-iva",
   sourceSha: "0123456789abcdef0123456789abcdef01234567",
-  runtimeProtocol: 1 as const,
-  runtimeEndpoint: "https://oliverp-plugin-solo-iva.example.workers.dev/render",
-  slots: ["dashboard.summary" as const],
-  permissions: ["finances:read" as const],
+  hooks: [{ type: "finance.other_transaction.vat_only" as const, concept: "solo_iva" }],
 };
 
 describe("plugin installations", () => {
@@ -40,7 +37,7 @@ describe("plugin installations", () => {
     const t = convexTest(schema, modules);
     const { admin } = await seed(t);
     const installed = await asUser(t, admin).mutation(api.plugins.install, manifest);
-    expect(installed).toMatchObject({ pluginId: manifest.pluginId, slots: ["dashboard.summary"], permissions: ["finances:read"], enabled: true });
+    expect(installed).toMatchObject({ pluginId: manifest.pluginId, hooks: manifest.hooks, enabled: true });
     await expect(asUser(t, admin).query(api.plugins.list, { projectLegacyId: 7 })).resolves.toHaveLength(1);
   });
 
@@ -73,27 +70,6 @@ describe("plugin installations", () => {
     await expect(asUser(t, admin).query(api.plugins.list, { projectLegacyId: 7 })).resolves.toMatchObject([{ enabled: false }]);
   });
 
-  it("keeps only one enabled plugin in each host slot", async () => {
-    const t = convexTest(schema, modules);
-    const { admin } = await seed(t);
-    await asUser(t, admin).mutation(api.plugins.install, manifest);
-    await asUser(t, admin).mutation(api.plugins.install, {
-      ...manifest,
-      pluginId: "com.example.alternative",
-      name: "Alternative dashboard",
-      repositoryUrl: "https://github.com/example/alternative",
-    });
-    await expect(asUser(t, admin).query(api.plugins.list, { projectLegacyId: 7 })).resolves.toMatchObject([
-      { pluginId: "com.example.alternative", enabled: true },
-      { pluginId: manifest.pluginId, enabled: false },
-    ]);
-    await asUser(t, admin).mutation(api.plugins.setEnabled, { projectLegacyId: 7, pluginId: manifest.pluginId, enabled: true });
-    await expect(asUser(t, admin).query(api.plugins.list, { projectLegacyId: 7 })).resolves.toMatchObject([
-      { pluginId: "com.example.alternative", enabled: false },
-      { pluginId: manifest.pluginId, enabled: true },
-    ]);
-  });
-
   it("revokes the installation without changing project records", async () => {
     const t = convexTest(schema, modules);
     const { admin } = await seed(t);
@@ -101,5 +77,50 @@ describe("plugin installations", () => {
     await expect(asUser(t, admin).mutation(api.plugins.uninstall, { projectLegacyId: 7, pluginId: manifest.pluginId })).resolves.toEqual({ removed: true });
     await expect(asUser(t, admin).query(api.plugins.list, { projectLegacyId: 7 })).resolves.toEqual([]);
     await expect(t.run((ctx) => ctx.db.query("projects").collect())).resolves.toHaveLength(1);
+  });
+
+  it("upgrades the active legacy runtime installation to hooks without replacing it", async () => {
+    const t = convexTest(schema, modules);
+    const { admin } = await seed(t);
+    await t.run(async (ctx) => {
+      const project = await ctx.db
+        .query("projects")
+        .withIndex("by_legacy_id", (q) => q.eq("legacyId", 7))
+        .unique();
+      if (!project) throw new Error("Missing test project.");
+      await ctx.db.insert("pluginInstallations", {
+        projectId: project._id,
+        projectLegacyId: 7,
+        pluginId: manifest.pluginId,
+        name: manifest.name,
+        description: manifest.description,
+        version: "3.0.0",
+        repositoryUrl: manifest.repositoryUrl,
+        sourceSha: manifest.sourceSha,
+        runtimeProtocol: 1,
+        runtimeEndpoint: "https://legacy.invalid/render",
+        slots: ["dashboard.summary"],
+        permissions: ["finances:read"],
+        enabled: true,
+        installedBy: admin,
+        installedAt: new Date(0).toISOString(),
+      });
+    });
+
+    await t.mutation(internal.migration.upgradePluginInstallation, {
+      projectLegacyId: 7,
+      pluginId: manifest.pluginId,
+      version: "4.0.0",
+      sourceSha: "89abcdef0123456789abcdef0123456789abcdef",
+      hooks: manifest.hooks,
+    });
+
+    await expect(asUser(t, admin).query(api.plugins.list, { projectLegacyId: 7 })).resolves.toMatchObject([
+      { pluginId: manifest.pluginId, version: "4.0.0", hooks: manifest.hooks, enabled: true },
+    ]);
+    const stored = await t.run((ctx) => ctx.db.query("pluginInstallations").unique());
+    expect(stored).not.toHaveProperty("runtimeEndpoint");
+    expect(stored).not.toHaveProperty("slots");
+    expect(stored).not.toHaveProperty("permissions");
   });
 });

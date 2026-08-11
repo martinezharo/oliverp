@@ -24,6 +24,10 @@ const movementType = v.union(
 );
 const pluginSlot = v.union(v.literal("dashboard.summary"));
 const pluginPermission = v.union(v.literal("finances:read"));
+const pluginHook = v.object({
+  type: v.literal("finance.other_transaction.vat_only"),
+  concept: v.string(),
+});
 
 /**
  * Convex's _id is intentionally not exposed as the public API id. The
@@ -201,9 +205,9 @@ export default defineSchema({
     .index("by_project", ["projectLegacyId"]),
 
   /**
-   * Plugins are private, project-scoped integrations. OlivERP grants explicit
-   * data permissions to their remote runtimes and renders only validated,
-   * host-native view documents; plugin code never runs in the browser.
+   * Plugins are private, project-scoped behavior extensions. The legacy
+   * runtime fields remain optional while existing installations are upgraded;
+   * new plugins declare validated hooks that execute in OlivERP's data model.
    */
   pluginInstallations: defineTable({
     projectId: v.id("projects"),
@@ -214,10 +218,11 @@ export default defineSchema({
     version: v.string(),
     repositoryUrl: v.string(),
     sourceSha: v.string(),
-    runtimeProtocol: v.literal(1),
-    runtimeEndpoint: v.string(),
-    slots: v.array(pluginSlot),
-    permissions: v.array(pluginPermission),
+    runtimeProtocol: v.optional(v.literal(1)),
+    runtimeEndpoint: v.optional(v.string()),
+    slots: v.optional(v.array(pluginSlot)),
+    permissions: v.optional(v.array(pluginPermission)),
+    hooks: v.optional(v.array(pluginHook)),
     enabled: v.boolean(),
     installedBy: v.string(),
     installedAt: v.string(),

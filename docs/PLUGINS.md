@@ -1,46 +1,41 @@
 # OlivERP plugins
 
 Plugins are private, project-specific extensions installed from GitHub repository
-URLs. They run their own backend logic and return a restricted view document that
-OlivERP renders with its native components.
+URLs. They declare a small set of reviewed behavior hooks that OlivERP executes
+inside its own trusted backend.
 
-There is no marketplace or public catalog. A plugin never opens a separate
-application, injects JavaScript into OlivERP, or receives the browser session.
-Installed plugins persist in the OlivERP account for each project.
+There is no marketplace or public catalog. Plugins do not open another
+application, replace OlivERP screens, inject JavaScript, receive the browser
+session, or run a remote service. An installation persists in the OlivERP
+account for the selected project.
 
-## How execution works
+## How plugins work
 
-1. An administrator pastes a private GitHub repository URL.
-2. OlivERP reads and validates `oliverp-plugin.json` through its GitHub App.
-3. The administrator reviews the requested UI slots and data permissions.
-4. OlivERP stores the exact manifest source SHA and installation for the project.
-5. When a supported slot is displayed, the OlivERP server sends only the granted
-   data to the plugin runtime over HTTPS.
-6. OlivERP validates the response and renders it with trusted native components.
+1. A project administrator pastes a private GitHub repository URL.
+2. OlivERP reads `oliverp-plugin.json` through its GitHub App.
+3. OlivERP validates the manifest and shows every requested behavior hook.
+4. The administrator reviews and activates the plugin.
+5. OlivERP stores the exact source SHA and applies those hooks in its normal
+   backend calculations for that project.
 
-Plugin source code runs only in the plugin's deployed runtime. It does not run in
-the OlivERP Worker or in the user's browser.
+Disabling or removing a plugin stops its hooks without deleting accounting
+records. Updating a repository does not silently alter an installation: paste
+its URL again to review and install the new version and source SHA.
 
 ## Security model
 
-- Plugin repositories must be private and explicitly shared with the OlivERP
-  GitHub App using read-only contents access.
+- Repositories must be private and explicitly shared with the OlivERP GitHub
+  App using read-only contents access.
 - Only project administrators can install, activate, deactivate, or remove a
-  plugin. Project members can use active plugins.
+  plugin. Project members can use active behavior.
 - Every installation belongs to exactly one project.
-- The install dialog shows each requested slot and permission before activation.
-- Unknown slots, permissions, manifest fields, protocols, and response fields
-  are rejected.
-- Runtime endpoints must use public HTTPS URLs. Local and private network targets
-  are blocked.
-- Runtime responses are size-limited and time-limited, and cannot contain HTML,
-  scripts, event handlers, or arbitrary CSS.
-- Only one active plugin may occupy a given UI slot. Activating another plugin
-  for that slot deactivates the previous one.
+- The manifest schema is closed. Unknown hooks and fields are rejected.
+- Plugin source is not executed in the browser or evaluated dynamically by the
+  OlivERP Worker.
+- Plugins cannot replace UI, access cookies or Convex session tokens, or send
+  project data to an external runtime.
 
-OlivERP does not persist GitHub installation tokens or repository source code.
-The remote plugin runtime is trusted with the data covered by its approved
-permissions, so install only plugins whose code and operator you trust.
+OlivERP stores neither GitHub installation tokens nor repository source code.
 
 ## Repository manifest
 
@@ -51,107 +46,50 @@ Put `oliverp-plugin.json` at the root of the private repository:
   "schemaVersion": 1,
   "id": "com.example.my-private-plugin",
   "name": "My private plugin",
-  "description": "A focused project finance summary.",
+  "description": "Applies a private accounting rule.",
   "version": "1.0.0",
-  "runtime": {
-    "protocol": 1,
-    "endpoint": "https://my-plugin.example.workers.dev/render"
-  },
-  "slots": ["dashboard.summary"],
-  "permissions": ["finances:read"]
+  "hooks": [
+    {
+      "type": "finance.other_transaction.vat_only",
+      "concept": "solo_iva"
+    }
+  ]
 }
 ```
 
 - `id` is a stable lowercase identifier and must not change between releases.
 - `version` follows semantic versioning.
-- `runtime.endpoint` is the deployed HTTPS handler. It is an API endpoint, not a
-  plugin webpage.
-- `slots` declares where validated output may appear.
-- `permissions` declares which project data the runtime may receive.
-- The manifest is strict: additional fields are rejected.
+- `hooks` contains only capabilities supported and validated by OlivERP.
+- Hook values are reviewed before activation and stored with the installation.
 
-## Supported capabilities
+## Supported hooks
 
-| Capability | Current value | Meaning |
-| :-- | :-- | :-- |
-| UI slot | `dashboard.summary` | Replaces the standard dashboard summary with a native metrics and table view. |
-| Data permission | `finances:read` | Receives daily project finance summaries when that dashboard slot loads. |
+### `finance.other_transaction.vat_only`
 
-The finance payload is delivered only from OlivERP's server to the installed
-runtime. It contains the same daily aggregate rows used by the normal dashboard;
-it does not include the user's cookie or Convex session token.
+This hook applies only to manual income and expense transactions whose concept
+exactly matches `concept`. Matching is case-sensitive and does not normalize
+spaces or punctuation.
 
-## Runtime request
+For a matching transaction, OlivERP:
 
-The endpoint receives `POST` requests with JSON shaped like this:
+- keeps its VAT in input or output VAT totals;
+- excludes its gross amount from income, expenses, balance, and URP;
+- leaves the transaction visible and editable in the normal transaction list;
+- does not alter sales, purchases, stock, or any screen.
 
-```json
-{
-  "protocol": 1,
-  "plugin": { "id": "com.example.my-private-plugin", "version": "1.0.0" },
-  "slot": "dashboard.summary",
-  "context": { "projectId": 123 },
-  "data": {
-    "finances": []
-  }
-}
-```
-
-The finance rows are the daily report records returned by OlivERP's finance
-backend. Plugins should ignore no fields silently: validate the request, reject
-unsupported protocol or slot values, and avoid logging financial payloads.
-
-## Native dashboard response
-
-Return JSON with protocol and plugin identity, a list of selectable periods and
-metrics, and a table. Text lengths, row counts, tones, and column alignment are
-validated by OlivERP. The full schema is intentionally closed so arbitrary UI
-code cannot cross the plugin boundary.
-
-```json
-{
-  "protocol": 1,
-  "plugin": { "id": "com.example.my-private-plugin", "version": "1.0.0" },
-  "slot": "dashboard.summary",
-  "eyebrow": "Private plugin",
-  "title": "Finance focus",
-  "description": "A project-specific view.",
-  "defaultPeriod": "year",
-  "periods": [
-    {
-      "id": "year",
-      "label": "Year",
-      "metrics": [
-        { "label": "Metric", "value": "€0.00", "tone": "primary" }
-      ]
-    }
-  ],
-  "table": {
-    "title": "Breakdown",
-    "emptyMessage": "No entries yet.",
-    "columns": [
-      { "label": "Period", "align": "left" },
-      { "label": "Amount", "align": "right" }
-    ],
-    "rows": []
-  }
-}
-```
-
-Supported tones are `neutral`, `primary`, `rose`, `emerald`, and `amber`.
+For example, a hook with `"concept": "solo_iva"` matches `solo_iva`, but not
+`solo iva`, `Solo_IVA`, or any other concept.
 
 ## Add or update a private plugin
 
 1. Keep the GitHub repository private.
-2. Deploy its runtime to a public HTTPS endpoint.
-3. Give the OlivERP GitHub App read-only access to that repository only.
-4. Open **Plugins** in OlivERP and paste the repository URL.
-5. Review the runtime host, slots, and permissions.
-6. Choose **Add and activate**.
+2. Give the OlivERP GitHub App read-only access to that repository only.
+3. Open **Plugins** in OlivERP and paste the repository URL.
+4. Review the behavior hooks.
+5. Choose **Add and activate**.
 
-The same plugin may be installed independently in different projects. Updating a
-manifest in GitHub does not silently change an installation: paste the repository
-URL again to review and store the new version and source SHA.
+The same plugin can be installed independently in different projects. Its hooks
+affect only projects where the plugin is both installed and active.
 
 ## OlivERP deployment configuration
 
@@ -162,7 +100,7 @@ GITHUB_PLUGINS_APP_ID=
 GITHUB_PLUGINS_PRIVATE_KEY=
 ```
 
-The private key may use the PKCS#1 PEM generated by GitHub or PKCS#8 PEM. Never
+The private key can use the PKCS#1 PEM generated by GitHub or PKCS#8 PEM. Never
 expose it through a `NEXT_PUBLIC_` variable. OlivERP signs a short-lived app JWT,
-exchanges it for a repository-scoped installation token, reads the manifest, and
-discards the token.
+exchanges it for a repository-scoped installation token, reads the manifest,
+and discards the token.

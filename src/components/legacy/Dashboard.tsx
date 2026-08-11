@@ -7,12 +7,11 @@ import { useFinanceRows } from "@/hooks/useErpData";
 import DashboardStats from "./DashboardStats";
 import EmptyProject from "./EmptyProject";
 import RevenueChart from "./RevenueChart";
-import PluginDashboardSlot from "@/components/plugins/PluginDashboardSlot";
 
 const t = (key: string) => ui.en[key] ?? key;
 
 export default function Dashboard() {
-  const { projectId, plugins, openModal } = useErpContext();
+  const { projectId, openModal } = useErpContext();
   const rows = useFinanceRows();
   const onOpenModal = openModal;
 
@@ -34,11 +33,8 @@ export default function Dashboard() {
           <div className="relative z-10"><div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-pink-500/20 transition-colors group-hover:bg-pink-500/30"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-pink-400"><path d="M12 2v20" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg></div><h3 className="mb-2 text-2xl font-bold text-white">{t("index.incomeExpense")}</h3><p className="max-w-[180px] text-sm leading-relaxed text-pink-200/60">{t("index.incomeExpenseDesc")}</p><div className="mt-6 inline-flex items-center gap-2 text-sm font-medium text-pink-400 transition-all group-hover:gap-3"><span>{t("common.start")}</span><Arrow /></div></div>
         </button>
       </div>
-      {rows === undefined || plugins === undefined ? <StatsSkeleton /> : (() => {
-        const plugin = plugins.find((item) => item.enabled && item.slots.includes("dashboard.summary"));
-        const fallback = <><DashboardStats transactions={rows} /><RevenueChart projectId={projectId} /></>;
-        return plugin ? <PluginDashboardSlot projectId={projectId} plugin={plugin} fallback={fallback} /> : fallback;
-      })()}
+      {rows === undefined ? <StatsSkeleton /> : <DashboardStats transactions={rows} />}
+      <RevenueChart projectId={projectId} />
     </>
   );
 }
