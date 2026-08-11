@@ -4,23 +4,7 @@ import type { ServerLocals } from "./server-context";
 export const DEMO_MODE_COOKIE = "erp_demo_mode";
 
 export function convexAppUrl(locals?: ServerLocals): string | undefined {
-    return getEnv(
-        locals,
-        "CONVEX_APP_URL",
-        "CONVEX_PRODUCTION_URL",
-        "CONVEX_URL",
-        "PUBLIC_CONVEX_URL",
-        "NEXT_PUBLIC_CONVEX_URL",
-    );
-}
-
-export function convexSiteUrl(locals?: ServerLocals): string | undefined {
-    return getEnv(
-        locals,
-        "CONVEX_SITE_URL",
-        "VITE_CONVEX_SITE_URL",
-        "PUBLIC_CONVEX_SITE_URL",
-    );
+    return getEnv(locals, "NEXT_PUBLIC_CONVEX_URL");
 }
 
 /**
@@ -33,9 +17,4 @@ export function convexSiteUrl(locals?: ServerLocals): string | undefined {
  */
 export function isDemoMode(locals?: ServerLocals): boolean {
     return Boolean(locals?.demoMode);
-}
-
-/** True when this deployment can actually reach its Convex backend. */
-export function isConfigured(locals?: ServerLocals): boolean {
-    return Boolean(convexAppUrl(locals)) && Boolean(getEnv(locals, "CONVEX_BRIDGE_SECRET"));
 }

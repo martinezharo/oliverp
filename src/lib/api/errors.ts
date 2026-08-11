@@ -138,31 +138,3 @@ export function fromZodError(error: ZodError): ApiError {
         hint: "Revisa los campos listados en 'details'. El esquema completo esta en GET /api/v1/openapi.json",
     });
 }
-
-/**
- * Maps a Postgres/PostgREST failure onto the API error vocabulary. The RPC
- * functions raise with specific SQLSTATEs precisely so this can distinguish a
- * caller mistake (404, 409) from a genuine server fault (500).
- */
-export function fromPostgresError(error: { code?: string; message: string }): ApiError {
-    switch (error.code) {
-        case "no_data_found":
-        case "P0002":
-            return new ApiError("not_found", error.message);
-        case "23503": // foreign_key_violation
-            return new ApiError("validation_error", error.message, {
-                hint: "Alguna referencia (producto_id, proyecto_id) no existe o pertenece a otro proyecto.",
-            });
-        case "23514": // check_violation
-        case "23502": // not_null_violation
-            return new ApiError("validation_error", error.message);
-        case "23505": // unique_violation
-            return new ApiError("conflict", error.message);
-        case "22P02": // invalid_text_representation, typically a bad enum cast
-            return new ApiError("validation_error", error.message, {
-                hint: "Un valor de enum o fecha no es valido. Consulta los valores aceptados en /api/v1/openapi.json",
-            });
-        default:
-            return new ApiError("internal_error", error.message);
-    }
-}

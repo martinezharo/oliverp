@@ -4,21 +4,6 @@ import { apiHandler, json, parseBody, parseQuery, withIdempotency } from "../../
 import { crearCompraSchema, filtrosComprasSchema } from "../../../lib/api/schemas";
 import { paginated, serializeCompra } from "../../../lib/api/serializers";
 
-export const COMPRA_SELECT = `
-    id,
-    proyecto_id,
-    fecha,
-    estado,
-    compra_detalle (
-        id,
-        producto_id,
-        unidades,
-        precio_unitario_compra,
-        porcentaje_iva,
-        producto:productos ( nombre )
-    )
-`;
-
 /** GET /api/v1/compras */
 export const GET: APIRoute = (context) =>
     apiHandler(context, "read", async (principal) => {

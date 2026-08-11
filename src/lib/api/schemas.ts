@@ -6,7 +6,7 @@ import { roundMoney, roundVatRate } from "./numbers";
  *
  * The enum tuples below are the single source of truth shared by validation and
  * the OpenAPI document, so the accepted values quoted in an error message can
- * never drift from the ones the database actually takes. They mirror the
+ * never drift from the values accepted by the Convex domain. They mirror the
  * status unions declared in `convex/schema.ts`.
  */
 export const ESTADOS_VENTA = ["pendiente", "enviada", "devuelta", "reembolsada"] as const;
@@ -22,8 +22,7 @@ export const TIPOS_MOVIMIENTO = [
 
 /**
  * Accepts `2026-01-31` or a full ISO timestamp. Plain dates are widened to
- * midnight so the value always lands cleanly in a `timestamp` column, which
- * spares callers the explicit cast the SQL notes warn about.
+ * midnight so the value has one consistent representation in the backend.
  */
 const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
 const ISO_DATETIME = /^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?(\.\d+)?(Z|[+-]\d{2}:?\d{2})?$/;
@@ -193,7 +192,7 @@ export const filtrosClientesSchema = paginacionSchema.extend({
     buscar: z.string().trim().min(1).optional(),
 });
 
-export const filtrosSchema = paginacionSchema.extend({
+const filtrosSchema = paginacionSchema.extend({
     proyecto_id: z.coerce.number().int().positive().optional(),
     desde: fechaSchema.optional(),
     hasta: fechaSchema.optional(),
@@ -211,5 +210,3 @@ export const filtrosComprasSchema = filtrosSchema.extend({
 export const filtrosTransaccionesSchema = filtrosSchema.extend({
     tipo: z.enum(TIPOS_TRANSACCION).optional(),
 });
-
-export type Linea = z.infer<typeof lineaSchema>;

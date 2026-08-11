@@ -1,15 +1,8 @@
 // Translation dictionaries for the app (Spanish base + English).
-// Keys are flat and namespaced. Used on the server (frontmatter / API routes)
-// and on the client (the active-language dict is injected into `window`).
-
-export const defaultLang = "en";
+// Keys are flat and namespaced. The same dictionaries are used by server API
+// code and client components.
 
 export type Lang = "es" | "en";
-
-export const languages: Record<Lang, string> = {
-  es: "Español",
-  en: "English",
-};
 
 type Dict = Record<string, string>;
 

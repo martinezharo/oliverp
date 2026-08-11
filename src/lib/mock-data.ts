@@ -1,16 +1,15 @@
 /**
- * Mock data for Demo Mode
- * Used when the Convex data gateway is not configured
+ * Mock data for the explicit, read-only Demo Mode.
  */
 
-import type {
-    Proyecto,
-    VistaFinanzasDiarias,
-    VistaStockFinal,
-} from "../types/database";
+import type { Project } from "@/hooks/useErpContext";
+import type { FinanceRow, StockRow } from "@/components/legacy/types";
+
+type MockFinanceRow = FinanceRow & { nombre_proyecto: string };
+type MockStockRow = StockRow & { nombre_proyecto: string };
 
 // ── Translation keys for mock product/project names ───────
-export const productNameTranslationKeys: Record<string, string> = {
+const productNameTranslationKeys: Record<string, string> = {
     "Mando Samsung BN59": "product.mando_samsung_bn59",
     "Mando LG AKB75095308": "product.mando_lg_akb75095308",
     "Mando Sony RMT-TX300E": "product.mando_sony_rmt_tx300e",
@@ -18,7 +17,7 @@ export const productNameTranslationKeys: Record<string, string> = {
     "Mando Xiaomi Mi Box": "product.mando_xiaomi_mi_box",
 };
 
-export const projectNameTranslationKeys: Record<string, string> = {
+const projectNameTranslationKeys: Record<string, string> = {
     "Octopus Control": "project.octopus_control",
     "Demo Store": "project.demo_store",
 };
@@ -32,13 +31,13 @@ export function getProjectNameKey(name: string): string {
 }
 
 // ── Projects ──────────────────────────────────────────────
-export const mockProjects: Proyecto[] = [
+export const mockProjects: Project[] = [
     { id: 1, nombre: "Octopus Control", activo: true },
     { id: 2, nombre: "Demo Store", activo: true },
 ];
 
 // ── Stock ─────────────────────────────────────────────────
-export const mockStock: VistaStockFinal[] = [
+export const mockStock: MockStockRow[] = [
     {
         proyecto_id: 1,
         nombre_proyecto: "Octopus Control",
@@ -117,8 +116,8 @@ export const mockStock: VistaStockFinal[] = [
 ];
 
 // ── Daily Finance (last 90 days) ──────────────────────────
-function generateMockFinanzas(): VistaFinanzasDiarias[] {
-    const data: VistaFinanzasDiarias[] = [];
+function generateMockFinanzas(): MockFinanceRow[] {
+    const data: MockFinanceRow[] = [];
     const now = new Date();
 
     for (let i = 90; i >= 0; i--) {

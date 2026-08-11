@@ -28,8 +28,8 @@ export interface TransactionSources {
   others: Array<Record<string, unknown>>;
 }
 
-export const PURCHASE_CHANNEL = "Proveedor";
-export const OTHER_CHANNEL = "Manual";
+const PURCHASE_CHANNEL = "Proveedor";
+const OTHER_CHANNEL = "Manual";
 
 export function transactionDeleteUrl(projectId: number, transaction: Pick<NormalizedTransaction, "id" | "type">): string {
   const params = new URLSearchParams({
@@ -65,7 +65,7 @@ function totalOf(details: Array<Record<string, unknown>>, priceKey: string): num
   );
 }
 
-export function saleTransaction(row: Record<string, unknown>): NormalizedTransaction {
+function saleTransaction(row: Record<string, unknown>): NormalizedTransaction {
   const details = detailsOf(row, "venta_detalle");
   return {
     id: Number(row.id),
@@ -79,7 +79,7 @@ export function saleTransaction(row: Record<string, unknown>): NormalizedTransac
   };
 }
 
-export function purchaseTransaction(row: Record<string, unknown>): NormalizedTransaction {
+function purchaseTransaction(row: Record<string, unknown>): NormalizedTransaction {
   const details = detailsOf(row, "compra_detalle");
   return {
     id: Number(row.id),
@@ -93,7 +93,7 @@ export function purchaseTransaction(row: Record<string, unknown>): NormalizedTra
   };
 }
 
-export function otherTransaction(row: Record<string, unknown>): NormalizedTransaction {
+function otherTransaction(row: Record<string, unknown>): NormalizedTransaction {
   const type = String(row.tipo);
   const amount = Math.abs(Number(row.importe));
   return {

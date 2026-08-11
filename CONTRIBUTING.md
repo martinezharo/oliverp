@@ -48,9 +48,10 @@ This section guides you through submitting an enhancement suggestion, including 
 
 ### Developing with Demo Mode
 
-If you want to contribute to the UI or frontend logic without configuring a backend or creating an account, you can use the **Demo Mode**.
+If you want to contribute to the UI or frontend logic without creating an
+account, open the explicit **Demo Mode** link on the login screen.
 
-Simply skip step 3 of the installation (skip the `.env` file credentials). The application will detect the absence of Convex credentials and automatically populate the dashboard with realistic mock data, allowing you to develop and test your changes immediately.
+The demo uses realistic mock data and is intentionally read-only. Backend-backed changes still require a configured local Convex deployment.
 
 
 ## Styleguides
@@ -66,7 +67,7 @@ Simply skip step 3 of the installation (skip the `.env` file credentials). The a
 
 - Use TypeScript for all logic.
 - Prefer functional components and hooks.
-- Define types/interfaces for all data structures (see `src/types/`).
+- Define types/interfaces close to the feature that owns them.
 - Use `any` only as a last resort.
 
 ### Tailwind CSS Styleguide

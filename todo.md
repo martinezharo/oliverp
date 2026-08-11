@@ -1,47 +1,5 @@
-- [x] Transaction filters
-- Manage refunds and returns through the database and enable editing the sale status.
-- Default the purchase price to the most recent transaction only.
+# Backlog
 
-## Remaining from the 2026-07-31 testing pass
-
-RLS, the RPC/trigger tests, the VAT arithmetic and the pre-push hook are done
-(PR #3). Still open:
-
-- [x] **Unify the legacy routes.** All browser API routes now reuse the user
-      validated by middleware through `sessionBackend`; no route performs a
-      second `getUser()` call.
-- [x] **Serializer and Zod rounding.** `lib/api/serializers.ts` and
-      `schemas.ts` normalize monetary inputs to cents and keep base, VAT and
-      gross output internally consistent, with unit coverage at rounding edges.
-- [x] **Nothing notices when production drifts from `db-structure/`.** A policy
-      called `Solo_Yo_Acceso_Total`, added by hand in the dashboard and absent
-      from this repository, had been granting one hardcoded email full access to
-      all eight business tables. It surfaced only because its predicate appeared
-      in a query plan being read for another reason; it is dropped now
-      (`.sb-migrations/20260801_drop_hardcoded_email_bypass_policy.sql`). A check
-      that compares `pg_policies` against the policies in `02-rls.sql` would have
-      caught it the day it appeared. `pnpm db:policies:check` now compares the
-      reviewed manifest against a read-only production connection, while the
-      PostgreSQL suite verifies that the manifest still matches `db-structure`.
-
-- [x] **A policy is a query plan too.** The RLS suite proved the policies added
-      in PR #3 were *correct* and said nothing about what they cost, so the
-      stock page timed out in production against a real project's data (fixed by
-      `.sb-migrations/20260801_carry_proyecto_id_on_child_tables.sql`). The
-      fixture is four rows; nothing in it can produce a bad plan. Worth a test
-      that seeds a few thousand lines and asserts `EXPLAIN` on
-      `vista_stock_final` shows no per-row subplan — or, more cheaply, that the
-      query finishes well inside the timeout. The suite now seeds 10,000 detail
-      rows, rejects row-dependent membership predicates on high-volume tables,
-      and runs `EXPLAIN ANALYZE` under the production timeout.
-
-- [ ] **A membership UI.** Creating a project now writes the project and its
-      first admin in one Convex mutation, and `requireAdmin` enforces the role.
-      What is still missing is the screen: inviting, listing and removing
-      members, plus a rule for removing the last admin. Until it exists every
-      project has exactly one member. See `docs/AUDIT.md` #7.
-
-- [x] **Project and account deletion.** `/ajustes` lets a user delete a project
-      they administer, or their whole account. Both purge in budgeted rounds
-      (`convex/account.ts`) because a large project exceeds the write limit of a
-      single Convex transaction.
+- [ ] Manage refunds and returns through the domain model and UI.
+- [ ] Default purchase prices to the most recent transaction.
+- [ ] Add membership management to `/ajustes`, including last-admin rules.

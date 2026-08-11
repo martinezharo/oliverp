@@ -4,7 +4,7 @@ dist/
 .open-next/
 test-results/
 tsconfig.tsbuildinfo
-# generated types
+# generated local artifacts
 .astro/
 
 # dependencies

@@ -2,7 +2,7 @@
 
 import { createContext, useContext } from "react";
 
-export interface CloudUser {
+interface CloudUser {
   id: string;
   name: string | null;
   email: string | null;

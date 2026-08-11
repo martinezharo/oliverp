@@ -4,22 +4,6 @@ import { apiHandler, json, parseBody, parseQuery, withIdempotency } from "../../
 import { crearVentaSchema, filtrosVentasSchema } from "../../../lib/api/schemas";
 import { paginated, serializeVenta } from "../../../lib/api/serializers";
 
-export const VENTA_SELECT = `
-    id,
-    proyecto_id,
-    fecha,
-    canal,
-    estado,
-    venta_detalle (
-        id,
-        producto_id,
-        unidades,
-        precio_unitario_venta,
-        porcentaje_iva,
-        producto:productos ( nombre )
-    )
-`;
-
 /** GET /api/v1/ventas */
 export const GET: APIRoute = (context) =>
     apiHandler(context, "read", async (principal) => {

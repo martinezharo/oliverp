@@ -8,10 +8,8 @@ import { ajustarStockSchema } from "../../../../lib/api/schemas";
  * POST /api/v1/stock/ajustes
  *
  * Records a manual stock correction (breakage, inventory count, a gift).
- * Movements tied to sales and purchases are written by database triggers, so
- * this endpoint only ever produces `ajuste manual` rows — note the space in that
- * enum value, which is a well-known trap when writing SQL against this schema by
- * hand.
+ * Movements tied to sales and purchases are written by the Convex domain
+ * mutations, so this endpoint only ever produces `ajuste manual` rows.
  */
 export const POST: APIRoute = (context) =>
     apiHandler(context, "write", async (principal) => {

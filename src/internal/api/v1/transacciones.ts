@@ -4,9 +4,6 @@ import { apiHandler, json, parseBody, parseQuery, withIdempotency } from "../../
 import { crearTransaccionSchema, filtrosTransaccionesSchema } from "../../../lib/api/schemas";
 import { paginated, serializeTransaccion } from "../../../lib/api/serializers";
 
-export const TRANSACCION_SELECT =
-    "id, proyecto_id, tipo, concepto, descripcion, importe, porcentaje_iva, fecha";
-
 /**
  * Other income and expenses: everything that is neither a sale nor a purchase
  * (subscriptions, fees, refunds from a supplier...).
@@ -38,7 +35,7 @@ export const GET: APIRoute = (context) =>
 /**
  * POST /api/v1/transacciones
  *
- * Single-table, so no RPC is needed; the insert is already atomic.
+ * The Convex mutation keeps the transaction write atomic with its validation.
  */
 export const POST: APIRoute = (context) =>
     apiHandler(context, "write", async (principal) => {

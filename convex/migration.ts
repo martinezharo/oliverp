@@ -4,17 +4,17 @@ import { assertBridgeSecret, fail, productByLegacyId, projectByLegacyId } from "
 import type { MutationCtx } from "./_generated/server";
 
 /**
- * One-shot import surface for the Supabase compatibility migration.
+ * One-shot import surface for the legacy data migration.
  *
  * These are `internal*` functions: they are not part of the deployment's
  * public API and cannot be reached with the bridge secret alone. Run them from
- * a trusted shell with `npx convex run migration:importProjects '{...}'`.
+ * a trusted shell with `pnpm exec convex run migration:importProjects '{...}'`.
  * They can rewrite any row and reassign project membership, so remote
  * reachability was the wrong default once the deployment stopped being
  * single-tenant.
  *
- * The Supabase migration is complete and its driver script has been removed
- * along with the rest of the Postgres tooling. These functions are kept because
+ * The data migration is complete and its driver script has been removed along
+ * with the rest of the legacy database tooling. These functions are kept because
  * they document the shape of the imported rows and can still be replayed by
  * hand. Each operation is idempotent by legacy id and expects small batches, so
  * a replay stays below Convex's argument and transaction limits.

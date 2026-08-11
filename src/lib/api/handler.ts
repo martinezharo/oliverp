@@ -4,8 +4,6 @@ import { ApiError, fromConvexError, fromZodError } from "./errors";
 import type { Scope } from "./keys";
 import type { ServerContext } from "../server-context";
 
-export const OPENAPI_PATH = "/api/v1/openapi.json";
-
 export function json(body: unknown, status = 200, headers: Record<string, string> = {}): Response {
     return new Response(JSON.stringify(body), {
         status,

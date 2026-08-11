@@ -19,9 +19,8 @@ the application.
 
 ## Demo mode
 
-If the Worker is missing its Convex URL or bridge secret, it deliberately falls
-back to a read-only demo experience. The demo has mock projects, stock, and
-financial data and does not require an account.
+The demo is an explicit, read-only path from the login screen. It has mock
+projects, stock, and financial data and does not require an account.
 
 ## Local development
 
@@ -134,10 +133,10 @@ are stored in the `counters` table and initialise themselves from the highest
 existing id the first time a project writes, so an existing deployment needs no
 migration step.
 
-The Supabase import is finished and its driver script has been removed together
-with the rest of the Postgres tooling. The import functions themselves remain in
+The data import is finished and its driver script has been removed together
+with the legacy database tooling. The import functions themselves remain in
 `convex/migration.ts` as `internal*` functions, runnable only from a trusted
-shell with `npx convex run`.
+shell with `pnpm exec convex run`.
 
 ### Before opening sign-up
 

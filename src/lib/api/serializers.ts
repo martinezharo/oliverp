@@ -7,7 +7,7 @@
  * The stored prices include VAT (the daily-finance view derives the tax as
  * `precio * iva / (100 + iva)`), so every total is broken out into base, tax and
  * gross here. A consumer building an invoice or a report should not have to
- * rediscover that convention from the SQL.
+ * rediscover that convention from the domain response.
  */
 
 import { roundMoney } from "./numbers";

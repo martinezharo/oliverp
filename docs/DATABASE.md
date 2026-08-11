@@ -12,9 +12,9 @@ GitHub identities and sessions, while `convex/schema.ts` stores the business
 tables. GitHub is the only application sign-in provider; there are no local
 passwords or signup screens to migrate.
 
-The Supabase migration is complete. Its driver script and the Postgres schema
-and RLS tooling have been removed; `convex/migration.ts` keeps the import
-functions as `internal*` functions for a manual replay from `npx convex run`.
+The data migration is complete. Its driver script and legacy schema tooling have
+been removed; `convex/migration.ts` keeps the import functions as `internal*`
+functions for a manual replay from `pnpm exec convex run`.
 
 After a user authorizes the configured GitHub OAuth App, Convex authorizes
 imported memberships from the verified JWT identity. The rebinding helpers

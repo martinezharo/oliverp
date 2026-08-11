@@ -567,18 +567,8 @@ export class BackendClient {
     }
 }
 
-export function convexConfig(locals?: ServerLocals): BackendConfig {
-    // Keep the URL public and the bridge credential server-only. The legacy
-    // aliases remain as a migration fallback, but new deployments only need
-    // NEXT_PUBLIC_CONVEX_URL plus CONVEX_BRIDGE_SECRET.
-    const convexUrl = getEnv(
-        locals,
-        "CONVEX_APP_URL",
-        "CONVEX_PRODUCTION_URL",
-        "CONVEX_URL",
-        "PUBLIC_CONVEX_URL",
-        "NEXT_PUBLIC_CONVEX_URL",
-    );
+function convexConfig(locals?: ServerLocals): BackendConfig {
+    const convexUrl = getEnv(locals, "NEXT_PUBLIC_CONVEX_URL");
     const bridgeSecret = getEnv(locals, "CONVEX_BRIDGE_SECRET");
 
     if (!convexUrl || !bridgeSecret) {
