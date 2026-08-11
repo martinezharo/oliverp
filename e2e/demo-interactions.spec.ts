@@ -4,8 +4,10 @@ test("renders every demo operation modal and the stock history dialog", async ({
   await page.goto("/api/demo/start");
 
   await page.goto("/");
-  await expect(page.locator("#btn-open-venta")).toBeVisible();
-  await page.locator("#btn-open-venta").click();
+  const main = page.getByRole("main");
+  const newSale = main.getByRole("button", { name: /New Sale/ });
+  await expect(newSale).toBeVisible();
+  await newSale.click();
   await expect(page.locator("dialog[open]")).toContainText("New Sale");
   await page.locator("dialog[open] button").first().click();
 
