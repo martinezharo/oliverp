@@ -14,10 +14,10 @@ const workflow = JSON.parse(
 };
 
 const parserCode = workflow.nodes.find(
-  (node) => node.name === "Parse Wallapop sale",
+  (node) => node.name === "Parse marketplace sale",
 )?.parameters?.jsCode;
 
-if (!parserCode) throw new Error("The Wallapop workflow has no parser node.");
+if (!parserCode) throw new Error("The marketplace workflow has no parser node.");
 
 function parseMessage(message: Record<string, unknown>) {
   const run = new Function("$json", "$env", parserCode!);
@@ -26,7 +26,7 @@ function parseMessage(message: Record<string, unknown>) {
   }>;
 }
 
-describe("Wallapop n8n parser", () => {
+describe("Marketplace n8n parser", () => {
   it("parses a plain-text confirmation", () => {
     const [item] = parseMessage({
       id: "gmail-plain-1",
@@ -42,9 +42,10 @@ describe("Wallapop n8n parser", () => {
     expect(item.json).toMatchObject({
       proyecto_id: 7,
       origen_id: "gmail-plain-1",
+      canal: "Wallapop",
       fecha: "2026-08-03",
       comprador_nombre: "Antonio R.",
-      titulo_wallapop: "Mando Xiaomi XMRM-006 a Estrenar",
+      titulo_producto: "Mando Xiaomi XMRM-006 a Estrenar",
       importe_total: 3.49,
       unidades: 1,
       estado: "pendiente",
@@ -64,10 +65,40 @@ describe("Wallapop n8n parser", () => {
 
     expect(item.json).toMatchObject({
       origen_id: "gmail-html-1",
+      canal: "Wallapop",
       fecha: "2026-08-04",
       comprador_nombre: "María",
-      titulo_wallapop: "Mando LG MR20GA con Micrófono y Puntero a Estrenar",
+      titulo_producto: "Mando LG MR20GA con Micrófono y Puntero a Estrenar",
       importe_total: 12.9,
+    });
+  });
+
+  it("parses the Vinted confirmation shape and uses the Gmail message date", () => {
+    const [item] = parseMessage({
+      id: "gmail-vinted-1",
+      subject: "Has vendido un artículo en Vinted",
+      from: "Tu equipo de Vinted <no-reply@vinted.es>",
+      date: "2026-08-08T21:38:00+02:00",
+      textPlain: [
+        "Hola, oliver.mar:",
+        "ahmedh831 ha comprado",
+        "Mando Samsung BN59-01358D a Estrenar",
+        "3,50 €",
+        "Transfiere el pago del comprador cuando haya finalizado la transacción.",
+        "Envía el pedido en los próximos 5 días.",
+      ].join("\n"),
+    });
+
+    expect(item.json).toMatchObject({
+      proyecto_id: 7,
+      origen_id: "gmail-vinted-1",
+      canal: "Vinted",
+      fecha: "2026-08-08",
+      comprador_nombre: "ahmedh831",
+      titulo_producto: "Mando Samsung BN59-01358D a Estrenar",
+      importe_total: 3.5,
+      unidades: 1,
+      estado: "pendiente",
     });
   });
 

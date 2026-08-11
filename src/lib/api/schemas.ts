@@ -19,6 +19,7 @@ export const TIPOS_MOVIMIENTO = [
     "ajuste manual",
     "devolucion_com",
 ] as const;
+export const MARKETPLACE_CHANNELS = ["Wallapop", "Vinted"] as const;
 
 /**
  * Accepts `2026-01-31` or a full ISO timestamp. Plain dates are widened to
@@ -139,12 +140,19 @@ export const crearProductoSchema = z.object({
     proyecto_id: idSchema.optional(),
     nombre: z.string().min(1, { message: "El nombre no puede estar vacio." }),
     titulo_wallapop: z.string().trim().min(1).max(300).optional(),
+    titulo_vinted: z.string().trim().min(1).max(300).optional(),
 });
 
-export const actualizarProductoSchema = z.object({
-    proyecto_id: idSchema.optional(),
-    titulo_wallapop: z.string().trim().min(1).max(300),
-});
+export const actualizarProductoSchema = z
+    .object({
+        proyecto_id: idSchema.optional(),
+        titulo_wallapop: z.string().trim().min(1).max(300).optional(),
+        titulo_vinted: z.string().trim().min(1).max(300).optional(),
+    })
+    .refine(
+        (body) => Boolean(body.titulo_wallapop) !== Boolean(body.titulo_vinted),
+        { message: "Indica exactamente un titulo_wallapop o titulo_vinted." },
+    );
 
 // -----------------------------------------------------------------------------
 // Wallapop import and customers
@@ -156,6 +164,22 @@ export const importarVentaWallapopSchema = z.object({
     fecha: fechaSchema,
     comprador_nombre: z.string().trim().min(1).max(200),
     titulo_wallapop: z.string().trim().min(1).max(300),
+    importe_total: z.number().positive({ message: "El importe total debe ser mayor que cero." }).transform(roundMoney),
+    unidades: z.number().int().positive().default(1),
+    porcentaje_iva: porcentajeIvaSchema.default(21),
+    // A sale is pending until the seller ships it; pending sales do not count
+    // as revenue in the ERP financial views.
+    estado: z.enum(ESTADOS_VENTA).default("pendiente"),
+});
+
+export const importarVentaMarketplaceSchema = z.object({
+    proyecto_id: idSchema.optional(),
+    /** Stable Gmail message id; it is also the idempotency key at the source. */
+    origen_id: z.string().trim().min(1).max(500),
+    canal: z.enum(MARKETPLACE_CHANNELS),
+    fecha: fechaSchema,
+    comprador_nombre: z.string().trim().min(1).max(200),
+    titulo_producto: z.string().trim().min(1).max(300),
     importe_total: z.number().positive({ message: "El importe total debe ser mayor que cero." }).transform(roundMoney),
     unidades: z.number().int().positive().default(1),
     porcentaje_iva: porcentajeIvaSchema.default(21),

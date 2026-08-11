@@ -38,6 +38,7 @@ export const POST: APIRoute = (context) =>
                 projectId,
                 body.nombre,
                 body.titulo_wallapop,
+                body.titulo_vinted,
             );
             return json({ data }, 201);
         });

@@ -36,6 +36,7 @@ import * as clientes from "@/internal/api/v1/clientes";
 import * as compras from "@/internal/api/v1/compras";
 import * as compraById from "@/internal/api/v1/compras/[id]";
 import * as finanzas from "@/internal/api/v1/finanzas";
+import * as marketplace from "@/internal/api/v1/importaciones/marketplace";
 import * as wallapop from "@/internal/api/v1/importaciones/wallapop";
 import * as openapi from "@/internal/api/v1/openapi.json";
 import * as productos from "@/internal/api/v1/productos";
@@ -59,7 +60,7 @@ const exactRoutes = new Map<string, LegacyModule>([
   ["/api/sales/create", saleCreate], ["/api/sales/get", saleGet], ["/api/sales/init-data", saleInit], ["/api/sales/update", saleUpdate],
   ["/api/stats/evolution", statsEvolution], ["/api/stock/adjust", stockAdjust], ["/api/stock/movements", stockMovements],
   ["/api/transactions/concepts", transactionConcepts], ["/api/transactions/delete", transactionDelete], ["/api/transactions/details", transactionDetails], ["/api/transactions/get-other", transactionGetOther], ["/api/transactions/list", transactionList], ["/api/transactions/save", transactionSave],
-  ["/api/v1/clientes", clientes], ["/api/v1/compras", compras], ["/api/v1/finanzas", finanzas], ["/api/v1/importaciones/wallapop", wallapop], ["/api/v1/openapi.json", openapi], ["/api/v1/productos", productos], ["/api/v1/proyectos", proyectos], ["/api/v1/stock", stock], ["/api/v1/stock/ajustes", stockAdjustments], ["/api/v1/transacciones", transacciones], ["/api/v1/ventas", ventas],
+  ["/api/v1/clientes", clientes], ["/api/v1/compras", compras], ["/api/v1/finanzas", finanzas], ["/api/v1/importaciones/marketplace", marketplace], ["/api/v1/importaciones/wallapop", wallapop], ["/api/v1/openapi.json", openapi], ["/api/v1/productos", productos], ["/api/v1/proyectos", proyectos], ["/api/v1/stock", stock], ["/api/v1/stock/ajustes", stockAdjustments], ["/api/v1/transacciones", transacciones], ["/api/v1/ventas", ventas],
 ]);
 
 function runtimeEnv(): Record<string, unknown> | undefined {

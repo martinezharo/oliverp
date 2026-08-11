@@ -99,18 +99,25 @@ export class BackendClient {
         );
     }
 
-    createProduct(projectId: number, name: string, wallapopTitle?: string) {
+    createProduct(
+        projectId: number,
+        name: string,
+        wallapopTitle?: string,
+        vintedTitle?: string,
+    ) {
         return this.mutation<{
             id: number;
             proyecto_id: number;
             nombre: string;
             titulo_wallapop: string | null;
+            titulo_vinted: string | null;
         }>(
             api.domain.createProduct,
             this.args({
                 projectLegacyId: projectId,
                 name,
                 ...(wallapopTitle ? { wallapopTitle } : {}),
+                ...(vintedTitle ? { vintedTitle } : {}),
             }),
         );
     }
@@ -121,6 +128,7 @@ export class BackendClient {
             proyecto_id: number;
             nombre: string;
             titulo_wallapop: string;
+            titulo_vinted: string | null;
         }>(
             api.domain.updateProductWallapopTitle,
             this.args({
@@ -131,12 +139,30 @@ export class BackendClient {
         );
     }
 
+    updateProductVintedTitle(projectId: number, productId: number, vintedTitle: string) {
+        return this.mutation<{
+            id: number;
+            proyecto_id: number;
+            nombre: string;
+            titulo_wallapop: string | null;
+            titulo_vinted: string;
+        }>(
+            api.domain.updateProductVintedTitle,
+            this.args({
+                projectLegacyId: projectId,
+                productLegacyId: productId,
+                vintedTitle,
+            }),
+        );
+    }
+
     getProduct(projectId: number, productId: number) {
         return this.query<{
             id: number;
             proyecto_id: number;
             nombre: string;
             titulo_wallapop: string | null;
+            titulo_vinted: string | null;
         }>(
             api.domain.getProduct,
             this.args({ projectLegacyId: projectId, productLegacyId: productId }),
@@ -149,6 +175,7 @@ export class BackendClient {
             proyecto_id: number;
             nombre: string;
             titulo_wallapop: string | null;
+            titulo_vinted: string | null;
         } | null>(
             api.domain.getProductGlobal,
             this.args({ projectLegacyId: projectId, productLegacyId: productId }),
@@ -242,6 +269,40 @@ export class BackendClient {
                 date: values.date,
                 customerName: values.customerName,
                 wallapopTitle: values.wallapopTitle,
+                totalAmount: values.totalAmount,
+                units: values.units,
+                vatRate: values.vatRate,
+                status: values.status,
+            }),
+        );
+    }
+
+    importMarketplaceSale(values: {
+        projectId: number;
+        originId: string;
+        date: string;
+        customerName: string;
+        marketplaceTitle: string;
+        channel: "Wallapop" | "Vinted";
+        totalAmount: number;
+        units: number;
+        vatRate: number;
+        status: string;
+    }): Promise<{
+        id: number;
+        created: boolean;
+        customerId?: number;
+        productId?: number;
+    }> {
+        return this.mutation(
+            api.domain.importMarketplaceSale,
+            this.args({
+                projectLegacyId: values.projectId,
+                originId: values.originId,
+                date: values.date,
+                customerName: values.customerName,
+                marketplaceTitle: values.marketplaceTitle,
+                channel: values.channel,
                 totalAmount: values.totalAmount,
                 units: values.units,
                 vatRate: values.vatRate,

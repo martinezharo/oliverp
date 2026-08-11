@@ -55,11 +55,13 @@ export default defineSchema({
     projectLegacyId: v.number(),
     name: v.string(),
     wallapopTitle: v.optional(v.string()),
+    vintedTitle: v.optional(v.string()),
   })
     .index("by_legacy_id", ["legacyId"])
     .index("by_project_name", ["projectId", "name"])
     .index("by_project_legacy", ["projectLegacyId", "legacyId"])
-    .index("by_project_wallapop_title", ["projectId", "wallapopTitle"]),
+    .index("by_project_wallapop_title", ["projectId", "wallapopTitle"])
+    .index("by_project_vinted_title", ["projectId", "vintedTitle"]),
 
   customers: defineTable({
     legacyId: v.number(),

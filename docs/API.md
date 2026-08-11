@@ -117,6 +117,7 @@ on those routes.
 | `GET`    | `/api/v1/stock`               | Stock and days of inventory coverage.            |
 | `POST`   | `/api/v1/stock/ajustes`       | Applies a manual stock adjustment.               |
 | `GET`    | `/api/v1/finanzas`            | Income, expenses, profit, and VAT balance.        |
+| `POST`   | `/api/v1/importaciones/marketplace` | Imports a confirmed Wallapop or Vinted sale from Gmail. |
 | `POST`   | `/api/v1/importaciones/wallapop` | Imports a confirmed Wallapop sale from Gmail. |
 
 List endpoints always return the same envelope:
@@ -143,10 +144,11 @@ move stock. A return is a status `PATCH` to `devuelta`, not a deletion.
 and purchases. `POST /api/v1/stock/ajustes` is only for manual corrections
 (breakage, stock counts, and giveaways).
 
-**Wallapop titles are exact mappings.** The Gmail workflow sends the complete
-listing title. It must first be assigned to the matching product through
-`PATCH /api/v1/productos/{id}`; an unknown title is rejected instead of being
-silently attached to the wrong product.
+**Marketplace titles are exact mappings.** The Gmail workflow sends the
+complete listing title and channel. It must first be assigned to the matching
+product through `PATCH /api/v1/productos/{id}` using `titulo_wallapop` or
+`titulo_vinted`; an unknown title is rejected instead of being silently
+attached to the wrong product.
 
 **Dates accept `YYYY-MM-DD` or ISO 8601.** A date without a time is interpreted
 as midnight.
@@ -283,6 +285,28 @@ curl -X POST https://your-erp/api/v1/importaciones/wallapop \
 The import creates or reuses a customer by normalized name and records the
 sale as `Wallapop`. It remains `pendiente` until shipment; the exact title is
 matched to the product before the sale and stock movement are written.
+
+### Import a marketplace sale
+
+The n8n workflow also supports Vinted confirmation emails through
+`/api/v1/importaciones/marketplace`. Send `canal: "Wallapop"` or
+`canal: "Vinted"` and the exact title in `titulo_producto`:
+
+```json
+{
+  "origen_id": "gmail-message-id",
+  "canal": "Vinted",
+  "fecha": "2026-08-08",
+  "comprador_nombre": "ahmedh831",
+  "titulo_producto": "Mando Samsung BN59-01358D a Estrenar",
+  "importe_total": 3.50,
+  "unidades": 1,
+  "estado": "pendiente"
+}
+```
+
+The import records the marketplace as the sale channel and uses the
+marketplace-specific exact title mapping before writing the sale.
 
 ### Connect a Custom GPT or agent
 

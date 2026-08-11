@@ -1,6 +1,7 @@
 import {
     ESTADOS_COMPRA,
     ESTADOS_VENTA,
+    MARKETPLACE_CHANNELS,
     TIPOS_MOVIMIENTO,
     TIPOS_TRANSACCION,
 } from "./schemas";
@@ -371,7 +372,7 @@ export function buildOpenApiDocument(serverUrl: string) {
                         ...paginacionParams,
                     ],
                     responses: {
-                        ...listResponse({ type: "object", properties: { id: { type: "integer" }, proyecto_id: { type: "integer" }, nombre: { type: "string" }, titulo_wallapop: { type: "string", nullable: true } } }),
+                        ...listResponse({ type: "object", properties: { id: { type: "integer" }, proyecto_id: { type: "integer" }, nombre: { type: "string" }, titulo_wallapop: { type: "string", nullable: true }, titulo_vinted: { type: "string", nullable: true } } }),
                         ...errorResponses,
                     },
                 },
@@ -390,6 +391,7 @@ export function buildOpenApiDocument(serverUrl: string) {
                                         proyecto_id: { type: "integer" },
                                         nombre: { type: "string", minLength: 1 },
                                         titulo_wallapop: { type: "string", nullable: true },
+                                        titulo_vinted: { type: "string", nullable: true },
                                     },
                                 },
                             },
@@ -404,8 +406,8 @@ export function buildOpenApiDocument(serverUrl: string) {
 
             "/api/v1/productos/{id}": {
                 patch: {
-                    operationId: "actualizarProductoWallapop",
-                    summary: "Asigna el título de Wallapop a un producto",
+                    operationId: "actualizarProductoMarketplace",
+                    summary: "Asigna un título de marketplace a un producto",
                     parameters: [
                         { name: "id", in: "path", required: true, schema: { type: "integer" } },
                     ],
@@ -415,11 +417,12 @@ export function buildOpenApiDocument(serverUrl: string) {
                             "application/json": {
                                 schema: {
                                     type: "object",
-                                    required: ["titulo_wallapop"],
                                     properties: {
                                         proyecto_id: { type: "integer" },
                                         titulo_wallapop: { type: "string", minLength: 1 },
+                                        titulo_vinted: { type: "string", minLength: 1 },
                                     },
+                                    description: "Indica exactamente uno de titulo_wallapop o titulo_vinted.",
                                 },
                             },
                         },
@@ -484,6 +487,40 @@ export function buildOpenApiDocument(serverUrl: string) {
                         ...paginacionParams,
                     ],
                     responses: { ...listResponse(clienteSchema), ...errorResponses },
+                },
+            },
+
+            "/api/v1/importaciones/marketplace": {
+                post: {
+                    operationId: "importarVentaMarketplace",
+                    summary: "Importa una venta confirmada de Wallapop o Vinted",
+                    description:
+                        "Casa el título exacto del anuncio con el mapeo del producto para ese marketplace, crea o reutiliza el cliente y registra la venta y su movimiento de stock de forma atómica. Las ventas importadas quedan pendientes hasta el envío.",
+                    parameters: [idempotencyHeader],
+                    requestBody: {
+                        required: true,
+                        content: {
+                            "application/json": {
+                                schema: {
+                                    type: "object",
+                                    required: ["origen_id", "canal", "fecha", "comprador_nombre", "titulo_producto", "importe_total"],
+                                    properties: {
+                                        proyecto_id: { type: "integer" },
+                                        origen_id: { type: "string", description: "Id estable del mensaje Gmail." },
+                                        canal: { type: "string", enum: [...MARKETPLACE_CHANNELS] },
+                                        fecha: fechaSchema,
+                                        comprador_nombre: { type: "string" },
+                                        titulo_producto: { type: "string" },
+                                        importe_total: { type: "number", exclusiveMinimum: 0 },
+                                        unidades: { type: "integer", minimum: 1, default: 1 },
+                                        porcentaje_iva: { type: "number", minimum: 0, maximum: 100, default: 21 },
+                                        estado: { type: "string", enum: [...ESTADOS_VENTA], default: "pendiente" },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    responses: { ...itemResponse(ventaSchema, "201", "Importada"), ...escrituraResponses },
                 },
             },
 

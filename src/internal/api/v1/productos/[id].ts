@@ -15,17 +15,23 @@ function parseId(raw: string | undefined): number {
   return id;
 }
 
-/** PATCH /api/v1/productos/{id} - maps an existing product to its Wallapop title. */
+/** PATCH /api/v1/productos/{id} - maps an existing product to a marketplace title. */
 export const PATCH: APIRoute = (context) =>
   apiHandler(context, "write", async (principal) => {
     const productId = parseId(context.params.id);
     const body = await parseBody(context.request, actualizarProductoSchema);
     const projectId = resolveProjectId(principal, body.proyecto_id);
 
-    const data = await requireBackend(principal).updateProductWallapopTitle(
-      projectId,
-      productId,
-      body.titulo_wallapop,
-    );
+    const data = body.titulo_vinted
+      ? await requireBackend(principal).updateProductVintedTitle(
+          projectId,
+          productId,
+          body.titulo_vinted,
+        )
+      : await requireBackend(principal).updateProductWallapopTitle(
+          projectId,
+          productId,
+          body.titulo_wallapop!,
+        );
     return json({ data });
   });

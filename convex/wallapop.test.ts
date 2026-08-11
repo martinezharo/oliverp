@@ -25,6 +25,7 @@ async function seed(t: ReturnType<typeof convexTest>) {
       projectLegacyId: 7,
       name: "Xiaomi XMRM-006",
       wallapopTitle: "Mando Xiaomi XMRM-006 a Estrenar",
+      vintedTitle: "Mando Xiaomi XMRM-006 en Vinted",
     });
     return { projectId, productId };
   });
@@ -147,6 +148,66 @@ describe("importWallapopSale", () => {
     }));
     expect(counts.sales).toHaveLength(0);
     expect(counts.customers).toHaveLength(0);
+  });
+});
+
+describe("importMarketplaceSale", () => {
+  beforeEach(() => {
+    process.env.CONVEX_BRIDGE_SECRET = SECRET;
+  });
+
+  it("imports Vinted sales through the marketplace-specific title mapping", async () => {
+    const t = convexTest(schema, modules);
+    await seed(t);
+
+    const created = await t.mutation(api.domain.importMarketplaceSale, {
+      bridgeSecret: SECRET,
+      actor,
+      projectLegacyId: 7,
+      originId: "vinted-message-1",
+      date: "2026-08-08T00:00:00",
+      customerName: "ahmedh831",
+      marketplaceTitle: "Mando Xiaomi XMRM-006 en Vinted",
+      channel: "Vinted",
+      totalAmount: 3.5,
+      units: 1,
+      vatRate: 21,
+      status: "pendiente",
+    });
+    expect(created).toMatchObject({
+      id: 1,
+      created: true,
+      customerId: 1,
+      productId: 11,
+    });
+
+    const replay = await t.mutation(api.domain.importMarketplaceSale, {
+      bridgeSecret: SECRET,
+      actor,
+      projectLegacyId: 7,
+      originId: "vinted-message-1",
+      date: "2026-08-08T00:00:00",
+      customerName: "ahmedh831",
+      marketplaceTitle: "Mando Xiaomi XMRM-006 en Vinted",
+      channel: "Vinted",
+      totalAmount: 3.5,
+      units: 1,
+      vatRate: 21,
+      status: "pendiente",
+    });
+    expect(replay).toEqual({ id: 1, created: false });
+
+    const sale = await t.query(api.domain.getSale, {
+      bridgeSecret: SECRET,
+      actor,
+      projectLegacyId: 7,
+      legacyId: 1,
+    });
+    expect(sale).toMatchObject({
+      canal: "Vinted",
+      origen: "Vinted",
+      origen_id: "vinted-message-1",
+    });
   });
 });
 
