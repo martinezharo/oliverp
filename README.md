@@ -24,68 +24,74 @@ projects, stock, and financial data and does not require an account.
 
 ## Local development
 
-Prerequisites: Node.js LTS, pnpm, and a Convex project.
+Prerequisites: Node.js LTS, pnpm, and access to the OlivERP Convex project.
 
 ```bash
 pnpm install
-cp .env.example .env.local
+pnpm exec convex deployment select dev
+pnpm run check:dev-env
+pnpm dev:backend
+```
+
+In a second terminal:
+
+```bash
 pnpm dev
 ```
 
-Set `NEXT_PUBLIC_CONVEX_URL` to the `https://...convex.cloud` URL of the Convex
-deployment used by the browser. Set `CONVEX_BRIDGE_SECRET` to the same random
-value in the Worker and in Convex. The bridge secret is server-only.
+The selected `CONVEX_DEPLOYMENT` and `NEXT_PUBLIC_CONVEX_URL` must describe the
+same personal dev deployment. Both `pnpm dev` and `pnpm dev:backend` run a
+safety check that rejects `prod:` deployments and mismatched browser URLs.
+The check also prints the configured `DEV_PUBLIC_URL` so the HTTPS address is
+visible whenever either command starts. Production remains pinned independently
+in `wrangler.jsonc`.
 
-Convex functions run on the deployment, not from the working tree: a new query
-or mutation has to be pushed with `pnpm exec convex deploy` (or `pnpm deploy`)
-before the UI can call it. Until then the call fails, and because production
-masks internal errors the browser only sees `[Request ID: …] Server Error`.
+`pnpm dev:backend` watches `convex/` and pushes functions to the dev deployment.
+`CONVEX_BRIDGE_SECRET` is server-only and must use the same value in
+`.env.local` and the dev Convex environment. Use a different value in
+production.
 
-### One GitHub OAuth App for local development and production
+### Separate GitHub OAuth Apps for development and production
 
-Convex Auth owns the OAuth flow. This project deliberately uses one canonical
-Convex deployment for both local Next development and the production Worker,
-following the same pattern as KlipCode. That means the existing GitHub OAuth
-App needs only one callback URL:
+Convex Auth owns the OAuth flow and keeps each GitHub client secret in its
+Convex deployment. Development and production use separate databases and
+separate GitHub OAuth Apps because their callback hosts differ:
 
-`https://reminiscent-cricket-450.convex.site/api/auth/callback/github`
+| Environment | Convex deployment | GitHub callback URL |
+| --- | --- | --- |
+| Development | `dev:<deployment-name>` | `https://<deployment-name>.convex.site/api/auth/callback/github` |
+| Production | `prod:reminiscent-cricket-450` | `https://reminiscent-cricket-450.convex.site/api/auth/callback/github` |
 
-Add the credentials to that single Convex deployment, never to a
-`NEXT_PUBLIC_` variable:
-
-   ```bash
-   pnpm exec auth --prod --web-server-url https://oliverp.4oli.com
-   pnpm exec convex env set AUTH_GITHUB_ID
-   pnpm exec convex env set AUTH_GITHUB_SECRET
-   pnpm exec convex env set SITE_URL https://oliverp.4oli.com
-   pnpm exec convex env set CONVEX_BRIDGE_SECRET
-   ```
-
-The one-time `pnpm exec auth` setup generates the internal `JWT_PRIVATE_KEY`
-and `JWKS` values required to sign Convex Auth sessions. Keep those values in
-Convex only; they are not application or GitHub keys.
-
-The callback is on Convex, not on the Next app. Both environments use
-`https://reminiscent-cricket-450.convex.cloud`, so the same OAuth App works in
-local development and production. `SITE_URL` is only Convex Auth's public
-post-login origin; it is not a credential. There are no `BETTER_AUTH_SECRET`,
-`OAUTH_PROXY_*`, or application-level GitHub variables. When the new Worker
-gets its final public URL, update only `SITE_URL`; the GitHub callback and app
-remain unchanged.
-
-A separate Convex deployment would need its own GitHub OAuth App, because the
-callback lives on the deployment host and a GitHub OAuth App accepts a single
-callback URL. That is the reason this repository keeps one deployment.
-
-The first deployment can be configured with:
+Create an OAuth App named `OlivERP Development` with the development callback,
+then store its credentials in the dev deployment (the commands prompt for the
+values so they do not enter shell history):
 
 ```bash
-pnpm exec convex dev --configure new
+pnpm exec convex env set AUTH_GITHUB_ID --deployment dev
+pnpm exec convex env set AUTH_GITHUB_SECRET --deployment dev
 ```
 
-For local development, keep `NEXT_PUBLIC_CONVEX_URL` pointed at the canonical
-deployment above. For production, the same value is defined in
-`wrangler.jsonc`.
+Set the dev deployment's `SITE_URL` to the frontend origin you actually use and
+enable only the additional localhost or tailnet origins required for
+development. Production allows only `https://oliverp.4oli.com`; never enable
+local auth origins there.
+
+The one-time `pnpm exec auth` setup generates the internal `JWT_PRIVATE_KEY`
+and `JWKS` values required to sign Convex Auth sessions. Each deployment keeps
+its own pair in Convex; they are not application or GitHub keys. The current dev
+and production deployments already have these values.
+
+Production credentials remain in the production Convex environment. To
+reconfigure them deliberately, target production explicitly:
+
+```bash
+pnpm exec convex env set AUTH_GITHUB_ID --prod
+pnpm exec convex env set AUTH_GITHUB_SECRET --prod
+pnpm exec convex env set SITE_URL https://oliverp.4oli.com --prod
+```
+
+Never put either GitHub secret in `.env.local`, Cloudflare variables, or a
+`NEXT_PUBLIC_` variable. The callback is on Convex, not on the Next app.
 
 ## Cloudflare Worker deployment
 
@@ -153,7 +159,9 @@ shell with `pnpm exec convex run`.
 
 | Command | Action |
 | --- | --- |
-| `pnpm dev` | Start Next development server |
+| `pnpm check:dev-env` | Verify local development cannot target production |
+| `pnpm dev` | Verify the environment, then start Next development server |
+| `pnpm dev:backend` | Verify the environment, then sync Convex dev functions |
 | `pnpm check` | Type-check Next, Convex, and tests |
 | `pnpm lint` | Run ESLint |
 | `pnpm test` | Run unit and integration-style tests |

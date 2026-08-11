@@ -29,10 +29,10 @@ function canonicalSiteUrl() {
 
 /**
  * GitHub is deliberately the only provider. Convex Auth keeps the OAuth
- * callback on the Convex deployment, so one GitHub OAuth App can serve the
- * local Next dev server and the production Worker without an OAuth proxy or
- * application-specific secrets in the frontend. SITE_URL is the canonical
- * production origin; local development is explicitly allowlisted below.
+ * callback and credentials on the current Convex deployment. Development and
+ * production therefore use separate GitHub OAuth Apps and databases without
+ * exposing either client secret to Next.js. SITE_URL is the deployment's
+ * canonical frontend origin; local development is explicitly allowlisted.
  */
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [GitHub],

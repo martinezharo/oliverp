@@ -40,6 +40,10 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Development is exposed to the tailnet through Tailscale Serve on 8446.
+  // Next otherwise rejects its HMR requests because the public HTTPS hostname
+  // differs from the HTTP origin seen by the upstream dev server.
+  allowedDevOrigins: ["dev-oli.tail74d55a.ts.net"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
