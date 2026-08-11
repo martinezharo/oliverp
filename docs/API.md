@@ -140,8 +140,8 @@ List endpoints always return the same envelope:
 as income, and only purchases with the `recibida` status count as expenses and
 move stock. A return is a status `PATCH` to `devuelta`, not a deletion.
 
-**Stock moves automatically.** Database triggers generate movements for sales
-and purchases. `POST /api/v1/stock/ajustes` is only for manual corrections
+**Stock moves automatically.** Convex domain mutations generate movements for
+sales and purchases. `POST /api/v1/stock/ajustes` is only for manual corrections
 (breakage, stock counts, and giveaways).
 
 **Marketplace titles are exact mappings.** The Gmail workflow sends the

@@ -448,7 +448,7 @@ export function buildOpenApiDocument(serverUrl: string) {
                     operationId: "crearVenta",
                     summary: "Registra una venta",
                     description:
-                        "La cabecera y las líneas se escriben en una única transacción. El stock lo descuentan los triggers de la base de datos.",
+                        "La cabecera y las líneas se escriben en una única mutación transaccional de Convex.",
                     parameters: [idempotencyHeader],
                     requestBody: {
                         required: true,
@@ -785,7 +785,7 @@ export function buildOpenApiDocument(serverUrl: string) {
                     operationId: "ajustarStock",
                     summary: "Registra un ajuste manual de stock",
                     description:
-                        "Para roturas, recuentos o regalos. Los movimientos de ventas y compras los generan los triggers, no este endpoint.",
+                        "Para roturas, recuentos o regalos. Las ventas y compras generan sus movimientos dentro de sus mutaciones de Convex.",
                     parameters: [idempotencyHeader],
                     requestBody: {
                         required: true,
