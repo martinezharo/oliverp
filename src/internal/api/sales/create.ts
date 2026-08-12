@@ -22,7 +22,6 @@ export const POST: APIRoute = async (context) => {
             projectId: body.projectId,
             date: body.date,
             channel: body.channel,
-            status: "enviada",
             items: body.items.map((item) => ({
                 productId: item.productId,
                 units: item.units,

@@ -23,7 +23,6 @@ const sources = {
             id: 1,
             fecha: "2026-08-03",
             canal: "Online",
-            estado: "enviada",
             venta_detalle: [{ producto: { nombre: "Producto" }, unidades: 1, precio_unitario_venta: 10 }],
         },
     ],
@@ -31,7 +30,6 @@ const sources = {
         {
             id: 2,
             fecha: "2026-08-02",
-            estado: "recibida",
             compra_detalle: [{ producto: { nombre: "Producto" }, unidades: 1, precio_unitario_compra: 5 }],
         },
     ],

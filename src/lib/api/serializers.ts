@@ -67,7 +67,6 @@ export function serializeVenta(row: any) {
         proyecto_id: row.proyecto_id,
         fecha: row.fecha,
         canal: row.canal,
-        estado: row.estado,
         cliente_id: row.cliente_id ?? row.cliente?.id ?? null,
         cliente: row.cliente
             ? { id: row.cliente.id, nombre: row.cliente.nombre }
@@ -85,7 +84,6 @@ export function serializeCompra(row: any) {
         id: row.id,
         proyecto_id: row.proyecto_id,
         fecha: row.fecha,
-        estado: row.estado,
         items,
         totales: totales(items),
     };

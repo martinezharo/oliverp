@@ -43,9 +43,8 @@ export const GET: APIRoute = (context) =>
 /**
  * PATCH /api/v1/ventas/{id}
  *
- * Omitting `items` edits only the header, which is the common case for a status
- * change (e.g. `enviada` -> `devuelta`). Passing `items` replaces every line and
- * its stock movements atomically.
+ * Omitting `items` edits only the header (its date or channel). Passing `items`
+ * replaces every line and its stock movements atomically.
  */
 export const PATCH: APIRoute = (context) =>
     apiHandler(context, "write", async (principal) => {
@@ -59,7 +58,6 @@ export const PATCH: APIRoute = (context) =>
         await requireBackend(principal).updateSale(projectId, id, {
             date: body.fecha,
             channel: body.canal,
-            status: body.estado,
             items: body.items?.map((item) => ({
                 productId: item.producto_id,
                 units: item.unidades,

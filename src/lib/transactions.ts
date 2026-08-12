@@ -19,7 +19,6 @@ export interface NormalizedTransaction {
   units: number;
   amount: number;
   channel: string;
-  status: string;
 }
 
 export interface TransactionSources {
@@ -75,7 +74,6 @@ function saleTransaction(row: Record<string, unknown>): NormalizedTransaction {
     units: unitsOf(details),
     amount: totalOf(details, "precio_unitario_venta"),
     channel: String(row.canal ?? ""),
-    status: String(row.estado ?? ""),
   };
 }
 
@@ -89,7 +87,6 @@ function purchaseTransaction(row: Record<string, unknown>): NormalizedTransactio
     units: unitsOf(details),
     amount: -totalOf(details, "precio_unitario_compra"),
     channel: PURCHASE_CHANNEL,
-    status: String(row.estado ?? ""),
   };
 }
 
@@ -104,7 +101,6 @@ function otherTransaction(row: Record<string, unknown>): NormalizedTransaction {
     units: 1,
     amount: type === "gasto" ? -amount : amount,
     channel: OTHER_CHANNEL,
-    status: "completado",
   };
 }
 

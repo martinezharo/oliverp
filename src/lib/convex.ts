@@ -205,7 +205,6 @@ export class BackendClient {
         pageSize?: number;
         fromDate?: string;
         toDate?: string;
-        status?: string;
         channel?: string;
     }): Promise<{ data: Array<Record<string, unknown>>; count: number }> {
         return this.query(
@@ -216,7 +215,6 @@ export class BackendClient {
                 pageSize: values.pageSize ?? 20,
                 ...(values.fromDate ? { fromDate: values.fromDate } : {}),
                 ...(values.toDate ? { toDate: values.toDate } : {}),
-                ...(values.status ? { status: values.status } : {}),
                 ...(values.channel ? { channel: values.channel } : {}),
             }),
         );
@@ -230,7 +228,6 @@ export class BackendClient {
         projectId: number;
         date: string;
         channel: string;
-        status: string;
         items: SaleItemInput[];
     }): Promise<number> {
         return this.mutation(
@@ -239,7 +236,6 @@ export class BackendClient {
                 projectLegacyId: values.projectId,
                 date: values.date,
                 channel: values.channel,
-                status: values.status,
                 items: values.items,
             }),
         );
@@ -254,7 +250,6 @@ export class BackendClient {
         totalAmount: number;
         units: number;
         vatRate: number;
-        status: string;
     }): Promise<{
         id: number;
         created: boolean;
@@ -272,7 +267,6 @@ export class BackendClient {
                 totalAmount: values.totalAmount,
                 units: values.units,
                 vatRate: values.vatRate,
-                status: values.status,
             }),
         );
     }
@@ -287,7 +281,6 @@ export class BackendClient {
         totalAmount: number;
         units: number;
         vatRate: number;
-        status: string;
     }): Promise<{
         id: number;
         created: boolean;
@@ -306,7 +299,6 @@ export class BackendClient {
                 totalAmount: values.totalAmount,
                 units: values.units,
                 vatRate: values.vatRate,
-                status: values.status,
             }),
         );
     }
@@ -317,7 +309,6 @@ export class BackendClient {
         values: {
             date?: string;
             channel?: string;
-            status?: string;
             items?: SaleItemInput[];
         },
     ): Promise<number> {
@@ -337,7 +328,6 @@ export class BackendClient {
         pageSize?: number;
         fromDate?: string;
         toDate?: string;
-        status?: string;
     }): Promise<{ data: Array<Record<string, unknown>>; count: number }> {
         return this.query(
             api.domain.listPurchases,
@@ -347,7 +337,6 @@ export class BackendClient {
                 pageSize: values.pageSize ?? 20,
                 ...(values.fromDate ? { fromDate: values.fromDate } : {}),
                 ...(values.toDate ? { toDate: values.toDate } : {}),
-                ...(values.status ? { status: values.status } : {}),
             }),
         );
     }
@@ -359,7 +348,6 @@ export class BackendClient {
     createPurchase(values: {
         projectId: number;
         date: string;
-        status: string;
         items: PurchaseItemInput[];
     }): Promise<number> {
         return this.mutation(
@@ -367,7 +355,6 @@ export class BackendClient {
             this.args({
                 projectLegacyId: values.projectId,
                 date: values.date,
-                status: values.status,
                 items: values.items,
             }),
         );
@@ -376,7 +363,7 @@ export class BackendClient {
     updatePurchase(
         projectId: number,
         id: number,
-        values: { date?: string; status?: string; items?: PurchaseItemInput[] },
+        values: { date?: string; items?: PurchaseItemInput[] },
     ): Promise<number> {
         return this.mutation(
             api.domain.updatePurchase,

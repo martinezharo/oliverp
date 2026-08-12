@@ -3,18 +3,8 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 const role = v.union(v.literal("admin"), v.literal("miembro"));
-const saleStatus = v.union(
-  v.literal("pendiente"),
-  v.literal("enviada"),
-  v.literal("devuelta"),
-  v.literal("reembolsada"),
-);
-const purchaseStatus = v.union(
-  v.literal("pendiente"),
-  v.literal("recibida"),
-  v.literal("cancelada"),
-);
 const transactionType = v.union(v.literal("ingreso"), v.literal("gasto"));
+
 const movementType = v.union(
   v.literal("compra"),
   v.literal("venta"),
@@ -95,7 +85,6 @@ export default defineSchema({
     projectLegacyId: v.number(),
     date: v.string(),
     channel: v.string(),
-    status: saleStatus,
     customerId: v.optional(v.id("customers")),
     origin: v.optional(v.string()),
     originId: v.optional(v.string()),
@@ -127,7 +116,6 @@ export default defineSchema({
     projectId: v.id("projects"),
     projectLegacyId: v.number(),
     date: v.string(),
-    status: purchaseStatus,
   })
     .index("by_legacy_id", ["legacyId"])
     .index("by_project_date", ["projectId", "date"])

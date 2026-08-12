@@ -16,7 +16,6 @@ export const GET: APIRoute = (context) =>
             pageSize: filtros.page_size,
             fromDate: filtros.desde,
             toDate: filtros.hasta,
-            status: filtros.estado,
         });
 
         return json(
@@ -43,7 +42,6 @@ export const POST: APIRoute = (context) =>
             const id = await principal.backend!.createPurchase({
                 projectId,
                 date: body.fecha,
-                status: body.estado,
                 items: body.items.map((item) => ({
                     productId: item.producto_id,
                     units: item.unidades,

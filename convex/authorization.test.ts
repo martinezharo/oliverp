@@ -50,7 +50,6 @@ async function seedTwoTenants(t: Harness) {
         projectLegacyId: legacyId,
         date: "2026-08-01",
         channel: name,
-        status: "enviada",
       });
       await ctx.db.insert("saleLines", {
         legacyId: 1,
@@ -268,7 +267,6 @@ describe("legacy ids are allocated per project", () => {
       projectLegacyId: 1,
       date: "2026-08-02",
       channel: "Web",
-      status: "enviada",
       items: [{ productId: 1, units: 1, unitPrice: 5, vatRate: 21 }],
     });
     const bobSale = await asUser(t, bob.userId).mutation(api.domain.createSale, {
@@ -277,7 +275,6 @@ describe("legacy ids are allocated per project", () => {
       projectLegacyId: 2,
       date: "2026-08-02",
       channel: "Web",
-      status: "enviada",
       items: [{ productId: 1, units: 1, unitPrice: 5, vatRate: 21 }],
     });
 
@@ -299,7 +296,6 @@ describe("legacy ids are allocated per project", () => {
       projectLegacyId: 1,
       date: "2026-08-02",
       channel: "Web",
-      status: "enviada",
       items,
     });
     await asUser(t, alice.userId).mutation(api.domain.createSale, {
@@ -308,7 +304,6 @@ describe("legacy ids are allocated per project", () => {
       projectLegacyId: 1,
       date: "2026-08-03",
       channel: "Web",
-      status: "enviada",
       items,
     });
 

@@ -11,7 +11,6 @@ export const POST: APIRoute = async (context) => {
         const body = await context.request.json() as {
             projectId?: number;
             date?: string;
-            estado?: string;
             items?: Array<{ productId: number; units: number; unitPrice: number; tax?: number }>;
         };
         if (!body.projectId || !body.date || !body.items?.length) {
@@ -21,7 +20,6 @@ export const POST: APIRoute = async (context) => {
         const id = await session.backend.createPurchase({
             projectId: body.projectId,
             date: body.date,
-            status: body.estado ?? "pendiente",
             items: body.items.map((item) => ({
                 productId: item.productId,
                 units: item.units,

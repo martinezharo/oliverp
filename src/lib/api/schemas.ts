@@ -7,10 +7,8 @@ import { roundMoney, roundVatRate } from "./numbers";
  * The enum tuples below are the single source of truth shared by validation and
  * the OpenAPI document, so the accepted values quoted in an error message can
  * never drift from the values accepted by the Convex domain. They mirror the
- * status unions declared in `convex/schema.ts`.
+ * unions declared in `convex/schema.ts`.
  */
-export const ESTADOS_VENTA = ["pendiente", "enviada", "devuelta", "reembolsada"] as const;
-export const ESTADOS_COMPRA = ["pendiente", "recibida", "cancelada"] as const;
 export const TIPOS_TRANSACCION = ["ingreso", "gasto"] as const;
 export const TIPOS_MOVIMIENTO = [
     "compra",
@@ -70,7 +68,6 @@ export const crearVentaSchema = z.object({
     proyecto_id: idSchema.optional(),
     fecha: fechaSchema,
     canal: z.string().min(1, { message: "El canal no puede estar vacio." }),
-    estado: z.enum(ESTADOS_VENTA).default("enviada"),
     items: lineasSchema,
 });
 
@@ -78,7 +75,6 @@ export const actualizarVentaSchema = z
     .object({
         fecha: fechaSchema.optional(),
         canal: z.string().min(1).optional(),
-        estado: z.enum(ESTADOS_VENTA).optional(),
         items: lineasSchema.optional(),
     })
     .refine((body) => Object.keys(body).length > 0, {
@@ -91,14 +87,12 @@ export const actualizarVentaSchema = z
 export const crearCompraSchema = z.object({
     proyecto_id: idSchema.optional(),
     fecha: fechaSchema,
-    estado: z.enum(ESTADOS_COMPRA).default("recibida"),
     items: lineasSchema,
 });
 
 export const actualizarCompraSchema = z
     .object({
         fecha: fechaSchema.optional(),
-        estado: z.enum(ESTADOS_COMPRA).optional(),
         items: lineasSchema.optional(),
     })
     .refine((body) => Object.keys(body).length > 0, {
@@ -167,9 +161,6 @@ export const importarVentaWallapopSchema = z.object({
     importe_total: z.number().positive({ message: "El importe total debe ser mayor que cero." }).transform(roundMoney),
     unidades: z.number().int().positive().default(1),
     porcentaje_iva: porcentajeIvaSchema.default(21),
-    // A sale is pending until the seller ships it; pending sales do not count
-    // as revenue in the ERP financial views.
-    estado: z.enum(ESTADOS_VENTA).default("pendiente"),
 });
 
 export const importarVentaMarketplaceSchema = z.object({
@@ -183,9 +174,6 @@ export const importarVentaMarketplaceSchema = z.object({
     importe_total: z.number().positive({ message: "El importe total debe ser mayor que cero." }).transform(roundMoney),
     unidades: z.number().int().positive().default(1),
     porcentaje_iva: porcentajeIvaSchema.default(21),
-    // A sale is pending until the seller ships it; pending sales do not count
-    // as revenue in the ERP financial views.
-    estado: z.enum(ESTADOS_VENTA).default("pendiente"),
 });
 
 export const ajustarStockSchema = z.object({
@@ -223,13 +211,10 @@ const filtrosSchema = paginacionSchema.extend({
 });
 
 export const filtrosVentasSchema = filtrosSchema.extend({
-    estado: z.enum(ESTADOS_VENTA).optional(),
     canal: z.string().min(1).optional(),
 });
 
-export const filtrosComprasSchema = filtrosSchema.extend({
-    estado: z.enum(ESTADOS_COMPRA).optional(),
-});
+export const filtrosComprasSchema = filtrosSchema;
 
 export const filtrosTransaccionesSchema = filtrosSchema.extend({
     tipo: z.enum(TIPOS_TRANSACCION).optional(),

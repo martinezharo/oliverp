@@ -37,7 +37,6 @@ export const POST: APIRoute = (context) =>
           totalAmount: body.importe_total,
           units: body.unidades,
           vatRate: body.porcentaje_iva,
-          status: body.estado,
         });
         const sale = await requireBackend(principal).getSale(projectId, result.id);
         if (!sale) {

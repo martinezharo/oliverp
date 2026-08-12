@@ -60,7 +60,6 @@ describe("Marketplace n8n parser", () => {
       titulo_producto: "Mando Xiaomi XMRM-006 a Estrenar",
       importe_total: 3.49,
       unidades: 1,
-      estado: "pendiente",
     });
   });
 
@@ -110,7 +109,6 @@ describe("Marketplace n8n parser", () => {
       titulo_producto: "Mando Samsung BN59-01358D a Estrenar",
       importe_total: 3.5,
       unidades: 1,
-      estado: "pendiente",
     });
   });
 

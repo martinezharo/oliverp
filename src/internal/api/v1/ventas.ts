@@ -16,7 +16,6 @@ export const GET: APIRoute = (context) =>
             pageSize: filtros.page_size,
             fromDate: filtros.desde,
             toDate: filtros.hasta,
-            status: filtros.estado,
             channel: filtros.canal,
         });
 
@@ -45,7 +44,6 @@ export const POST: APIRoute = (context) =>
                 projectId,
                 date: body.fecha,
                 channel: body.canal,
-                status: body.estado,
                 items: body.items.map((item) => ({
                     productId: item.producto_id,
                     units: item.unidades,

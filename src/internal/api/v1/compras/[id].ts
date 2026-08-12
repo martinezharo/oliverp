@@ -40,7 +40,12 @@ export const GET: APIRoute = (context) =>
         return json({ data: serializeCompra(await fetchCompra(principal, projectId, id)) });
     });
 
-/** PATCH /api/v1/compras/{id} - typically to mark a purchase as `recibida`. */
+/**
+ * PATCH /api/v1/compras/{id}
+ *
+ * Omitting `items` edits only the date. Passing `items` replaces every line and
+ * its stock movements atomically.
+ */
 export const PATCH: APIRoute = (context) =>
     apiHandler(context, "write", async (principal) => {
         const id = parseId(context.params.id);
@@ -51,7 +56,6 @@ export const PATCH: APIRoute = (context) =>
 
         await requireBackend(principal).updatePurchase(projectId, id, {
             date: body.fecha,
-            status: body.estado,
             items: body.items?.map((item) => ({
                 productId: item.producto_id,
                 units: item.unidades,

@@ -31,17 +31,6 @@ const itemValidator = v.object({
   vatRate: v.number(),
 });
 
-const saleStatus = v.union(
-  v.literal("pendiente"),
-  v.literal("enviada"),
-  v.literal("devuelta"),
-  v.literal("reembolsada"),
-);
-const purchaseStatus = v.union(
-  v.literal("pendiente"),
-  v.literal("recibida"),
-  v.literal("cancelada"),
-);
 const transactionType = v.union(v.literal("ingreso"), v.literal("gasto"));
 function check(args: { bridgeSecret: string }): void {
   assertBridgeSecret(args.bridgeSecret);
@@ -158,7 +147,6 @@ export async function saleRow(ctx: QueryCtx | MutationCtx, sale: Doc<"sales">) {
     proyecto_id: sale.projectLegacyId,
     fecha: sale.date,
     canal: sale.channel,
-    estado: sale.status,
     cliente_id: customer?.legacyId ?? null,
     cliente: customer ? { id: customer.legacyId, nombre: customer.name } : null,
     origen: sale.origin ?? "manual",
@@ -191,7 +179,6 @@ export async function purchaseRow(ctx: QueryCtx | MutationCtx, purchase: Doc<"pu
     id: purchase.legacyId,
     proyecto_id: purchase.projectLegacyId,
     fecha: purchase.date,
-    estado: purchase.status,
     compra_detalle: details,
   };
 }
@@ -501,7 +488,6 @@ export const listSales = query({
     pageSize: v.number(),
     fromDate: v.optional(v.string()),
     toDate: v.optional(v.string()),
-    status: v.optional(saleStatus),
     channel: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
@@ -510,7 +496,6 @@ export const listSales = query({
     const rows = (await salesForProject(ctx, project._id)).filter((sale) => {
       if (args.fromDate && sale.date < args.fromDate) return false;
       if (args.toDate && sale.date > args.toDate) return false;
-      if (args.status && sale.status !== args.status) return false;
       if (args.channel && sale.channel !== args.channel) return false;
       return true;
     });
@@ -584,7 +569,6 @@ export const createSale = mutation({
     projectLegacyId: v.number(),
     date: v.string(),
     channel: v.string(),
-    status: saleStatus,
     items: v.array(itemValidator),
   },
   handler: async (ctx, args) => {
@@ -598,7 +582,6 @@ export const createSale = mutation({
       projectLegacyId: project.legacyId,
       date: args.date,
       channel: args.channel,
-      status: args.status,
     });
     const sale = (await ctx.db.get(saleId))!;
     await insertSaleLines(ctx, sale, args.items);
@@ -620,7 +603,6 @@ type MarketplaceImportArgs = {
   totalAmount: number;
   units: number;
   vatRate: number;
-  status: "pendiente" | "enviada" | "devuelta" | "reembolsada";
 };
 
 async function importMarketplaceSaleMutation(
@@ -720,7 +702,6 @@ async function importMarketplaceSaleMutation(
     projectLegacyId: project.legacyId,
     date: args.date,
     channel: args.channel,
-    status: args.status,
     customerId: customer._id,
     origin: args.channel,
     originId,
@@ -754,7 +735,6 @@ export const importWallapopSale = mutation({
     totalAmount: v.number(),
     units: v.number(),
     vatRate: v.number(),
-    status: saleStatus,
   },
   handler: async (ctx, args) =>
     importMarketplaceSaleMutation(ctx, {
@@ -776,7 +756,6 @@ export const importMarketplaceSale = mutation({
     totalAmount: v.number(),
     units: v.number(),
     vatRate: v.number(),
-    status: saleStatus,
   },
   handler: async (ctx, args) => importMarketplaceSaleMutation(ctx, args),
 });
@@ -788,7 +767,6 @@ export const updateSale = mutation({
     legacyId: v.number(),
     date: v.optional(v.string()),
     channel: v.optional(v.string()),
-    status: v.optional(saleStatus),
     items: v.optional(v.array(itemValidator)),
   },
   handler: async (ctx, args) => {
@@ -800,11 +778,7 @@ export const updateSale = mutation({
     const nextDate = args.date ?? existing.date;
     const nextChannel = args.channel ?? existing.channel;
     if (!nextChannel.trim()) fail("validation_error", "Sale channel cannot be empty.");
-    await ctx.db.patch(existing._id, {
-      date: nextDate,
-      channel: nextChannel,
-      ...(args.status ? { status: args.status } : {}),
-    });
+    await ctx.db.patch(existing._id, { date: nextDate, channel: nextChannel });
 
     if (args.items !== undefined) {
       if (args.items.length === 0) fail("validation_error", "A sale needs at least one line.");
@@ -860,7 +834,6 @@ export const listPurchases = query({
     pageSize: v.number(),
     fromDate: v.optional(v.string()),
     toDate: v.optional(v.string()),
-    status: v.optional(purchaseStatus),
   },
   handler: async (ctx, args) => {
     check(args);
@@ -868,7 +841,6 @@ export const listPurchases = query({
     const rows = (await purchasesForProject(ctx, project._id)).filter((purchase) => {
       if (args.fromDate && purchase.date < args.fromDate) return false;
       if (args.toDate && purchase.date > args.toDate) return false;
-      if (args.status && purchase.status !== args.status) return false;
       return true;
     });
     const from = Math.max(0, (args.page - 1) * args.pageSize);
@@ -923,29 +895,30 @@ async function insertPurchaseLines(
       unitPriceCents: cents(item.unitPrice),
       vatRate: item.vatRate,
     });
-    if (purchase.status === "recibida") {
-      await ctx.db.insert("stockMovements", {
-        legacyId: movementLegacyId++,
-        productId: product._id,
-        productLegacyId: product.legacyId,
-        projectId: purchase.projectId,
-        projectLegacyId: purchase.projectLegacyId,
-        units: item.units,
-        type: "compra",
-        purchaseLineId: lineId,
-        date: purchase.date,
-      });
-    }
+    await ctx.db.insert("stockMovements", {
+      legacyId: movementLegacyId++,
+      productId: product._id,
+      productLegacyId: product.legacyId,
+      projectId: purchase.projectId,
+      projectLegacyId: purchase.projectLegacyId,
+      units: item.units,
+      type: "compra",
+      purchaseLineId: lineId,
+      date: purchase.date,
+    });
   }
 }
 
 /**
- * Reconciles movements when a purchase changes status without replacing its
- * lines. Pending and cancelled purchases are commitments, not inventory; a
- * transition to received creates the linked movement and a transition away
- * from received removes it.
+ * Brings the stock movements of a purchase back in line with its lines without
+ * replacing them: it re-dates the existing movement, drops duplicates, and
+ * writes the movement of any line that has none.
+ *
+ * The last case is what the status backfill relies on — purchases that were
+ * left `pendiente` never got a movement, so their units never reached the
+ * warehouse.
  */
-async function syncPurchaseStockMovements(
+export async function syncPurchaseStockMovements(
   ctx: MutationCtx,
   purchase: Doc<"purchases">,
 ): Promise<void> {
@@ -960,11 +933,6 @@ async function syncPurchaseStockMovements(
       .query("stockMovements")
       .withIndex("by_purchase_line", (q) => q.eq("purchaseLineId", line._id))
       .collect();
-
-    if (purchase.status !== "recibida") {
-      for (const movement of movements) await ctx.db.delete(movement._id);
-      continue;
-    }
 
     const movement = movements[0];
     for (const duplicate of movements.slice(1)) await ctx.db.delete(duplicate._id);
@@ -992,7 +960,6 @@ export const createPurchase = mutation({
     ...bridgeArgs,
     projectLegacyId: v.number(),
     date: v.string(),
-    status: purchaseStatus,
     items: v.array(itemValidator),
   },
   handler: async (ctx, args) => {
@@ -1004,7 +971,6 @@ export const createPurchase = mutation({
       projectId: project._id,
       projectLegacyId: project.legacyId,
       date: args.date,
-      status: args.status,
     });
     const purchase = (await ctx.db.get(purchaseId))!;
     await insertPurchaseLines(ctx, purchase, args.items);
@@ -1018,7 +984,6 @@ export const updatePurchase = mutation({
     projectLegacyId: v.number(),
     legacyId: v.number(),
     date: v.optional(v.string()),
-    status: v.optional(purchaseStatus),
     items: v.optional(v.array(itemValidator)),
   },
   handler: async (ctx, args) => {
@@ -1026,10 +991,7 @@ export const updatePurchase = mutation({
     await requireProject(ctx, args.actor, args.projectLegacyId);
     const existing = await purchaseByLegacyId(ctx, args.projectLegacyId, args.legacyId);
     if (!existing) fail("not_found", `Purchase ${args.legacyId} not found.`);
-    await ctx.db.patch(existing._id, {
-      date: args.date ?? existing.date,
-      ...(args.status ? { status: args.status } : {}),
-    });
+    await ctx.db.patch(existing._id, { date: args.date ?? existing.date });
 
     if (args.items !== undefined) {
       if (args.items.length === 0) fail("validation_error", "A purchase needs at least one line.");
@@ -1530,7 +1492,7 @@ export async function computeDailyFinances(ctx: QueryCtx, args: DailyFinanceArgs
 
   for (const line of saleLines) {
     const sale = salesById.get(line.saleId);
-    if (!sale || sale.status !== "enviada") continue;
+    if (!sale) continue;
     const row = get(dayOf(sale.date));
     const gross = line.units * line.unitPriceCents;
     const vat = vatPart(gross, line.vatRate);
@@ -1541,7 +1503,7 @@ export async function computeDailyFinances(ctx: QueryCtx, args: DailyFinanceArgs
   }
   for (const line of purchaseLines) {
     const purchase = purchasesById.get(line.purchaseId);
-    if (!purchase || purchase.status !== "recibida") continue;
+    if (!purchase) continue;
     const row = get(dayOf(purchase.date));
     const gross = line.units * line.unitPriceCents;
     row.gastos += gross;

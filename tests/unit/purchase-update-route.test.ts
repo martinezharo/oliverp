@@ -36,7 +36,6 @@ describe("PUT /api/purchases/update", () => {
                     id: "42",
                     projectId: "7",
                     date: "2026-08-05",
-                    estado: "recibida",
                     items: [{ productId: 11, units: 1, unitPrice: 6.25, tax: 21 }],
                 }),
             }),
@@ -48,7 +47,6 @@ describe("PUT /api/purchases/update", () => {
         expect(await response.json()).toEqual({ success: true, id: 42 });
         expect(mocks.updatePurchase).toHaveBeenCalledWith(7, 42, {
             date: "2026-08-05",
-            status: "recibida",
             items: [{ productId: 11, units: 1, unitPrice: 6.25, vatRate: 21 }],
         });
     });

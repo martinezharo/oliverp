@@ -136,9 +136,9 @@ List endpoints always return the same envelope:
 **Prices include VAT.** This is how the schema stores them. Responses break out
 `total_base`, `total_iva`, and `total`, so clients do not have to derive them.
 
-**Statuses determine what counts.** Only sales with the `enviada` status count
-as income, and only purchases with the `recibida` status count as expenses and
-move stock. A return is a status `PATCH` to `devuelta`, not a deletion.
+**Every operation counts.** A recorded sale is income and a recorded purchase
+is an expense, both from the moment they are written; there are no workflow
+statuses that keep an operation out of the books. Undoing one is a `DELETE`.
 
 **Stock moves automatically.** Convex domain mutations generate movements for
 sales and purchases. `POST /api/v1/stock/ajustes` is only for manual corrections
@@ -205,9 +205,9 @@ All errors use the same structure:
         "message": "Las unidades deben ser un numero entero."
       },
       {
-        "field": "estado",
-        "message": "Invalid option: expected one of \"pendiente\"|\"enviada\"|\"devuelta\"|\"reembolsada\"",
-        "expected": "\"pendiente\" | \"enviada\" | \"devuelta\" | \"reembolsada\""
+        "field": "canal",
+        "message": "Invalid option: expected one of \"Wallapop\"|\"Vinted\"",
+        "expected": "\"Wallapop\" | \"Vinted\""
       }
     ],
     "hint": "Revisa los campos listados en 'details'."
@@ -249,13 +249,13 @@ curl -H "Authorization: Bearer erp_sk_..." \
   "https://your-erp/api/v1/finanzas?desde=2026-01-01&hasta=2026-01-31&detalle=resumen"
 ```
 
-### Mark a sale as returned
+### Correct the channel of a sale
 
 ```bash
 curl -X PATCH https://your-erp/api/v1/ventas/42 \
   -H "Authorization: Bearer erp_sk_..." \
   -H "Content-Type: application/json" \
-  -d '{"estado": "devuelta"}'
+  -d '{"canal": "Vinted"}'
 ```
 
 ### Import a Wallapop sale
@@ -277,14 +277,13 @@ curl -X POST https://your-erp/api/v1/importaciones/wallapop \
     "comprador_nombre": "Antonio R.",
     "titulo_wallapop": "Mando Xiaomi XMRM-006 a Estrenar",
     "importe_total": 3.49,
-    "unidades": 1,
-    "estado": "pendiente"
+    "unidades": 1
   }'
 ```
 
 The import creates or reuses a customer by normalized name and records the
-sale as `Wallapop`. It remains `pendiente` until shipment; the exact title is
-matched to the product before the sale and stock movement are written.
+sale as `Wallapop`. The exact title is matched to the product before the sale
+and its stock movement are written.
 
 ### Import a marketplace sale
 
@@ -300,8 +299,7 @@ The n8n workflow also supports Vinted confirmation emails through
   "comprador_nombre": "ahmedh831",
   "titulo_producto": "Mando Samsung BN59-01358D a Estrenar",
   "importe_total": 3.50,
-  "unidades": 1,
-  "estado": "pendiente"
+  "unidades": 1
 }
 ```
 

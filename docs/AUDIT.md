@@ -22,8 +22,8 @@ decisions, independent of the framework migration.
 
 The follow-up regression sweep found and fixed the React 19 stock-adjustment
 failure caused by reading `event.currentTarget` after an `await`, restored the
-sale/purchase/other edit flow, made purchase stock movements depend on the
-`recibida` status, and hardened the legacy transaction delete/update paths. The
+sale/purchase/other edit flow, and hardened the legacy transaction delete/update
+paths. The
 browser now covers the operation dialogs and the stock history flow in E2E tests;
 demo writes remain intentionally read-only, so the stock save test isolates only
 the demo response while exercising the real form and refresh behavior.

@@ -54,7 +54,7 @@ describe("API monetary output", () => {
 
     it("rounds each VAT-inclusive line and totals the serialized cents", () => {
         const venta = serializeVenta({
-            id: 1, proyecto_id: 2, fecha: "2026-08-04", canal: "web", estado: "enviada",
+            id: 1, proyecto_id: 2, fecha: "2026-08-04", canal: "web",
             venta_detalle: [line, { ...line, id: 2 }],
         });
 
@@ -67,7 +67,7 @@ describe("API monetary output", () => {
         expect(venta.totales).toEqual({ unidades: 6, base: 20.42, iva: 4.3, total: 24.72 });
 
         const compra = serializeCompra({
-            id: 1, proyecto_id: 2, fecha: "2026-08-04", estado: "recibida",
+            id: 1, proyecto_id: 2, fecha: "2026-08-04",
             compra_detalle: [{ ...line, precio_unitario_venta: undefined, precio_unitario_compra: "4.115" }],
         });
         expect(compra.items[0].total).toBe(12.36);

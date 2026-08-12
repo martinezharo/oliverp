@@ -43,7 +43,6 @@ function importArgs(overrides: Record<string, unknown> = {}) {
     totalAmount: 3.49,
     units: 1,
     vatRate: 21,
-    status: "pendiente" as const,
     ...overrides,
   };
 }
@@ -94,7 +93,6 @@ describe("importWallapopSale", () => {
     expect(sale).toMatchObject({
       id: 1,
       canal: "Wallapop",
-      estado: "pendiente",
       cliente: { id: 1, nombre: "Antonio R." },
       origen: "Wallapop",
       origen_id: "gmail-message-1",
@@ -172,7 +170,6 @@ describe("importMarketplaceSale", () => {
       totalAmount: 3.5,
       units: 1,
       vatRate: 21,
-      status: "pendiente",
     });
     expect(created).toMatchObject({
       id: 1,
@@ -193,7 +190,6 @@ describe("importMarketplaceSale", () => {
       totalAmount: 3.5,
       units: 1,
       vatRate: 21,
-      status: "pendiente",
     });
     expect(replay).toEqual({ id: 1, created: false });
 
@@ -225,7 +221,6 @@ describe("updatePurchase", () => {
       actor,
       projectLegacyId: 7,
       date: "2026-08-04T00:00:00",
-      status: "recibida",
       items: [{ productId: 11, units: 2, unitPrice: 4.5, vatRate: 21 }],
     });
 
@@ -236,7 +231,6 @@ describe("updatePurchase", () => {
         projectLegacyId: 7,
         legacyId: purchaseId,
         date: "2026-08-04T00:00:00",
-        status: "recibida",
         items: [{ productId: 11, units: 2, unitPrice: 6.25, vatRate: 21 }],
       }),
     ).resolves.toBe(purchaseId);

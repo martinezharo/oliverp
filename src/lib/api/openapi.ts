@@ -1,6 +1,4 @@
 import {
-    ESTADOS_COMPRA,
-    ESTADOS_VENTA,
     MARKETPLACE_CHANNELS,
     TIPOS_MOVIMIENTO,
     TIPOS_TRANSACCION,
@@ -209,7 +207,6 @@ export function buildOpenApiDocument(serverUrl: string) {
             proyecto_id: { type: "integer" },
             fecha: { type: "string" },
             canal: { type: "string" },
-            estado: { type: "string", enum: [...ESTADOS_VENTA] },
             cliente_id: { type: "integer", nullable: true },
             cliente: {
                 type: "object",
@@ -240,7 +237,6 @@ export function buildOpenApiDocument(serverUrl: string) {
             id: { type: "integer" },
             proyecto_id: { type: "integer" },
             fecha: { type: "string" },
-            estado: { type: "string", enum: [...ESTADOS_COMPRA] },
             items: { type: "array", items: lineaRespuestaSchema },
             totales: totalesSchema,
         },
@@ -302,8 +298,8 @@ export function buildOpenApiDocument(serverUrl: string) {
                 "",
                 "**IVA.** Todos los precios se guardan con IVA incluido; las respuestas desglosan base e IVA.",
                 "",
-                "**Estados.** Solo las ventas en estado `enviada` cuentan como ingreso, y solo las compras en",
-                "estado `recibida` cuentan como gasto y mueven stock.",
+                "**Toda operación cuenta.** Cada venta registrada es ingreso y cada compra es gasto; ambas",
+                "mueven stock en el momento de registrarlas. No hay estados de flujo que las dejen fuera.",
             ].join("\n"),
         },
         servers: [{ url: serverUrl }],
@@ -438,7 +434,6 @@ export function buildOpenApiDocument(serverUrl: string) {
                     parameters: [
                         proyectoIdParam,
                         ...rangoFechasParams,
-                        { name: "estado", in: "query", schema: { type: "string", enum: [...ESTADOS_VENTA] } },
                         { name: "canal", in: "query", schema: { type: "string" } },
                         ...paginacionParams,
                     ],
@@ -461,7 +456,6 @@ export function buildOpenApiDocument(serverUrl: string) {
                                         proyecto_id: { type: "integer" },
                                         fecha: fechaSchema,
                                         canal: { type: "string", examples: ["Amazon", "Web", "Wallapop"] },
-                                        estado: { type: "string", enum: [...ESTADOS_VENTA], default: "enviada" },
                                         items: { type: "array", minItems: 1, items: lineaSchema },
                                     },
                                 },
@@ -495,7 +489,7 @@ export function buildOpenApiDocument(serverUrl: string) {
                     operationId: "importarVentaMarketplace",
                     summary: "Importa una venta confirmada de Wallapop o Vinted",
                     description:
-                        "Casa el título exacto del anuncio con el mapeo del producto para ese marketplace, crea o reutiliza el cliente y registra la venta y su movimiento de stock de forma atómica. Las ventas importadas quedan pendientes hasta el envío.",
+                        "Casa el título exacto del anuncio con el mapeo del producto para ese marketplace, crea o reutiliza el cliente y registra la venta y su movimiento de stock de forma atómica.",
                     parameters: [idempotencyHeader],
                     requestBody: {
                         required: true,
@@ -514,7 +508,6 @@ export function buildOpenApiDocument(serverUrl: string) {
                                         importe_total: { type: "number", exclusiveMinimum: 0 },
                                         unidades: { type: "integer", minimum: 1, default: 1 },
                                         porcentaje_iva: { type: "number", minimum: 0, maximum: 100, default: 21 },
-                                        estado: { type: "string", enum: [...ESTADOS_VENTA], default: "pendiente" },
                                     },
                                 },
                             },
@@ -529,7 +522,7 @@ export function buildOpenApiDocument(serverUrl: string) {
                     operationId: "importarVentaWallapop",
                     summary: "Importa una venta confirmada de Wallapop",
                     description:
-                        "Casa el título exacto del anuncio con un producto, crea o reutiliza el cliente por nombre y registra la venta y su movimiento de stock de forma atómica. Las ventas importadas quedan pendientes hasta el envío.",
+                        "Casa el título exacto del anuncio con un producto, crea o reutiliza el cliente por nombre y registra la venta y su movimiento de stock de forma atómica.",
                     parameters: [idempotencyHeader],
                     requestBody: {
                         required: true,
@@ -547,7 +540,6 @@ export function buildOpenApiDocument(serverUrl: string) {
                                         importe_total: { type: "number", exclusiveMinimum: 0 },
                                         unidades: { type: "integer", minimum: 1, default: 1 },
                                         porcentaje_iva: { type: "number", minimum: 0, maximum: 100, default: 21 },
-                                        estado: { type: "string", enum: [...ESTADOS_VENTA], default: "pendiente" },
                                     },
                                 },
                             },
@@ -568,7 +560,7 @@ export function buildOpenApiDocument(serverUrl: string) {
                     operationId: "actualizarVenta",
                     summary: "Modifica una venta",
                     description:
-                        "Omitir 'items' modifica solo la cabecera, que es lo habitual para cambiar el estado (por ejemplo a 'devuelta'). Enviar 'items' sustituye todas las líneas.",
+                        "Omitir 'items' modifica solo la cabecera (fecha o canal). Enviar 'items' sustituye todas las líneas.",
                     parameters: [...idPathParams],
                     requestBody: {
                         required: true,
@@ -580,11 +572,10 @@ export function buildOpenApiDocument(serverUrl: string) {
                                     properties: {
                                         fecha: fechaSchema,
                                         canal: { type: "string" },
-                                        estado: { type: "string", enum: [...ESTADOS_VENTA] },
                                         items: { type: "array", minItems: 1, items: lineaSchema },
                                     },
                                 },
-                                example: { estado: "devuelta" },
+                                example: { canal: "Vinted" },
                             },
                         },
                     },
@@ -599,7 +590,6 @@ export function buildOpenApiDocument(serverUrl: string) {
                     parameters: [
                         proyectoIdParam,
                         ...rangoFechasParams,
-                        { name: "estado", in: "query", schema: { type: "string", enum: [...ESTADOS_COMPRA] } },
                         ...paginacionParams,
                     ],
                     responses: { ...listResponse(compraSchema), ...errorResponses },
@@ -607,7 +597,8 @@ export function buildOpenApiDocument(serverUrl: string) {
                 post: {
                     operationId: "crearCompra",
                     summary: "Registra una compra",
-                    description: "Solo las compras en estado 'recibida' incrementan stock y cuentan como gasto.",
+                    description:
+                        "La cabecera, las líneas y sus movimientos de stock se escriben en una única mutación transaccional de Convex.",
                     parameters: [idempotencyHeader],
                     requestBody: {
                         required: true,
@@ -619,13 +610,11 @@ export function buildOpenApiDocument(serverUrl: string) {
                                     properties: {
                                         proyecto_id: { type: "integer" },
                                         fecha: fechaSchema,
-                                        estado: { type: "string", enum: [...ESTADOS_COMPRA], default: "recibida" },
                                         items: { type: "array", minItems: 1, items: lineaSchema },
                                     },
                                 },
                                 example: {
                                     fecha: "2026-01-15",
-                                    estado: "recibida",
                                     items: [{ producto_id: 1, unidades: 50, precio_unitario: 9.5, porcentaje_iva: 21 }],
                                 },
                             },
@@ -655,11 +644,10 @@ export function buildOpenApiDocument(serverUrl: string) {
                                     minProperties: 1,
                                     properties: {
                                         fecha: fechaSchema,
-                                        estado: { type: "string", enum: [...ESTADOS_COMPRA] },
                                         items: { type: "array", minItems: 1, items: lineaSchema },
                                     },
                                 },
-                                example: { estado: "recibida" },
+                                example: { fecha: "2026-01-16" },
                             },
                         },
                     },
@@ -864,8 +852,6 @@ export function buildOpenApiDocument(serverUrl: string) {
             },
         },
         "x-enums": {
-            estado_venta: [...ESTADOS_VENTA],
-            estado_compra: [...ESTADOS_COMPRA],
             tipo_transaccion: [...TIPOS_TRANSACCION],
             tipo_movimiento: [...TIPOS_MOVIMIENTO],
         },

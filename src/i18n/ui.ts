@@ -189,7 +189,6 @@ const es: Dict = {
   "txn.colUnits": "Uds",
   "txn.colAmount": "Importe",
   "txn.colChannel": "Canal",
-  "txn.colStatus": "Estado",
   "txn.colActions": "Acciones",
   "txn.confirmDelete": "¿Seguro que quieres eliminar este movimiento?",
   "txn.deleteError": "Error al eliminar",
@@ -229,10 +228,6 @@ const es: Dict = {
 
   // Purchase modal
   "modal.purchase.title": "Nueva Compra",
-  "modal.purchase.status": "Estado",
-  "modal.purchase.statusPending": "Pendiente",
-  "modal.purchase.statusReceived": "Recibida",
-  "modal.purchase.statusCancelled": "Cancelada",
   "modal.purchase.distribute": "Reparte según coste unitario",
   "modal.purchase.estimatedTotal": "Total Estimado",
   "modal.purchase.save": "Guardar Compra",
@@ -538,7 +533,6 @@ const en: Dict = {
   "txn.colUnits": "Qty",
   "txn.colAmount": "Amount",
   "txn.colChannel": "Channel",
-  "txn.colStatus": "Status",
   "txn.colActions": "Actions",
   "txn.confirmDelete": "Are you sure you want to delete this movement?",
   "txn.deleteError": "Error deleting",
@@ -578,10 +572,6 @@ const en: Dict = {
 
   // Purchase modal
   "modal.purchase.title": "New Purchase",
-  "modal.purchase.status": "Status",
-  "modal.purchase.statusPending": "Pending",
-  "modal.purchase.statusReceived": "Received",
-  "modal.purchase.statusCancelled": "Cancelled",
   "modal.purchase.distribute": "Distributes by unit cost",
   "modal.purchase.estimatedTotal": "Estimated Total",
   "modal.purchase.save": "Save Purchase",

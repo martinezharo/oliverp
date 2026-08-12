@@ -19,7 +19,6 @@ export const PUT: APIRoute = async (context) => {
             id?: unknown;
             projectId?: unknown;
             date?: unknown;
-            estado?: unknown;
             items?: Array<{ productId: number; units: number; unitPrice: number; tax?: number }>;
         };
         const id = parsePositiveInteger(body.id);
@@ -37,7 +36,6 @@ export const PUT: APIRoute = async (context) => {
 
         await session.backend.updatePurchase(projectId, id, {
             date: body.date,
-            ...(typeof body.estado === "string" ? { status: body.estado } : {}),
             items: body.items.map((item) => ({
                 productId: item.productId,
                 units: item.units,

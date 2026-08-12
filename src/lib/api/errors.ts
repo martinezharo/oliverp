@@ -7,7 +7,7 @@ import type { ZodError } from "zod";
  *
  * The `code` is a stable machine-readable slug, `message` explains the problem
  * in plain language, and `hint` tells the caller what to do about it. That last
- * field matters more than it looks: an LLM that gets "estado invalido" retries
+ * field matters more than it looks: an LLM that gets "canal invalido" retries
  * blindly, while one that gets the list of accepted values fixes the call.
  */
 export type ApiErrorCode =

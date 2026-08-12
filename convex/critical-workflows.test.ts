@@ -53,7 +53,6 @@ describe("critical inventory workflows", () => {
     const saleId = await t.mutation(api.domain.createSale, {
       ...args(),
       channel: "Web",
-      status: "enviada",
     });
 
     const sale = await t.query(api.domain.getSale, {
@@ -65,7 +64,6 @@ describe("critical inventory workflows", () => {
     expect(sale).toMatchObject({
       id: saleId,
       canal: "Web",
-      estado: "enviada",
       venta_detalle: [{ producto_id: 11, unidades: 2, precio_unitario_venta: 8 }],
     });
 
@@ -83,31 +81,15 @@ describe("critical inventory workflows", () => {
     ]);
   });
 
-  it("does not add pending purchases to stock until they are received", async () => {
+  // Purchases used to reach the warehouse and the books only once they were
+  // marked `recibida`, while the web form created every one of them as
+  // `pendiente`. Recording a purchase is now the only event there is.
+  it("adds a purchase to stock and to the books as soon as it is recorded", async () => {
     const t = convexTest(schema, modules);
     await seed(t);
 
     const purchaseId = await t.mutation(api.domain.createPurchase, {
-      ...args({
-        items: [{ productId: 11, units: 4, unitPrice: 3.5, vatRate: 21 }],
-      }),
-      status: "pendiente",
-    });
-
-    expect((await t.query(api.domain.getStockForProduct, {
-      bridgeSecret: SECRET,
-      actor,
-      projectLegacyId: 7,
-      productLegacyId: 11,
-    }))?.stock_actual).toBe(0);
-    expect(await t.run(async (ctx) => await ctx.db.query("stockMovements").collect())).toEqual([]);
-
-    await t.mutation(api.domain.updatePurchase, {
-      bridgeSecret: SECRET,
-      actor,
-      projectLegacyId: 7,
-      legacyId: purchaseId,
-      status: "recibida",
+      ...args({ items: [{ productId: 11, units: 4, unitPrice: 3.5, vatRate: 21 }] }),
     });
 
     expect((await t.query(api.domain.getStockForProduct, {
@@ -120,20 +102,31 @@ describe("critical inventory workflows", () => {
       expect.objectContaining({ units: 4, type: "compra" }),
     ]);
 
+    const finances = await t.query(api.domain.listDailyFinances, {
+      bridgeSecret: SECRET,
+      actor,
+      projectLegacyId: 7,
+    });
+    expect(finances).toEqual([expect.objectContaining({ dia: "2026-08-10", gastos: 14 })]);
+
+    // Re-dating the header carries its movement along instead of duplicating it.
     await t.mutation(api.domain.updatePurchase, {
       bridgeSecret: SECRET,
       actor,
       projectLegacyId: 7,
       legacyId: purchaseId,
-      status: "cancelada",
+      date: "2026-08-12T00:00:00",
     });
+
+    expect(await t.run(async (ctx) => await ctx.db.query("stockMovements").collect())).toEqual([
+      expect.objectContaining({ units: 4, type: "compra", date: "2026-08-12T00:00:00" }),
+    ]);
     expect((await t.query(api.domain.getStockForProduct, {
       bridgeSecret: SECRET,
       actor,
       projectLegacyId: 7,
       productLegacyId: 11,
-    }))?.stock_actual).toBe(0);
-    expect(await t.run(async (ctx) => await ctx.db.query("stockMovements").collect())).toEqual([]);
+    }))?.stock_actual).toBe(4);
   });
 
   it("records signed manual adjustments and rejects zero", async () => {

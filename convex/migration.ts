@@ -221,9 +221,6 @@ export const importSales = internalMutation({
         projectLegacyId,
         date: dateValue(row.fecha),
         channel: stringValue(row.canal),
-        status: ["pendiente", "enviada", "devuelta", "reembolsada"].includes(stringValue(row.estado))
-          ? stringValue(row.estado) as "pendiente" | "enviada" | "devuelta" | "reembolsada"
-          : "pendiente" as const,
       };
       if (existing) await ctx.db.patch(existing._id, values);
       else await ctx.db.insert("sales", values);
@@ -281,9 +278,6 @@ export const importPurchases = internalMutation({
         projectId: project._id,
         projectLegacyId,
         date: dateValue(row.fecha),
-        status: ["pendiente", "recibida", "cancelada"].includes(stringValue(row.estado))
-          ? stringValue(row.estado) as "pendiente" | "recibida" | "cancelada"
-          : "pendiente" as const,
       };
       if (existing) await ctx.db.patch(existing._id, values);
       else await ctx.db.insert("purchases", values);

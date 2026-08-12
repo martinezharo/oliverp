@@ -74,16 +74,14 @@ describe("browser write routes", () => {
       projectId: 7,
       date: "2026-08-10",
       channel: "Web",
-      status: "enviada",
       items: [{ productId: 11, units: 2, unitPrice: 8.5, vatRate: 10 }],
     });
   });
 
-  it("preserves a pending purchase status while mapping unitPrice and VAT", async () => {
+  it("maps unitPrice and VAT of a new purchase", async () => {
     const response = await createPurchase(context({
       projectId: 7,
       date: "2026-08-10",
-      estado: "pendiente",
       items: [{ productId: 11, units: 4, unitPrice: 3.5, tax: 21 }],
     }));
 
@@ -91,7 +89,6 @@ describe("browser write routes", () => {
     expect(mocks.backend.createPurchase).toHaveBeenCalledWith({
       projectId: 7,
       date: "2026-08-10",
-      status: "pendiente",
       items: [{ productId: 11, units: 4, unitPrice: 3.5, vatRate: 21 }],
     });
   });
@@ -143,14 +140,12 @@ describe("browser write routes", () => {
       id: "18",
       projectId: "7",
       date: "2026-08-11",
-      estado: "recibida",
       items: [{ productId: 11, units: 3, unitPrice: 4, tax: 10 }],
     }));
 
     expect(response.status).toBe(200);
     expect(mocks.backend.updatePurchase).toHaveBeenCalledWith(7, 18, {
       date: "2026-08-11",
-      status: "recibida",
       items: [{ productId: 11, units: 3, unitPrice: 4, vatRate: 10 }],
     });
   });
