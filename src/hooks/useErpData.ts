@@ -4,7 +4,7 @@ import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { useMemo } from "react";
 
-import type { FinanceRow, StockRow } from "@/components/legacy/types";
+import type { FinanceRow, StockRow } from "@/types/erp";
 import { useErpContext } from "@/hooks/useErpContext";
 import { mockFinanzas, mockStock } from "@/lib/mock-data";
 import { normalizeTransactions, type NormalizedTransaction } from "@/lib/transactions";

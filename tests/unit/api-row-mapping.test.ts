@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toFinanceRow, toStockRow, type FinanceApiRow, type StockApiRow } from "../../src/components/legacy/apiRows";
+import { toFinanceRow, toStockRow, type FinanceApiRow, type StockApiRow } from "../../src/lib/api-rows";
 import { serializeFinanzas, serializeStock } from "../../src/lib/api/serializers";
 
 /**

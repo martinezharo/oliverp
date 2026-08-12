@@ -38,7 +38,11 @@ test.describe("plugin and documentation workspace", () => {
     await expect(page.getByRole("heading", { name: "Plugins", level: 1 })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Add a private plugin" })).toBeVisible();
     await expect(page.getByText("No private plugins added")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Docs", exact: true })).toBeVisible();
+
+    // The bottom bar only carries the operational routes; documentation and
+    // the other secondary destinations live behind "More".
+    await page.getByRole("button", { name: "More" }).click();
+    await expect(page.getByRole("link", { name: "Documentation", exact: true })).toBeVisible();
     await page.screenshot({ path: "test-results/plugins-mobile.png", fullPage: true });
   });
 });

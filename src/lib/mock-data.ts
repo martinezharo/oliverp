@@ -3,7 +3,7 @@
  */
 
 import type { Project } from "@/hooks/useErpContext";
-import type { FinanceRow, StockRow } from "@/components/legacy/types";
+import type { FinanceRow, StockRow } from "@/types/erp";
 
 type MockFinanceRow = FinanceRow & { nombre_proyecto: string };
 type MockStockRow = StockRow & { nombre_proyecto: string };

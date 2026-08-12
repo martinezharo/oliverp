@@ -4,9 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { useCloudSession } from "@/hooks/useCloudSession";
-import { ui } from "@/i18n/ui";
-
-const t = (key: string) => ui.en[key] ?? key;
+import { t } from "@/i18n/t";
 
 export default function LoginClient() {
   const session = useCloudSession();

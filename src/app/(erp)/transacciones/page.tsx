@@ -1,4 +1,4 @@
-import TransactionsPage from "@/components/legacy/TransactionsPage";
+import TransactionsPage from "@/components/transactions/TransactionsPage";
 
 export default function Transactions() {
   return <TransactionsPage />;

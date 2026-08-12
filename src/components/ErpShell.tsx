@@ -5,15 +5,13 @@ import { useQuery } from "convex/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
-import AppLayout from "@/components/legacy/AppLayout";
-import OperationModals from "@/components/legacy/OperationModals";
-import ProjectModal from "@/components/legacy/ProjectModal";
+import AppLayout from "@/components/layout/AppLayout";
+import OperationModals from "@/components/operations/OperationModals";
+import ProjectModal from "@/components/projects/ProjectModal";
 import { ErpContext, type ModalKind, type ModalRequest, type Project } from "@/hooks/useErpContext";
 import { useCloudSession } from "@/hooks/useCloudSession";
-import { ui } from "@/i18n/ui";
+import { t } from "@/i18n/t";
 import { mockProjects } from "@/lib/mock-data";
-
-const t = (key: string) => ui.en[key] ?? key;
 
 const titles: Record<string, string> = {
   "/": "title.dashboard",

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { orderLines, purchaseItemsFromRecord, saleItemsFromRecord } from "../../src/components/legacy/OperationModals";
+import { orderLines, purchaseItemsFromRecord, saleItemsFromRecord } from "../../src/components/operations/shared";
 
 /**
  * The sale form once passed the field name where the product id belonged, so
