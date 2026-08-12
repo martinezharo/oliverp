@@ -135,6 +135,56 @@ export function ModalFrame({
 }
 
 /**
+ * Loads the record an edit modal starts from.
+ *
+ * The read endpoints are scoped by project, so the request has to carry
+ * `projectId` next to the id — a bare id is rejected with a 400 and the form
+ * would open empty over an existing operation. While the active project is
+ * still unknown the hook stays in its loading state instead of firing an
+ * incomplete request; the shell remounts the modal once the project resolves.
+ */
+function useExistingRecord<T>(
+  endpoint: string,
+  {
+    transactionId,
+    projectId,
+    demo,
+    errorKey,
+    onLoad,
+  }: {
+    transactionId: number | null;
+    projectId: number | null;
+    demo: boolean;
+    errorKey: string;
+    onLoad: (record: T) => void;
+  },
+) {
+  const [loading, setLoading] = useState(transactionId !== null && !demo);
+  const [error, setError] = useState<string | null>(null);
+  // Held in a ref so callers can pass an inline closure over their setters
+  // without the request restarting on every render.
+  const apply = useRef(onLoad);
+  useEffect(() => { apply.current = onLoad; });
+
+  useEffect(() => {
+    if (!transactionId || demo || !projectId) return;
+    let active = true;
+    void apiJson<T>(`${endpoint}?id=${transactionId}&projectId=${projectId}`)
+      .then((record) => { if (active) apply.current(record); })
+      .catch((cause) => {
+        if (!active) return;
+        const message = apiErrorMessage(cause, t(errorKey));
+        setError(message);
+        window.alert(message);
+      })
+      .finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [demo, endpoint, errorKey, projectId, transactionId]);
+
+  return { loading, error };
+}
+
+/**
  * Turns the form rows into the payload lines. Rows without a product chosen
  * are dropped here: `Number("")` serializes as a value the backend rejects
  * with an opaque validation error.
@@ -201,8 +251,6 @@ function SaleModal({ transactionId, projectId, demo, onClose, onSaved }: { trans
   const [total, setTotal] = useState("");
   const [items, setItems] = useState<Item[]>([]);
   const [busy, setBusy] = useState(false);
-  const [loadingExisting, setLoadingExisting] = useState(editing && !demo);
-  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     void apiJson<{ products: Product[]; channels: string[] }>(`/api/sales/init-data?projectId=${projectId ?? ""}`)
@@ -210,27 +258,19 @@ function SaleModal({ transactionId, projectId, demo, onClose, onSaved }: { trans
       .catch(() => { setProducts([]); setChannels([]); });
   }, [projectId]);
 
-  useEffect(() => {
-    if (!transactionId || demo) return;
-    let active = true;
-    void apiJson<SaleRecord>(`/api/sales/get?id=${transactionId}`)
-      .then((sale) => {
-        if (!active) return;
-        const nextItems = saleItemsFromRecord(sale.venta_detalle);
-        setDate(dateOnly(sale.fecha));
-        setChannel(sale.canal);
-        setItems(nextItems);
-        setTotal(itemTotal(nextItems));
-      })
-      .catch((cause) => {
-        if (!active) return;
-        const message = apiErrorMessage(cause, t("modal.sale.loadError"));
-        setLoadError(message);
-        window.alert(message);
-      })
-      .finally(() => { if (active) setLoadingExisting(false); });
-    return () => { active = false; };
-  }, [demo, transactionId]);
+  const { loading: loadingExisting, error: loadError } = useExistingRecord<SaleRecord>("/api/sales/get", {
+    transactionId,
+    projectId,
+    demo,
+    errorKey: "modal.sale.loadError",
+    onLoad: (sale) => {
+      const nextItems = saleItemsFromRecord(sale.venta_detalle);
+      setDate(dateOnly(sale.fecha));
+      setChannel(sale.canal);
+      setItems(nextItems);
+      setTotal(itemTotal(nextItems));
+    },
+  });
 
   function update(index: number, key: keyof Item, value: string) {
     setItems((current) => distributeTotal(current.map((item, itemIndex) => itemIndex === index ? { ...item, [key]: value } : item), key === "price" ? "" : total, products));
@@ -286,8 +326,6 @@ function PurchaseModal({ transactionId, projectId, demo, onClose, onSaved }: { t
   const [total, setTotal] = useState("");
   const [items, setItems] = useState<Item[]>([]);
   const [busy, setBusy] = useState(false);
-  const [loadingExisting, setLoadingExisting] = useState(editing && !demo);
-  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     void apiJson<{ products: Product[] }>(`/api/sales/init-data?projectId=${projectId ?? ""}`)
@@ -295,27 +333,19 @@ function PurchaseModal({ transactionId, projectId, demo, onClose, onSaved }: { t
       .catch(() => setProducts([]));
   }, [projectId]);
 
-  useEffect(() => {
-    if (!transactionId || demo) return;
-    let active = true;
-    void apiJson<PurchaseRecord>(`/api/purchases/get?id=${transactionId}`)
-      .then((purchase) => {
-        if (!active) return;
-        const nextItems = purchaseItemsFromRecord(purchase.compra_detalle);
-        setDate(dateOnly(purchase.fecha));
-        setStatus(purchase.estado || "pendiente");
-        setItems(nextItems);
-        setTotal(itemTotal(nextItems));
-      })
-      .catch((cause) => {
-        if (!active) return;
-        const message = apiErrorMessage(cause, t("modal.purchase.loadError"));
-        setLoadError(message);
-        window.alert(message);
-      })
-      .finally(() => { if (active) setLoadingExisting(false); });
-    return () => { active = false; };
-  }, [demo, transactionId]);
+  const { loading: loadingExisting, error: loadError } = useExistingRecord<PurchaseRecord>("/api/purchases/get", {
+    transactionId,
+    projectId,
+    demo,
+    errorKey: "modal.purchase.loadError",
+    onLoad: (purchase) => {
+      const nextItems = purchaseItemsFromRecord(purchase.compra_detalle);
+      setDate(dateOnly(purchase.fecha));
+      setStatus(purchase.estado || "pendiente");
+      setItems(nextItems);
+      setTotal(itemTotal(nextItems));
+    },
+  });
 
   function update(index: number, key: keyof Item, value: string) { setItems((current) => current.map((item, itemIndex) => itemIndex === index ? { ...item, [key]: value } : item)); }
 
@@ -374,8 +404,6 @@ function OtherModal({ transactionId, projectId, demo, onClose, onSaved }: { tran
   const [description, setDescription] = useState("");
   const [concepts, setConcepts] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
-  const [loadingExisting, setLoadingExisting] = useState(editing && !demo);
-  const [loadError, setLoadError] = useState<string | null>(null);
 
   useEffect(() => {
     void apiJson<{ concepts: string[] }>(`/api/transactions/concepts?projectId=${projectId ?? ""}`)
@@ -383,28 +411,20 @@ function OtherModal({ transactionId, projectId, demo, onClose, onSaved }: { tran
       .catch(() => setConcepts([]));
   }, [projectId]);
 
-  useEffect(() => {
-    if (!transactionId || demo) return;
-    let active = true;
-    void apiJson<OtherRecord>(`/api/transactions/get-other?id=${transactionId}`)
-      .then((transaction) => {
-        if (!active) return;
-        setType(transaction.tipo === "gasto" ? "gasto" : "ingreso");
-        setDate(dateOnly(transaction.fecha));
-        setConcept(transaction.concepto);
-        setAmount(String(transaction.importe));
-        setVat(String(transaction.porcentaje_iva ?? 0));
-        setDescription(transaction.descripcion ?? "");
-      })
-      .catch((cause) => {
-        if (!active) return;
-        const message = apiErrorMessage(cause, t("modal.other.loadError"));
-        setLoadError(message);
-        window.alert(message);
-      })
-      .finally(() => { if (active) setLoadingExisting(false); });
-    return () => { active = false; };
-  }, [demo, transactionId]);
+  const { loading: loadingExisting, error: loadError } = useExistingRecord<OtherRecord>("/api/transactions/get-other", {
+    transactionId,
+    projectId,
+    demo,
+    errorKey: "modal.other.loadError",
+    onLoad: (transaction) => {
+      setType(transaction.tipo === "gasto" ? "gasto" : "ingreso");
+      setDate(dateOnly(transaction.fecha));
+      setConcept(transaction.concepto);
+      setAmount(String(transaction.importe));
+      setVat(String(transaction.porcentaje_iva ?? 0));
+      setDescription(transaction.descripcion ?? "");
+    },
+  });
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
