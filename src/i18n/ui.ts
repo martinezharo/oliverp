@@ -40,6 +40,8 @@ const es: Dict = {
   "nav.stock": "Stock",
   "nav.transactions": "Transacciones",
   "nav.history": "Historial",
+  "nav.more": "Más",
+  "nav.moreClose": "Cerrar menú",
 
   // Layout
   "layout.signOut": "Cerrar Sesión",
@@ -387,6 +389,8 @@ const en: Dict = {
   "nav.stock": "Stock",
   "nav.transactions": "Transactions",
   "nav.history": "History",
+  "nav.more": "More",
+  "nav.moreClose": "Close menu",
 
   // Layout
   "layout.signOut": "Sign Out",
