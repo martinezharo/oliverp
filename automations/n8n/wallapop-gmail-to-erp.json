@@ -12,7 +12,8 @@
         },
         "filters": {
           "q": "(from:info@wallapop.com subject:\"Venta confirmada\") OR (from:no-reply@vinted.es subject:\"Has vendido un artículo en Vinted\")"
-        }
+        },
+        "simple": false
       },
       "id": "marketplace-gmail-trigger",
       "name": "Marketplace sale email",
@@ -39,7 +40,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{$env.ERP_API_URL || 'https://erp-1f3.pages.dev'}}/api/v1/importaciones/marketplace",
+        "url": "={{$env.ERP_API_URL || 'https://oliverp.4oli.com'}}/api/v1/importaciones/marketplace",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [

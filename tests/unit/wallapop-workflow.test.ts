@@ -10,7 +10,11 @@ const workflow = JSON.parse(
     "utf8",
   ),
 ) as {
-  nodes: Array<{ name: string; parameters?: { jsCode?: string } }>;
+  nodes: Array<{
+    name: string;
+    type?: string;
+    parameters?: { jsCode?: string; simple?: boolean };
+  }>;
 };
 
 const parserCode = workflow.nodes.find(
@@ -27,6 +31,14 @@ function parseMessage(message: Record<string, unknown>) {
 }
 
 describe("Marketplace n8n parser", () => {
+  it("requests full Gmail bodies for the parser", () => {
+    const trigger = workflow.nodes.find(
+      (node) => node.type === "n8n-nodes-base.gmailTrigger",
+    );
+
+    expect(trigger?.parameters).toMatchObject({ simple: false });
+  });
+
   it("parses a plain-text confirmation", () => {
     const [item] = parseMessage({
       id: "gmail-plain-1",
