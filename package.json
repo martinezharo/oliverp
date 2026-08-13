@@ -27,6 +27,8 @@
     "dependencies": {
         "@auth/core": "0.41.3",
         "@convex-dev/auth": "^0.0.94",
+        "@fontsource-variable/jetbrains-mono": "5.3.0",
+        "@fontsource-variable/outfit": "5.3.0",
         "@opennextjs/cloudflare": "^1.20.2",
         "@tailwindcss/postcss": "^4.3.3",
         "chart.js": "^4.5.1",

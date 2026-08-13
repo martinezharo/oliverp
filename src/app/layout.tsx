@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { JetBrains_Mono, Outfit } from "next/font/google";
 import { ConvexAuthNextjsServerProvider } from "@convex-dev/auth/nextjs/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
+import "@fontsource-variable/jetbrains-mono";
+import "@fontsource-variable/outfit";
 import { ConvexClientProvider } from "@/components/ConvexClientProvider";
 import "@/styles/global.css";
 
@@ -10,22 +11,6 @@ export const metadata: Metadata = {
   description: "OlivERP management system",
   icons: { icon: "/favicon.webp" },
 };
-
-// Self-hosted at build time: the previous <link> to fonts.googleapis.com
-// blocked the first render on two extra connections to a third party.
-const outfit = Outfit({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  display: "swap",
-  variable: "--font-outfit",
-});
-
-const jetbrainsMono = JetBrains_Mono({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-  display: "swap",
-  variable: "--font-jetbrains-mono",
-});
 
 function runtimeConvexUrl(): string | undefined {
   try {
@@ -42,7 +27,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     // The server provider hands the cookie-borne token to the client, so the
     // first render already knows whether there is a session.
     <ConvexAuthNextjsServerProvider storageNamespace={convexUrl}>
-      <html lang="en" className={`dark ${outfit.variable} ${jetbrainsMono.variable}`}>
+      <html lang="en" className="dark">
         <body className="min-h-screen overflow-x-hidden bg-[#0f1016] text-slate-300">
           <ConvexClientProvider convexUrl={convexUrl}>{children}</ConvexClientProvider>
         </body>

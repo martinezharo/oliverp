@@ -51,6 +51,8 @@
   --background: oklch(0.15 0.03 245.8);
   --foreground: oklch(0.95 0.02 245.8);
   --border: oklch(0.25 0.03 245.8);
+  --font-outfit: "Outfit Variable";
+  --font-jetbrains-mono: "JetBrains Mono Variable";
 }
 
 body {
