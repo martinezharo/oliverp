@@ -5,6 +5,7 @@ import {
 
 import { AUTH_COOKIE_MAX_AGE_SECONDS } from "@convex/lib/session";
 import { routePolicy } from "@/lib/auth/routes";
+import { APP_ROOT } from "@/lib/navigation";
 import { DEMO_MODE_COOKIE } from "@/lib/runtime";
 
 /**
@@ -31,7 +32,7 @@ export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
     const authenticated = await convexAuth.isAuthenticated();
 
     if (pathname === "/login") {
-        return authenticated ? nextjsMiddlewareRedirect(request, "/") : undefined;
+        return authenticated ? nextjsMiddlewareRedirect(request, APP_ROOT) : undefined;
     }
 
     if (!authenticated) return nextjsMiddlewareRedirect(request, "/login");

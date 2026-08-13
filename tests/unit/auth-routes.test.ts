@@ -31,10 +31,20 @@ describe("routePolicy", () => {
         expect(routePolicy("/api/auth/signout")).toBe("public");
     });
 
+    it("serves the landing page to anyone", () => {
+        expect(routePolicy("/")).toBe("public");
+    });
+
     it("redirects unauthenticated page requests to the login page", () => {
-        for (const path of ["/", "/stock", "/transacciones", "/historial"]) {
+        for (const path of ["/app", "/app/stock", "/app/transacciones", "/app/historial"]) {
             expect(routePolicy(path), path).toBe("session_redirect");
         }
+    });
+
+    it("does not treat a lookalike path as the application", () => {
+        // The landing is the only public page; anything else stays gated.
+        expect(routePolicy("/application")).toBe("session_redirect");
+        expect(routePolicy("/appointments")).toBe("session_redirect");
     });
 
     it("keeps the complete Convex Auth compatibility namespace public", () => {

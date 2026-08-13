@@ -10,6 +10,7 @@ import { apiErrorMessage, apiJson } from "@/lib/client-api";
 import { useCloudSession } from "@/hooks/useCloudSession";
 import { useErpContext } from "@/hooks/useErpContext";
 import { plural, t } from "@/i18n/t";
+import { appPath } from "@/lib/navigation";
 
 type ProjectRow = {
   id: number;
@@ -58,7 +59,7 @@ export default function SettingsPage() {
         // The project selector and every list read from Convex, which pushes
         // the removal to them; the route is replaced so a deleted project id
         // does not stay in the URL.
-        router.replace("/ajustes");
+        router.replace(appPath("ajustes"));
       } else {
         await apiJson("/api/account/delete", { method: "POST" });
         // The account is gone: end the session before anything can re-query.

@@ -10,7 +10,7 @@ test.describe("plugin and documentation workspace", () => {
   });
 
   test("offers only private repository installation", async ({ page }) => {
-    await page.goto("/plugins");
+    await page.goto("/app/plugins");
     await expect(page.getByRole("heading", { name: "Plugins", level: 1 })).toBeVisible();
     await expect(page.getByRole("link", { name: /Plugin documentation/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Add a private plugin" })).toBeVisible();
@@ -23,7 +23,7 @@ test.describe("plugin and documentation workspace", () => {
   });
 
   test("renders repository documentation and keeps it reachable below settings", async ({ page }) => {
-    await page.goto("/documentacion");
+    await page.goto("/app/documentacion");
     await expect(page.getByRole("heading", { name: "Documentation", level: 1 })).toBeVisible();
     await expect(page.getByRole("link", { name: /Plugin development/ })).toBeVisible();
     await page.getByRole("link", { name: /Plugin development/ }).click();
@@ -34,7 +34,7 @@ test.describe("plugin and documentation workspace", () => {
 
   test("keeps private plugin management usable on a narrow screen", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto("/plugins");
+    await page.goto("/app/plugins");
     await expect(page.getByRole("heading", { name: "Plugins", level: 1 })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Add a private plugin" })).toBeVisible();
     await expect(page.getByText("No private plugins added")).toBeVisible();

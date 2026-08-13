@@ -3,5 +3,7 @@ import { DEMO_MODE_COOKIE } from "../../../lib/runtime";
 
 export const GET: APIRoute = (context) => {
     context.cookies.delete(DEMO_MODE_COOKIE, { path: "/" });
-    return context.redirect("/login");
+    // Leaving the demo is not a request to sign in: the visitor goes back to
+    // the landing page, which is public and offers both ways in again.
+    return context.redirect("/");
 };

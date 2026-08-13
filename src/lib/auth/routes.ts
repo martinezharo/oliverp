@@ -16,6 +16,8 @@ export type RoutePolicy =
     | "session_redirect";
 
 const PUBLIC_ROUTES = new Set([
+    /** The landing page. The ERP itself lives under `APP_ROOT`. */
+    "/",
     "/login",
     "/signup",
     "/api/demo/start",

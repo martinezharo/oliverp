@@ -1,4 +1,5 @@
 import type { APIRoute } from "@/lib/server-context";
+import { APP_ROOT } from "../../../lib/navigation";
 import { DEMO_MODE_COOKIE } from "../../../lib/runtime";
 
 export const GET: APIRoute = (context) => {
@@ -9,5 +10,5 @@ export const GET: APIRoute = (context) => {
         sameSite: "lax",
         secure: new URL(context.request.url).protocol === "https:",
     });
-    return context.redirect("/");
+    return context.redirect(APP_ROOT);
 };

@@ -45,7 +45,7 @@ test("saves a manual stock adjustment and refreshes its history", async ({ page 
   });
 
   await page.goto("/api/demo/start");
-  await page.goto("/stock");
+  await page.goto("/app/stock");
   await expect(page.getByRole("heading", { name: "Inventory & Stock", level: 1 })).toBeVisible();
 
   await page.locator("#stock-table tbody button").first().click();

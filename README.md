@@ -17,10 +17,19 @@ Production URL: configure after the first Worker deployment · [API documentatio
 The old Astro, Pages, Better Auth, and OAuth-proxy layers are no longer part of
 the application.
 
+## Routes
+
+`/` is the public landing page. The ERP itself lives under `/app`
+(`/app/stock`, `/app/transacciones`, …) and needs a session; anonymous visitors
+are redirected to `/login` by the middleware. The route table backing the
+sidebar, the header title and every internal link is
+[`src/lib/navigation.ts`](./src/lib/navigation.ts).
+
 ## Demo mode
 
-The demo is an explicit, read-only path from the login screen. It has mock
-projects, stock, and financial data and does not require an account.
+The demo is an explicit, read-only path, offered from both the landing page and
+the login screen. It has mock projects, stock, and financial data, does not
+require an account, and leaving it returns to the landing page.
 
 ## Local development
 

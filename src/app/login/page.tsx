@@ -9,9 +9,9 @@ export const metadata: Metadata = { title: ui.en["title.login"] };
 /**
  * The Convex URL is read from the Worker env at request time, so this route
  * must not be prerendered — a build-time render would bake in whatever the
- * build environment happened to have. The `(erp)` routes are already dynamic
- * because their layout reads the demo cookie, which is why the flag lives
- * here instead of blanketing the whole app from the root layout.
+ * build environment happened to have. The `/app` routes are already dynamic
+ * because their layout reads the demo cookie, which is why the flag lives here
+ * and on the landing page instead of blanketing everything from the root.
  */
 export const dynamic = "force-dynamic";
 

@@ -20,7 +20,7 @@ test.describe("Next/Convex Auth shell", () => {
     await page.goto("/login");
     await page.getByRole("link", { name: "View demo mode" }).click();
 
-    await expect(page).toHaveURL(/\/$/);
+    await expect(page).toHaveURL(/\/app$/);
     await expect(page.getByText("Demo Mode", { exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
     await expect(page.getByRole("button", { name: /Octopus Control/ })).toBeVisible();
@@ -33,9 +33,9 @@ test.describe("Next/Convex Auth shell", () => {
     await page.goto("/api/demo/start");
 
     for (const [path, heading] of [
-      ["/stock", "Inventory & Stock"],
-      ["/transacciones", "Transactions"],
-      ["/historial", "History"],
+      ["/app/stock", "Inventory & Stock"],
+      ["/app/transacciones", "Transactions"],
+      ["/app/historial", "History"],
     ] as const) {
       await page.goto(path);
       await expect(page.getByRole("heading", { name: heading, level: 1 })).toBeVisible();

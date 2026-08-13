@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
+import { Logo } from "@/components/ui/Logo";
 import { t } from "@/i18n/t";
+import { APP_SECTIONS, appPath, isCurrentPath, type AppSection } from "@/lib/navigation";
 
 type MenuItem = {
   label: string;
@@ -13,59 +14,26 @@ type MenuItem = {
   icon: string;
 };
 
+function toMenuItem(section: AppSection): MenuItem {
+  return {
+    label: t(section.navKey),
+    ...(section.mobileLabel === undefined ? {} : { mobileLabel: section.mobileLabel }),
+    path: appPath(section.segment),
+    icon: section.icon,
+  };
+}
+
 // The bottom bar only has room for a handful of destinations before the labels
 // stop being readable, so the navigation is split: the operational routes stay
 // on the bar and the rest move behind the "More" button. The sidebar on large
 // screens has room for everything and renders both groups inline.
-const primaryItems: MenuItem[] = [
-  {
-    label: t("nav.home"),
-    path: "/",
-    icon: "M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6",
-  },
-  {
-    label: t("nav.stock"),
-    path: "/stock",
-    icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
-  },
-  {
-    label: t("nav.transactions"),
-    path: "/transacciones",
-    icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-  },
-  {
-    label: t("nav.history"),
-    path: "/historial",
-    icon: "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z",
-  },
-];
-
-const overflowItems: MenuItem[] = [
-  {
-    label: t("nav.plugins"),
-    path: "/plugins",
-    icon: "M8.5 3v4.5H4M15.5 3v4.5H20M8.5 21v-4.5H4M15.5 21v-4.5H20 M9.5 7.5h5a2 2 0 012 2v5a2 2 0 01-2 2h-5a2 2 0 01-2-2v-5a2 2 0 012-2z",
-  },
-  {
-    label: t("nav.settings"),
-    path: "/ajustes",
-    icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z",
-  },
-  {
-    label: t("nav.documentation"),
-    mobileLabel: "Docs",
-    path: "/documentacion",
-    icon: "M4 19.5A2.5 2.5 0 016.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z M8 7h8M8 11h6",
-  },
-];
+const primaryItems = APP_SECTIONS.filter((section) => section.group === "primary").map(toMenuItem);
+const overflowItems = APP_SECTIONS.filter((section) => section.group === "overflow").map(toMenuItem);
 
 const moreIcon = "M6 12h.01M12 12h.01M18 12h.01";
 // The toggle swaps to a cross while the panel is open, so a second tap on the
 // same cell reads as "close" rather than as another destination.
 const closeIcon = "M6 18L18 6M6 6l12 12";
-
-const isCurrent = (currentPath: string, path: string) =>
-  currentPath === path || currentPath.startsWith(`${path}/`);
 
 function NavIcon({ path, active, className = "" }: { path: string; active: boolean; className?: string }) {
   return (
@@ -129,7 +97,7 @@ export default function Sidebar({ currentPath, search }: { currentPath: string; 
   // Anchored on the whole bar so a tap on the toggle or inside the panel is
   // never treated as a click outside.
   const moreRef = useRef<HTMLElement>(null);
-  const overflowActive = overflowItems.some((item) => isCurrent(currentPath, item.path));
+  const overflowActive = overflowItems.some((item) => isCurrentPath(currentPath, item.path));
 
   useEffect(() => {
     if (!moreOpen) return;
@@ -160,17 +128,14 @@ export default function Sidebar({ currentPath, search }: { currentPath: string; 
     )}
     <aside ref={moreRef} className="fixed bottom-0 left-0 right-0 z-40 flex h-16 flex-row border-t border-white/5 bg-[#0f1016]/95 backdrop-blur-xl transition-all duration-300 lg:bottom-auto lg:right-auto lg:top-0 lg:h-screen lg:w-64 lg:flex-col lg:border-r lg:border-t-0">
       <div className="hidden h-16 items-center justify-center border-b border-white/5 px-0 lg:flex lg:justify-start lg:px-6">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-indigo-600 shadow-lg shadow-primary-500/20">
-          <Image src="/icon.svg" alt="OlivERP" width={24} height={24} className="h-6 w-6" />
-        </div>
-        <span className="ml-3 hidden bg-gradient-to-r from-white to-slate-400 bg-clip-text text-xl font-bold tracking-tight text-transparent lg:block">
-          OlivERP
-        </span>
+        <Link href={appPath()}>
+          <Logo nameClassName="hidden lg:block" />
+        </Link>
       </div>
 
       <nav className="flex flex-1 flex-row items-stretch justify-around overflow-x-auto px-0 py-0 lg:flex-col lg:justify-start lg:space-y-2 lg:overflow-y-auto lg:px-3 lg:py-6">
         {primaryItems.map((item) => (
-          <NavLink key={item.path} item={item} active={isCurrent(currentPath, item.path)} search={search} />
+          <NavLink key={item.path} item={item} active={isCurrentPath(currentPath, item.path)} search={search} />
         ))}
 
         {/* Behind "More" on the bottom bar, inline on the sidebar. */}
@@ -178,7 +143,7 @@ export default function Sidebar({ currentPath, search }: { currentPath: string; 
           <NavLink
             key={item.path}
             item={item}
-            active={isCurrent(currentPath, item.path)}
+            active={isCurrentPath(currentPath, item.path)}
             search={search}
             className="hidden lg:flex"
           />
@@ -209,7 +174,7 @@ export default function Sidebar({ currentPath, search }: { currentPath: string; 
         <div className="pointer-events-none absolute inset-x-0 bottom-full flex justify-end px-2 pb-2 lg:hidden">
           <div className="pointer-events-auto w-48 origin-bottom-right animate-[zoom-in_0.15s_ease-out] overflow-hidden rounded-2xl border border-white/10 bg-[#161821] p-2 shadow-2xl shadow-black/50">
             {overflowItems.map((item) => {
-              const active = isCurrent(currentPath, item.path);
+              const active = isCurrentPath(currentPath, item.path);
               return (
                 <Link
                   key={item.path}

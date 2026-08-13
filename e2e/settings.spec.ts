@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("renders the settings page with destructive actions disabled", async ({ page }) => {
-  await page.goto("/ajustes");
+  await page.goto("/app/ajustes");
   const main = page.getByRole("main");
 
   await expect(main.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
@@ -26,9 +26,9 @@ test("renders the settings page with destructive actions disabled", async ({ pag
 });
 
 test("is reachable from the sidebar", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/app");
   await page.getByRole("link", { name: "Settings" }).click();
-  await expect(page).toHaveURL(/\/ajustes/);
+  await expect(page).toHaveURL(/\/app\/ajustes/);
   await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
 });
 

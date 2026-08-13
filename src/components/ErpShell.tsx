@@ -12,21 +12,12 @@ import { ErpContext, type ModalKind, type ModalRequest, type Project } from "@/h
 import { useCloudSession } from "@/hooks/useCloudSession";
 import { t } from "@/i18n/t";
 import { mockProjects } from "@/lib/mock-data";
-
-const titles: Record<string, string> = {
-  "/": "title.dashboard",
-  "/stock": "title.stock",
-  "/transacciones": "title.transactions",
-  "/historial": "title.history",
-  "/plugins": "title.plugins",
-  "/ajustes": "title.settings",
-  "/documentacion": "title.documentation",
-};
+import { APP_ROOT, titleKeyFor } from "@/lib/navigation";
 
 /**
  * The persistent application shell.
  *
- * It renders from the `(erp)` layout, so React keeps it mounted across every
+ * It renders from the `/app` layout, so React keeps it mounted across every
  * route in the group: the sidebar, the header and the project list survive a
  * navigation instead of being torn down and rebuilt. Only `children` — the
  * page itself — changes.
@@ -34,7 +25,7 @@ const titles: Record<string, string> = {
 export default function ErpShell({ demo, children }: { demo: boolean; children: React.ReactNode }) {
   const session = useCloudSession();
   const router = useRouter();
-  const pathname = usePathname() ?? "/";
+  const pathname = usePathname() ?? APP_ROOT;
   const searchParams = useSearchParams();
   const [modal, setModal] = useState<ModalRequest | null>(null);
   const [projectModal, setProjectModal] = useState(false);
@@ -85,14 +76,14 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
   return (
     <ErpContext.Provider value={context}>
       <AppLayout
-        title={t(titles[pathname] ?? (pathname.startsWith("/plugins/") ? "title.plugins" : pathname.startsWith("/documentacion/") ? "title.documentation" : "title.dashboard"))}
+        title={t(titleKeyFor(pathname))}
         currentPath={pathname}
         projects={projects}
         projectId={projectId}
         demo={demo}
         onNewProject={() => { if (!demo) setProjectModal(true); }}
       >
-        {demo && <DemoBanner full={pathname === "/"} />}
+        {demo && <DemoBanner full={pathname === APP_ROOT} />}
         {/* The chrome is never blanked: only the content area waits. */}
         {ready ? children : <ShellSkeleton />}
       </AppLayout>

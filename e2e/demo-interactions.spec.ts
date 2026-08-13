@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("renders every demo operation modal and the stock history dialog", async ({ page }) => {
   await page.goto("/api/demo/start");
 
-  await page.goto("/");
+  await page.goto("/app");
   const main = page.getByRole("main");
   const newSale = main.getByRole("button", { name: /New Sale/ });
   await expect(newSale).toBeVisible();
@@ -19,7 +19,7 @@ test("renders every demo operation modal and the stock history dialog", async ({
   await expect(page.locator("dialog[open]")).toContainText("Other Income / Expenses");
   await page.locator("dialog[open] button").first().click();
 
-  await page.goto("/stock");
+  await page.goto("/app/stock");
   await page.locator("#stock-table tbody button").first().click();
   await expect(page.locator("dialog[open]")).toContainText("Add Manual Adjustment");
 });

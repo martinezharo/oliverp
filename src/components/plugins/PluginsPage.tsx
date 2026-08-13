@@ -7,6 +7,7 @@ import { useState } from "react";
 
 import { useErpContext } from "@/hooks/useErpContext";
 import { apiErrorMessage, apiJson } from "@/lib/client-api";
+import { appPath } from "@/lib/navigation";
 import {
   installArgs,
   type PluginInstallation,
@@ -107,7 +108,7 @@ export default function PluginsPage() {
           <h1 className="bg-gradient-to-r from-white to-slate-400 bg-clip-text text-3xl font-bold tracking-tight text-transparent">Plugins</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Connect your own private repositories. Their validated behavior applies to OlivERP and persists for the selected project. There is no public catalog.</p>
         </div>
-        <Link href="/documentacion/plugins" className="inline-flex items-center gap-2 self-start rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:border-primary-500/30 hover:text-white">Plugin documentation <ArrowIcon /></Link>
+        <Link href={appPath("documentacion/plugins")} className="inline-flex items-center gap-2 self-start rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:border-primary-500/30 hover:text-white">Plugin documentation <ArrowIcon /></Link>
       </header>
 
       {!projectId ? <EmptyState title="Select a project" detail="Private plugins are added and activated independently for each project." /> : (
