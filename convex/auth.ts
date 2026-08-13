@@ -22,6 +22,14 @@ function localDevelopmentOrigins(): Set<string> {
   return new Set(["http://localhost:3000", "http://127.0.0.1:3000", ...extra]);
 }
 
+/**
+ * Where a sign-in ends up when the requested destination cannot be honoured.
+ * The site root is the public landing page, so falling back to it would drop a
+ * user who just signed in outside the application. Mirrors `APP_ROOT` in
+ * `src/lib/navigation.ts`, which Convex functions cannot import.
+ */
+const POST_LOGIN_PATH = "/app";
+
 function canonicalSiteUrl() {
   const siteUrl = process.env.SITE_URL;
   if (!siteUrl) throw new Error("Missing environment variable SITE_URL");
@@ -58,7 +66,7 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         // Fall through to the canonical site instead of accepting an invalid URL.
       }
 
-      return `${siteUrl}/`;
+      return `${siteUrl}${POST_LOGIN_PATH}`;
     },
   },
 });

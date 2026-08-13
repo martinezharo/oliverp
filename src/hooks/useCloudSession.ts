@@ -21,7 +21,8 @@ export interface CloudSession {
   /** A valid token exists; the profile behind it may still be loading. */
   authenticated: boolean;
   configured: boolean;
-  signIn: () => Promise<void>;
+  /** Signs in and returns to `redirectTo`, which defaults to the app root. */
+  signIn: (redirectTo?: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 

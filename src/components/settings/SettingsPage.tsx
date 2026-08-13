@@ -5,7 +5,10 @@ import { useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import ApiKeysModal from "@/components/settings/ApiKeysModal";
+import Badge from "@/components/ui/Badge";
 import ConfirmDeleteModal from "@/components/ui/ConfirmDeleteModal";
+import { dangerButton, dangerSolidButton, secondaryButton } from "@/components/ui/button";
 import { apiErrorMessage, apiJson } from "@/lib/client-api";
 import { useCloudSession } from "@/hooks/useCloudSession";
 import { useErpContext } from "@/hooks/useErpContext";
@@ -27,6 +30,60 @@ const demoProjects: ProjectRow[] = [
 
 type Pending = { kind: "project"; project: ProjectRow } | { kind: "account" };
 
+/**
+ * A group of settings: a heading and a hairline-separated list of rows.
+ *
+ * The page used to wrap each group in its own rounded, blurred, bordered card
+ * with a bordered header inside it, which made three nested boxes out of what
+ * is really a list of six controls. A rule above and below the rows separates
+ * the groups just as well without the weight, and without a paragraph under
+ * each heading explaining what the rows already say.
+ */
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section>
+      <h2 className="text-base font-semibold text-white">{title}</h2>
+      <ul className="mt-3 divide-y divide-white/5 border-y border-white/5">{children}</ul>
+    </section>
+  );
+}
+
+/**
+ * One setting: what it is on the left, what you can do about it on the right.
+ *
+ * Below `sm` the two stack and the actions spread across the full width, so a
+ * row stays tappable on a phone instead of squeezing two buttons into a corner.
+ */
+function Row({
+  title,
+  badge,
+  meta,
+  children,
+}: {
+  title: string;
+  badge?: React.ReactNode;
+  meta?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <li className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="truncate font-medium text-white">{title}</span>
+          {badge}
+        </div>
+        {meta && <div className="mt-1 text-xs text-slate-500">{meta}</div>}
+      </div>
+      <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:shrink-0 [&>button]:flex-1 sm:[&>button]:flex-none">
+        {children}
+      </div>
+    </li>
+  );
+}
+
+/** The account actions line up in one column, so they share a width. */
+const accountButton = "sm:min-w-40";
+
 export default function SettingsPage() {
   const { demo } = useErpContext();
   const session = useCloudSession();
@@ -36,8 +93,22 @@ export default function SettingsPage() {
   const projects = demo ? demoProjects : (remote?.proyectos as ProjectRow[] | undefined);
 
   const [pending, setPending] = useState<Pending | null>(null);
+  /** The project whose API keys are open, or null while the modal is closed. */
+  const [managing, setManaging] = useState<ProjectRow | null>(null);
   const [busy, setBusy] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  async function signOut() {
+    if (demo || signingOut) return;
+    setSigningOut(true);
+    try {
+      await session.signOut();
+      router.replace("/login");
+    } finally {
+      setSigningOut(false);
+    }
+  }
 
   function open(next: Pending) {
     setError(null);
@@ -74,98 +145,102 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="space-y-8">
+    // Settings is a column of rows, not a dashboard: capping the width keeps a
+    // label and its button from ending up at opposite edges of a wide screen,
+    // and centring it keeps the empty space balanced instead of piling it all
+    // up on the right.
+    <div className="mx-auto max-w-3xl space-y-10">
       <header>
-        <h1 className="bg-gradient-to-r from-white to-slate-400 bg-clip-text text-3xl font-bold tracking-tight text-transparent">
+        <h1 className="bg-linear-to-r from-white to-slate-400 bg-clip-text text-2xl font-bold tracking-tight text-transparent sm:text-3xl">
           {t("settings.heading")}
         </h1>
         <p className="mt-2 text-sm text-slate-400">{t("settings.subtitle")}</p>
       </header>
 
-      <section className="overflow-hidden rounded-3xl border border-white/5 bg-[#14151a]/50 backdrop-blur-xl">
-        <div className="border-b border-white/5 px-6 py-5">
-          <h2 className="text-lg font-semibold text-white">{t("settings.projects.title")}</h2>
-          <p className="mt-1 text-sm text-slate-500">{t("settings.projects.description")}</p>
-        </div>
-
+      <Section title={t("settings.projects.title")}>
         {projects === undefined ? (
-          <div className="animate-pulse space-y-px" aria-busy="true">
-            <div className="h-20 bg-white/5" />
-            <div className="h-20 bg-white/[0.03]" />
-          </div>
+          <li className="animate-pulse space-y-3 py-4" aria-busy="true">
+            <div className="h-5 w-48 rounded bg-white/5" />
+            <div className="h-3 w-64 rounded bg-white/[0.03]" />
+          </li>
         ) : projects.length === 0 ? (
-          <p className="px-6 py-10 text-center text-sm text-slate-500">
+          <li className="py-8 text-center text-sm text-slate-500">
             {t("settings.projects.empty")}
-          </p>
+          </li>
         ) : (
-          <ul className="divide-y divide-white/5">
-            {projects.map((project) => (
-              <li
-                key={project.id}
-                className="flex flex-col gap-4 px-6 py-5 sm:flex-row sm:items-center sm:justify-between"
+          projects.map((project) => (
+            <Row
+              key={project.id}
+              title={project.nombre}
+              badge={<Badge>{t(`settings.projects.role.${project.rol}`)}</Badge>}
+              meta={
+                <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span>{plural("settings.projects.members", project.miembros)}</span>
+                  <span aria-hidden="true" className="text-slate-700">·</span>
+                  <span>{plural("settings.projects.keys", project.api_keys)}</span>
+                </span>
+              }
+            >
+              {/* Management first, destruction last: the red button stays at
+                  the edge of the row so nothing lands on it by accident. */}
+              <button
+                type="button"
+                disabled={project.rol !== "admin"}
+                onClick={() => setManaging(project)}
+                className={secondaryButton}
               >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-3">
-                    <span className="truncate font-medium text-white">{project.nombre}</span>
-                    <span className="shrink-0 rounded-full border border-primary-500/20 bg-primary-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-primary-400">
-                      {t(`settings.projects.role.${project.rol}`)}
-                    </span>
-                  </div>
-                  <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-                    <span>{plural("settings.projects.members", project.miembros)}</span>
-                    <span aria-hidden="true" className="text-slate-700">·</span>
-                    <span>{plural("settings.projects.keys", project.api_keys)}</span>
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  disabled={demo || project.rol !== "admin"}
-                  onClick={() => open({ kind: "project", project })}
-                  className="shrink-0 self-start rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-2 text-sm font-medium text-red-300 transition-all hover:border-red-400/40 hover:bg-red-500/10 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-red-500/20 disabled:hover:bg-red-500/5 sm:self-auto"
-                >
-                  {t("settings.projects.delete")}
-                </button>
-              </li>
-            ))}
-          </ul>
+                {t("settings.keys.manage")}
+              </button>
+              <button
+                type="button"
+                disabled={demo || project.rol !== "admin"}
+                onClick={() => open({ kind: "project", project })}
+                className={dangerButton}
+              >
+                {t("settings.projects.delete")}
+              </button>
+            </Row>
+          ))
         )}
-      </section>
+      </Section>
 
-      <section className="overflow-hidden rounded-3xl border border-red-500/20 bg-red-500/[0.03] backdrop-blur-xl">
-        <div className="border-b border-red-500/10 px-6 py-5">
-          <h2 className="flex items-center gap-2 text-lg font-semibold text-red-300">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" />
-              <path d="M12 9v4" />
-              <path d="M12 17h.01" />
-            </svg>
-            {t("settings.danger.title")}
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">{t("settings.danger.description")}</p>
-        </div>
+      <Section title={t("settings.account.title")}>
+        {/* The email is the row: labelling it "Session" and then repeating
+            "Sign out" as the title next to a button that already says it was
+            three ways of saying the same thing. */}
+        <Row title={session.user?.email ?? t("settings.session.title")}>
+          <button
+            type="button"
+            disabled={demo || signingOut}
+            onClick={() => void signOut()}
+            className={`${secondaryButton} ${accountButton}`}
+          >
+            {signingOut ? t("settings.session.signingOut") : t("layout.signOut")}
+          </button>
+        </Row>
 
-        <div className="flex flex-col gap-4 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="font-medium text-white">{t("settings.account.delete")}</p>
-            <p className="mt-1 text-xs text-slate-500">{t("settings.account.deleteHint")}</p>
-          </div>
+        <Row title={t("settings.account.delete")}>
           <button
             type="button"
             disabled={demo}
             onClick={() => open({ kind: "account" })}
-            className="shrink-0 self-start rounded-lg bg-red-500 px-5 py-2.5 text-sm font-medium text-white shadow-lg shadow-red-500/20 transition-all hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none sm:self-auto"
+            className={`${dangerSolidButton} ${accountButton}`}
           >
-            {t("settings.account.delete")}
+            {t("settings.deleteAccount.title")}
           </button>
-        </div>
+        </Row>
+      </Section>
 
-        {demo && (
-          <p className="border-t border-red-500/10 px-6 py-3 text-xs text-amber-400/80">
-            {t("settings.demoNotice")}
-          </p>
-        )}
-      </section>
+      {demo && <p className="text-xs text-amber-400/80">{t("settings.demoNotice")}</p>}
+
+      {managing && (
+        <ApiKeysModal
+          projectId={managing.id}
+          projectName={managing.nombre}
+          demo={demo}
+          onClose={() => setManaging(null)}
+        />
+      )}
 
       {pending?.kind === "project" && (
         <ConfirmDeleteModal

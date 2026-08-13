@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import { CloudSessionContext, type CloudSession } from "@/hooks/useCloudSession";
 import { setAuthToken } from "@/lib/authToken";
 import { getConvexBrowserClient } from "@/lib/convex-browser";
+import { APP_ROOT } from "@/lib/navigation";
 
 function CloudSessionBridge({ children }: { children: React.ReactNode }) {
   const { isLoading, isAuthenticated } = useConvexAuth();
@@ -19,8 +20,13 @@ function CloudSessionBridge({ children }: { children: React.ReactNode }) {
     setAuthToken(token ?? null);
   }, [token]);
 
-  const handleSignIn = useCallback(async () => {
-    await signIn("github", { redirectTo: window.location.href });
+  // The OAuth round trip comes back to whatever is asked for here, so it has to
+  // be a place worth landing on: `window.location.href` would send the user
+  // back to `/login` (or, from the landing page, to the landing page itself),
+  // leaving a signed-in visitor outside the application. Resolved against the
+  // current origin so development hosts return to themselves.
+  const handleSignIn = useCallback(async (redirectTo: string = APP_ROOT) => {
+    await signIn("github", { redirectTo: new URL(redirectTo, window.location.origin).toString() });
   }, [signIn]);
 
   const handleSignOut = useCallback(async () => {

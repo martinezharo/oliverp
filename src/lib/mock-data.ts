@@ -3,7 +3,7 @@
  */
 
 import type { Project } from "@/hooks/useErpContext";
-import type { FinanceRow, StockRow } from "@/types/erp";
+import type { ApiKeyRow, FinanceRow, StockRow } from "@/types/erp";
 
 type MockFinanceRow = FinanceRow & { nombre_proyecto: string };
 type MockStockRow = StockRow & { nombre_proyecto: string };
@@ -34,6 +34,25 @@ export function getProjectNameKey(name: string): string {
 export const mockProjects: Project[] = [
     { id: 1, nombre: "Octopus Control", activo: true },
     { id: 2, nombre: "Demo Store", activo: true },
+];
+
+// ── API keys ──────────────────────────────────────────────
+/**
+ * One plausible key so demo mode shows the management screen as it really
+ * looks. The prefix is the only part of a key that is ever stored in the
+ * clear, so a sample one gives nothing away.
+ */
+export const mockApiKeys: ApiKeyRow[] = [
+    {
+        id: "demo-key-1",
+        nombre: "n8n",
+        prefijo: "erp_sk_4f2a9c",
+        scopes: ["read", "write"],
+        activa: true,
+        expira_en: null,
+        ultimo_uso_en: "2026-08-11T09:12:00.000Z",
+        creada_en: "2026-06-02T10:00:00.000Z",
+    },
 ];
 
 // ── Stock ─────────────────────────────────────────────────

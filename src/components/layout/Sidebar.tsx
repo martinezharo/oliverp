@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Logo } from "@/components/ui/Logo";
 import { t } from "@/i18n/t";
-import { APP_SECTIONS, appPath, isCurrentPath, type AppSection } from "@/lib/navigation";
+import { APP_SECTIONS, activeSectionPath, appPath, type AppSection } from "@/lib/navigation";
 
 type MenuItem = {
   label: string;
@@ -97,7 +97,10 @@ export default function Sidebar({ currentPath, search }: { currentPath: string; 
   // Anchored on the whole bar so a tap on the toggle or inside the panel is
   // never treated as a click outside.
   const moreRef = useRef<HTMLElement>(null);
-  const overflowActive = overflowItems.some((item) => isCurrentPath(currentPath, item.path));
+  // Exactly one section is current, so the dashboard — whose path prefixes
+  // every other one — no longer lights up alongside the real destination.
+  const activePath = activeSectionPath(currentPath);
+  const overflowActive = overflowItems.some((item) => item.path === activePath);
 
   useEffect(() => {
     if (!moreOpen) return;
@@ -135,7 +138,7 @@ export default function Sidebar({ currentPath, search }: { currentPath: string; 
 
       <nav className="flex flex-1 flex-row items-stretch justify-around overflow-x-auto px-0 py-0 lg:flex-col lg:justify-start lg:space-y-2 lg:overflow-y-auto lg:px-3 lg:py-6">
         {primaryItems.map((item) => (
-          <NavLink key={item.path} item={item} active={isCurrentPath(currentPath, item.path)} search={search} />
+          <NavLink key={item.path} item={item} active={item.path === activePath} search={search} />
         ))}
 
         {/* Behind "More" on the bottom bar, inline on the sidebar. */}
@@ -143,7 +146,7 @@ export default function Sidebar({ currentPath, search }: { currentPath: string; 
           <NavLink
             key={item.path}
             item={item}
-            active={isCurrentPath(currentPath, item.path)}
+            active={item.path === activePath}
             search={search}
             className="hidden lg:flex"
           />
@@ -174,7 +177,7 @@ export default function Sidebar({ currentPath, search }: { currentPath: string; 
         <div className="pointer-events-none absolute inset-x-0 bottom-full flex justify-end px-2 pb-2 lg:hidden">
           <div className="pointer-events-auto w-48 origin-bottom-right animate-[zoom-in_0.15s_ease-out] overflow-hidden rounded-2xl border border-white/10 bg-[#161821] p-2 shadow-2xl shadow-black/50">
             {overflowItems.map((item) => {
-              const active = isCurrentPath(currentPath, item.path);
+              const active = item.path === activePath;
               return (
                 <Link
                   key={item.path}

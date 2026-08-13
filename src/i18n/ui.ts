@@ -323,7 +323,6 @@ const es: Dict = {
   "settings.heading": "Ajustes",
   "settings.subtitle": "Gestiona tus proyectos y tu cuenta.",
   "settings.projects.title": "Tus proyectos",
-  "settings.projects.description": "Cada proyecto tiene sus propios datos, clientes y API keys.",
   "settings.projects.empty": "Todavía no tienes ningún proyecto.",
   "settings.projects.role.admin": "Administrador",
   "settings.projects.role.miembro": "Miembro",
@@ -333,10 +332,41 @@ const es: Dict = {
   "settings.projects.keys.other": "{count} API keys activas",
   "settings.projects.keys.zero": "Sin API keys",
   "settings.projects.delete": "Eliminar proyecto",
-  "settings.danger.title": "Zona de peligro",
-  "settings.danger.description": "Estas acciones son permanentes y no se pueden deshacer.",
+  "settings.keys.manage": "Gestionar API keys",
+  "settings.keys.title": "API keys",
+  "settings.keys.subtitle": "Credenciales de {name} para integraciones y automatizaciones.",
+  "settings.keys.empty": "Este proyecto todavía no tiene ninguna API key.",
+  "settings.keys.emptyHint": "Crea una para conectar n8n, un script o cualquier otra herramienta.",
+  "settings.keys.forbidden": "Solo los administradores del proyecto pueden ver sus API keys.",
+  "settings.keys.loadError": "No se pudieron cargar las API keys.",
+  "settings.keys.scopes.read": "Lectura",
+  "settings.keys.scopes.write": "Lectura y escritura",
+  "settings.keys.scopesLabel": "Permisos",
+  "settings.keys.nameLabel": "Nombre",
+  "settings.keys.namePlaceholder": "n8n, script de facturación…",
+  "settings.keys.expiresLabel": "Caduca el (opcional)",
+  "settings.keys.expiresNever": "No caduca",
+  "settings.keys.expiresOn": "Caduca el {date}",
+  "settings.keys.expired": "Caducada el {date}",
+  "settings.keys.created": "Creada el {date}",
+  "settings.keys.lastUsed": "Último uso el {date}",
+  "settings.keys.neverUsed": "Sin usar",
+  "settings.keys.create": "Crear API key",
+  "settings.keys.creating": "Creando…",
+  "settings.keys.createError": "No se pudo crear la API key.",
+  "settings.keys.revoke": "Revocar",
+  "settings.keys.revoking": "Revocando…",
+  "settings.keys.revokeConfirm": "¿Seguro? Dejará de funcionar al instante.",
+  "settings.keys.revokeError": "No se pudo revocar la API key.",
+  "settings.keys.newTitle": "Guarda esta key ahora",
+  "settings.keys.newHint": "Es la única vez que se muestra. Si la pierdes, revócala y crea otra.",
+  "settings.keys.copy": "Copiar",
+  "settings.keys.copied": "Copiada",
+  "settings.keys.demoNotice": "En modo demo no se pueden crear API keys.",
+  "settings.session.signingOut": "Cerrando sesión…",
+  "settings.session.title": "Sesión",
+  "settings.account.title": "Cuenta",
   "settings.account.delete": "Eliminar mi cuenta",
-  "settings.account.deleteHint": "Se borrarán tu cuenta y todos los datos de tus proyectos.",
   "settings.demoNotice": "En modo demo las acciones destructivas están desactivadas.",
   "settings.deleteProject.title": "Eliminar proyecto",
   "settings.deleteProject.warning": "Se borrarán permanentemente todas las ventas, compras, productos, clientes, movimientos de stock y API keys de <strong>{name}</strong>.",
@@ -351,6 +381,87 @@ const es: Dict = {
   "settings.deleting": "Eliminando…",
   "settings.deleteError": "No se pudo completar el borrado.",
   "common.irreversible": "Esta acción no se puede deshacer",
+
+  // Landing page
+  "landing.meta.title": "OlivERP | El ERP que no te pide ser contable",
+  "landing.meta.description":
+    "ERP gratuito y de código abierto para negocios pequeños: registra ventas y compras, y el stock, el IVA y el balance se calculan solos.",
+  "landing.hero.eyebrow": "Gratis y de código abierto",
+  // Split in three because the middle word is painted with the gradient.
+  "landing.hero.title.before": "El ERP que ",
+  "landing.hero.title.highlight": "no",
+  "landing.hero.title.after": " te pide ser contable",
+  "landing.hero.lede":
+    "Apunta lo que vendes y lo que compras, como se lo contarías a alguien. El stock, el IVA y el balance se calculan solos.",
+  "landing.hero.note": "Demo con datos de ejemplo · sin registro · sin tarjeta",
+
+  "landing.cta.enter": "Entrar",
+  "landing.cta.enterSuffix": "al ERP",
+  "landing.cta.demo": "Probar la demo",
+
+  "landing.modules.label": "Todo el negocio",
+  "landing.modules.title": "Seis módulos, todos incluidos",
+  "landing.modules.description": "Todo lo que ves está en la aplicación desde el primer día.",
+  "landing.modules.sales.title": "Ventas y compras",
+  "landing.modules.sales.description":
+    "Varias líneas de producto, unidades y precio. El IVA repercutido o soportado sale solo y el stock se mueve con la operación.",
+  "landing.modules.stock.title": "Inventario y stock",
+  "landing.modules.stock.description":
+    "Existencias por producto, valoración a coste y a venta, beneficio por unidad y los días que te quedan antes de agotarlo.",
+  "landing.modules.transactions.title": "Transacciones",
+  "landing.modules.transactions.description":
+    "Los ingresos y gastos que no son una venta redonda, en modo diario o en lista, con el importe y el IVA separados.",
+  "landing.modules.dashboard.title": "Dashboard y proyección",
+  "landing.modules.dashboard.description":
+    "Balance del mes y del trimestre, saldo de IVA separado entre soportado y repercutido, y una proyección de cómo va a cerrar el mes.",
+  "landing.modules.history.title": "Historial",
+  "landing.modules.history.description":
+    "Todo lo registrado agrupado por meses, trimestres y años, para mirar atrás sin montar una hoja de cálculo.",
+  "landing.modules.plugins.title": "Tus propios plugins",
+  "landing.modules.plugins.description":
+    "¿Tu negocio tiene una regla rara? Escríbela en un repositorio tuyo, revísala y actívala sobre tu proyecto.",
+
+  "landing.claims.noManual.title": "Se usa sin manual",
+  "landing.claims.noManual.description":
+    "Rellenas el formulario como quien apunta la venta en una libreta. Nadie te pide una cuenta contable ni un asiento.",
+  "landing.claims.openSource.title": "Gratis y de código abierto",
+  "landing.claims.openSource.description":
+    "Sin planes, sin límites y sin tarjeta. El código está publicado y puedes montarlo en tu propio servidor.",
+  "landing.claims.agents.title": "Tus agentes también lo usan",
+  "landing.claims.agents.description":
+    "Cada pantalla tiene detrás un endpoint documentado. Dale la URL del contrato a tu GPT, a n8n o a Make y se apaña solo.",
+
+  "landing.demo.eyebrow": "Sin registro",
+  "landing.demo.title": "Entra y toca todo. Los datos son de mentira.",
+  "landing.demo.description": "Un negocio de ejemplo con ventas, stock y un trimestre de historial ya cargados.",
+  "landing.demo.cta": "Abrir la demo",
+
+  "landing.nav.modules": "Módulos",
+  "landing.nav.demo": "Demo",
+
+  "landing.footer.tagline":
+    "Registra ventas y compras sin saber contabilidad. El stock, el IVA y el balance se calculan solos.",
+  "landing.footer.legal": "MIT · © 2026 OlivERP",
+  "landing.footer.product": "Producto",
+  "landing.footer.enter": "Entrar al ERP",
+  "landing.footer.demo": "Probar la demo",
+  "landing.footer.project": "Proyecto",
+  "landing.footer.docs": "Documentación",
+  "landing.footer.github": "Código en GitHub",
+
+  // The still of the dashboard shown in the hero. Sample figures, so the
+  // amounts stay in the string and only the wording around them changes.
+  "landing.preview.month": "Febrero",
+  "landing.preview.balanceValue": "4.820 €",
+  "landing.preview.balanceFoot": "Ingresos {income} · Gastos {expenses}",
+  "landing.preview.balanceIncome": "18.420 €",
+  "landing.preview.balanceExpenses": "13.600 €",
+  "landing.preview.vatValue": "-1.096 €",
+  "landing.preview.vatFoot": "S: {supported} · R: {charged}",
+  "landing.preview.vatSupported": "2.140 €",
+  "landing.preview.vatCharged": "1.044 €",
+  "landing.preview.projectionValue": "19.840 €",
+  "landing.preview.revenueTotal": "18.420 €",
 };
 
 const en: Dict = {
@@ -667,7 +778,6 @@ const en: Dict = {
   "settings.heading": "Settings",
   "settings.subtitle": "Manage your projects and your account.",
   "settings.projects.title": "Your projects",
-  "settings.projects.description": "Each project has its own data, customers and API keys.",
   "settings.projects.empty": "You do not have any project yet.",
   "settings.projects.role.admin": "Admin",
   "settings.projects.role.miembro": "Member",
@@ -677,10 +787,41 @@ const en: Dict = {
   "settings.projects.keys.other": "{count} active API keys",
   "settings.projects.keys.zero": "No API keys",
   "settings.projects.delete": "Delete project",
-  "settings.danger.title": "Danger zone",
-  "settings.danger.description": "These actions are permanent and cannot be undone.",
+  "settings.keys.manage": "Manage API keys",
+  "settings.keys.title": "API keys",
+  "settings.keys.subtitle": "Credentials for {name}, used by integrations and automations.",
+  "settings.keys.empty": "This project has no API keys yet.",
+  "settings.keys.emptyHint": "Create one to connect n8n, a script or any other tool.",
+  "settings.keys.forbidden": "Only project admins can see its API keys.",
+  "settings.keys.loadError": "The API keys could not be loaded.",
+  "settings.keys.scopes.read": "Read",
+  "settings.keys.scopes.write": "Read and write",
+  "settings.keys.scopesLabel": "Permissions",
+  "settings.keys.nameLabel": "Name",
+  "settings.keys.namePlaceholder": "n8n, invoicing script…",
+  "settings.keys.expiresLabel": "Expires on (optional)",
+  "settings.keys.expiresNever": "Never expires",
+  "settings.keys.expiresOn": "Expires on {date}",
+  "settings.keys.expired": "Expired on {date}",
+  "settings.keys.created": "Created on {date}",
+  "settings.keys.lastUsed": "Last used on {date}",
+  "settings.keys.neverUsed": "Never used",
+  "settings.keys.create": "Create API key",
+  "settings.keys.creating": "Creating…",
+  "settings.keys.createError": "The API key could not be created.",
+  "settings.keys.revoke": "Revoke",
+  "settings.keys.revoking": "Revoking…",
+  "settings.keys.revokeConfirm": "Sure? It stops working immediately.",
+  "settings.keys.revokeError": "The API key could not be revoked.",
+  "settings.keys.newTitle": "Save this key now",
+  "settings.keys.newHint": "This is the only time it is shown. If you lose it, revoke it and create another.",
+  "settings.keys.copy": "Copy",
+  "settings.keys.copied": "Copied",
+  "settings.keys.demoNotice": "API keys cannot be created in demo mode.",
+  "settings.session.signingOut": "Signing out…",
+  "settings.session.title": "Session",
+  "settings.account.title": "Account",
   "settings.account.delete": "Delete my account",
-  "settings.account.deleteHint": "This erases your account and all the data in your projects.",
   "settings.demoNotice": "Destructive actions are disabled in demo mode.",
   "settings.deleteProject.title": "Delete project",
   "settings.deleteProject.warning": "This permanently erases every sale, purchase, product, customer, stock movement and API key in <strong>{name}</strong>.",
@@ -695,6 +836,87 @@ const en: Dict = {
   "settings.deleting": "Deleting…",
   "settings.deleteError": "The deletion could not be completed.",
   "common.irreversible": "This action cannot be undone",
+
+  // Landing page
+  "landing.meta.title": "OlivERP | The ERP that doesn't ask you to be an accountant",
+  "landing.meta.description":
+    "Free, open-source ERP for small businesses: record sales and purchases, and stock, VAT and your balance work themselves out.",
+  "landing.hero.eyebrow": "Free and open source",
+  // Split in three because the middle word is painted with the gradient.
+  "landing.hero.title.before": "The ERP that ",
+  "landing.hero.title.highlight": "doesn't",
+  "landing.hero.title.after": " ask you to be an accountant",
+  "landing.hero.lede":
+    "Jot down what you sell and what you buy, the way you would tell someone. Stock, VAT and your balance work themselves out.",
+  "landing.hero.note": "Demo with sample data · no sign-up · no card",
+
+  "landing.cta.enter": "Enter",
+  "landing.cta.enterSuffix": "the ERP",
+  "landing.cta.demo": "Try the demo",
+
+  "landing.modules.label": "The whole business",
+  "landing.modules.title": "Six modules, all included",
+  "landing.modules.description": "Everything you see is in the application from day one.",
+  "landing.modules.sales.title": "Sales and purchases",
+  "landing.modules.sales.description":
+    "Several product lines, units and price. Output or input VAT is worked out for you and stock moves with the operation.",
+  "landing.modules.stock.title": "Inventory and stock",
+  "landing.modules.stock.description":
+    "Stock per product, valued at cost and at sale price, profit per unit and how many days you have left before running out.",
+  "landing.modules.transactions.title": "Transactions",
+  "landing.modules.transactions.description":
+    "The income and expenses that are not a clean sale, as a journal or as a list, with the amount and the VAT kept apart.",
+  "landing.modules.dashboard.title": "Dashboard and forecast",
+  "landing.modules.dashboard.description":
+    "Balance for the month and the quarter, VAT balance split between input and output, and a forecast of how the month will close.",
+  "landing.modules.history.title": "History",
+  "landing.modules.history.description":
+    "Everything you have recorded grouped by month, quarter and year, so you can look back without building a spreadsheet.",
+  "landing.modules.plugins.title": "Your own plugins",
+  "landing.modules.plugins.description":
+    "Does your business have an odd rule? Write it in a repository of your own, review it and enable it on your project.",
+
+  "landing.claims.noManual.title": "No manual needed",
+  "landing.claims.noManual.description":
+    "You fill in the form like someone writing a sale down in a notebook. Nobody asks you for a ledger account or a journal entry.",
+  "landing.claims.openSource.title": "Free and open source",
+  "landing.claims.openSource.description":
+    "No plans, no limits and no card. The code is published and you can run it on your own server.",
+  "landing.claims.agents.title": "Your agents use it too",
+  "landing.claims.agents.description":
+    "Every screen has a documented endpoint behind it. Give the contract URL to your GPT, to n8n or to Make and it sorts itself out.",
+
+  "landing.demo.eyebrow": "No sign-up",
+  "landing.demo.title": "Come in and touch everything. The data is made up.",
+  "landing.demo.description": "A sample business with sales, stock and a quarter of history already loaded.",
+  "landing.demo.cta": "Open the demo",
+
+  "landing.nav.modules": "Modules",
+  "landing.nav.demo": "Demo",
+
+  "landing.footer.tagline":
+    "Record sales and purchases without knowing accounting. Stock, VAT and your balance work themselves out.",
+  "landing.footer.legal": "MIT · © 2026 OlivERP",
+  "landing.footer.product": "Product",
+  "landing.footer.enter": "Enter the ERP",
+  "landing.footer.demo": "Try the demo",
+  "landing.footer.project": "Project",
+  "landing.footer.docs": "Documentation",
+  "landing.footer.github": "Code on GitHub",
+
+  // The still of the dashboard shown in the hero. Sample figures, so the
+  // amounts stay in the string and only the wording around them changes.
+  "landing.preview.month": "February",
+  "landing.preview.balanceValue": "€4,820",
+  "landing.preview.balanceFoot": "Income {income} · Expenses {expenses}",
+  "landing.preview.balanceIncome": "€18,420",
+  "landing.preview.balanceExpenses": "€13,600",
+  "landing.preview.vatValue": "-€1,096",
+  "landing.preview.vatFoot": "In: {supported} · Out: {charged}",
+  "landing.preview.vatSupported": "€2,140",
+  "landing.preview.vatCharged": "€1,044",
+  "landing.preview.projectionValue": "€19,840",
+  "landing.preview.revenueTotal": "€18,420",
 };
 
 export const ui: Record<Lang, Dict> = { es, en };

@@ -248,6 +248,27 @@ export async function requireProject(
 }
 
 /**
+ * Whether a user administers a project.
+ *
+ * Split out of `requireAdmin` so a read that merely wants to *report* the
+ * answer — the settings screen listing API keys — decides it with the same
+ * lookup the enforcing path uses, instead of catching a thrown error.
+ */
+export async function isProjectAdmin(
+  ctx: QueryCtx | MutationCtx,
+  userId: string,
+  projectId: Id<"projects">,
+): Promise<boolean> {
+  const membership = await ctx.db
+    .query("projectMembers")
+    .withIndex("by_user_project", (q) =>
+      q.eq("userId", userId).eq("projectId", projectId),
+    )
+    .unique();
+  return membership?.role === "admin";
+}
+
+/**
  * Administrative operations are destructive and irreversible, so they are
  * restricted to a signed-in admin member. An API key is a delegated,
  * project-scoped credential and can never reach them, however it was minted.
@@ -262,13 +283,7 @@ export async function requireAdmin(
     fail("forbidden", "An API key cannot perform administrative operations.");
   }
   const userId = await sessionUserId(ctx, actor);
-  const membership = await ctx.db
-    .query("projectMembers")
-    .withIndex("by_user_project", (q) =>
-      q.eq("userId", userId).eq("projectId", project._id),
-    )
-    .unique();
-  if (membership?.role !== "admin") {
+  if (!(await isProjectAdmin(ctx, userId, project._id))) {
     fail("forbidden", "Only project admins can perform this operation.");
   }
   return project;

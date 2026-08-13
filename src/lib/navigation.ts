@@ -14,8 +14,8 @@ export function appPath(segment = ""): string {
     return segment ? `${APP_ROOT}/${segment}` : APP_ROOT;
 }
 
-/** True for the section's own page and for anything nested under it. */
-export function isCurrentPath(currentPath: string, path: string): boolean {
+/** True for the given page and for anything nested under it. */
+function isUnder(currentPath: string, path: string): boolean {
     return currentPath === path || currentPath.startsWith(`${path}/`);
 }
 
@@ -90,14 +90,25 @@ export const APP_SECTIONS: AppSection[] = [
 ];
 
 /**
- * Title key for a path, including nested pages: `/app/documentacion/api` keeps
- * the documentation title. Longest match wins, so the dashboard — whose path
- * is a prefix of every other one — only answers for itself.
+ * Sections ordered from the most specific path to the least, so a lookup can
+ * stop at the first match. The dashboard's path is a prefix of every other
+ * one, so it has to be tried last or it would answer for all of them.
  */
+const SECTIONS_BY_SPECIFICITY = APP_SECTIONS
+    .map((section) => ({ path: appPath(section.segment), titleKey: section.titleKey }))
+    .sort((a, b) => b.path.length - a.path.length);
+
+/**
+ * Path of the section a page belongs to, including nested pages:
+ * `/app/documentacion/api` resolves to the documentation section. Compare a
+ * section's path against this to know whether it is the current one.
+ */
+export function activeSectionPath(pathname: string): string {
+    return SECTIONS_BY_SPECIFICITY.find((section) => isUnder(pathname, section.path))?.path ?? appPath();
+}
+
+/** Title key for a page, resolved through its section. */
 export function titleKeyFor(pathname: string): string {
-    const match = APP_SECTIONS
-        .map((section) => ({ path: appPath(section.segment), titleKey: section.titleKey }))
-        .sort((a, b) => b.path.length - a.path.length)
-        .find((section) => isCurrentPath(pathname, section.path));
+    const match = SECTIONS_BY_SPECIFICITY.find((section) => isUnder(pathname, section.path));
     return match?.titleKey ?? "title.dashboard";
 }

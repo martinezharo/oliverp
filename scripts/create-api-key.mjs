@@ -81,7 +81,10 @@ async function main() {
     const keyHash = Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
 
     const convex = new ConvexHttpClient(convexUrl, { logger: false });
-    const data = await convex.mutation(api.domain.createApiKey, {
+    // The unattended door: there is no user session here, so the bridge secret
+    // is the authorization. Keys minted from the app go through
+    // `apiKeys.create`, which additionally requires a project admin.
+    const data = await convex.mutation(api.apiKeys.createUnattended, {
         bridgeSecret,
         name,
         projectLegacyId: projectId,

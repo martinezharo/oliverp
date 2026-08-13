@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { NAV_LINKS } from "./content";
-import { DemoButton, EnterButton, Wordmark } from "./ui";
+import { EnterButton, Wordmark } from "./ui";
 
 /**
  * The landing header.
@@ -29,8 +29,11 @@ export function LandingNav({ links = NAV_LINKS }: { links?: { href: string; labe
         scrolled ? "border-white/5 bg-[#0f1016]/80 backdrop-blur-md" : "border-transparent bg-transparent"
       }`}
     >
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-8 px-6">
-        <Wordmark />
+      {/* Tight gutters on a phone: the wordmark and the call to action have to
+          share 320px without wrapping, so the label drops to just the verb
+          until there is room for the rest of it. */}
+      <div className="mx-auto flex h-16 w-full max-w-6xl items-center gap-3 px-4 sm:gap-8 sm:px-6">
+        <Wordmark className="shrink-0" />
         <nav className="hidden gap-7 text-sm text-slate-400 md:flex">
           {links.map((link) => (
             <a key={link.href} href={link.href} className="transition-colors hover:text-white">
@@ -38,10 +41,7 @@ export function LandingNav({ links = NAV_LINKS }: { links?: { href: string; labe
             </a>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-3">
-          <DemoButton className="hidden sm:inline-flex" />
-          <EnterButton />
-        </div>
+        <EnterButton short className="ml-auto shrink-0" />
       </div>
     </header>
   );

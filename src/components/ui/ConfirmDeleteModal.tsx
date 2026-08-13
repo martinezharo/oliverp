@@ -6,6 +6,7 @@ import { t } from "@/i18n/t";
 
 import Modal, { useDialogOpen } from "./Modal";
 import { Spinner } from "./Spinner";
+import { dangerSolidButton, ghostButton } from "./button";
 import { input } from "./form";
 
 const warningIcon = (
@@ -130,14 +131,14 @@ export default function ConfirmDeleteModal({
             type="button"
             onClick={onClose}
             disabled={busy}
-            className="rounded-xl px-6 py-2 text-slate-400 transition-all hover:bg-white/5 hover:text-white disabled:opacity-40"
+            className={ghostButton}
           >
             {t("common.cancel")}
           </button>
           <button
             type="submit"
             disabled={!matches || busy}
-            className="flex items-center gap-2 rounded-lg bg-red-500 px-6 py-2.5 text-sm font-medium text-white shadow-lg shadow-red-500/20 transition-all hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+            className={`${dangerSolidButton} flex items-center gap-2`}
           >
             {busy ? (
               <Spinner />

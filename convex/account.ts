@@ -11,6 +11,7 @@ import {
   sessionUserId,
   type Actor,
 } from "./lib/bridge";
+import { activeKeyCount } from "./apiKeys";
 
 /**
  * Project and account lifecycle.
@@ -215,16 +216,12 @@ export const summary = query({
           .withIndex("by_project", (q) => q.eq("projectId", project._id))
           .collect();
         const mine = memberships.find((membership) => membership.userId === userId);
-        const keys = await ctx.db
-          .query("apiKeys")
-          .withIndex("by_project", (q) => q.eq("projectLegacyId", project.legacyId))
-          .collect();
         return {
           id: project.legacyId,
           nombre: project.name,
           rol: mine?.role ?? "miembro",
           miembros: memberships.length,
-          api_keys: keys.filter((key) => key.active).length,
+          api_keys: await activeKeyCount(ctx, project.legacyId),
         };
       }),
     );

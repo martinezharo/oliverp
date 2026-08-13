@@ -9,6 +9,7 @@
  */
 
 import type * as account from "../account.js";
+import type * as apiKeys from "../apiKeys.js";
 import type * as auth from "../auth.js";
 import type * as domain from "../domain.js";
 import type * as http from "../http.js";
@@ -26,6 +27,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   account: typeof account;
+  apiKeys: typeof apiKeys;
   auth: typeof auth;
   domain: typeof domain;
   http: typeof http;

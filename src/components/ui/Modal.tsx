@@ -60,14 +60,20 @@ export default function Modal({
   /** Caps the frame at the viewport and scrolls the body inside it. */
   scrollable?: boolean;
 }) {
+  // A `<dialog>` is itself a scroll container capped by the UA at
+  // `calc(100% - 38px)`, so a frame taller than that cap made the dialog scroll
+  // *around* the panel: its scrollbars were painted on the backdrop, a stride
+  // outside the panel, reading as a second, larger frame behind the modal.
+  // `max-h-full` lifts the cap to the viewport and the frame is sized to fit
+  // inside it, leaving the body as the only thing that ever scrolls.
   return (
     <dialog
       ref={dialogRef}
       onCancel={(event) => { event.preventDefault(); if (dismissible) onClose(); }}
       onMouseDown={(event) => { if (dismissible && event.target === event.currentTarget) onClose(); }}
-      className={`relative z-50 m-auto w-full ${maxWidth} bg-transparent p-0 backdrop:bg-black/80 backdrop:backdrop-blur-sm`}
+      className={`relative z-50 m-auto max-h-full w-full ${maxWidth} bg-transparent p-0 backdrop:bg-black/80 backdrop:backdrop-blur-sm`}
     >
-      <div className={`m-4 overflow-hidden rounded-3xl border border-white/10 bg-[#14151a] shadow-2xl ${scrollable ? "flex max-h-[90vh] flex-col" : ""}`}>
+      <div className={`m-4 overflow-hidden rounded-3xl border border-white/10 bg-[#14151a] shadow-2xl ${scrollable ? "flex max-h-[calc(100vh-2rem)] flex-col" : ""}`}>
         <div className={`flex items-center justify-between border-b border-white/5 bg-white/5 p-6 ${scrollable ? "shrink-0" : ""}`}>
           <div>
             <h3 className="flex items-center gap-2 text-xl font-bold text-white">{icon}{title}</h3>

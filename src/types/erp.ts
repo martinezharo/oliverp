@@ -38,3 +38,19 @@ export type Transaction = {
   amount: number;
   channel: string;
 };
+
+/**
+ * An API key as the settings screen sees it. The stored hash is deliberately
+ * absent: it is what proves a presented key, and nothing renders it.
+ */
+export type ApiKeyRow = {
+  id: string;
+  nombre: string;
+  /** First few characters of the secret, enough to recognise it in a list. */
+  prefijo: string;
+  scopes: Array<"read" | "write">;
+  activa: boolean;
+  expira_en: string | null;
+  ultimo_uso_en: string | null;
+  creada_en: string;
+};

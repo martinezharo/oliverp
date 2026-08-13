@@ -33,6 +33,14 @@ Convex as a verified JWT.
 
 ### 2. Create an API key
 
+From the app, in **Settings → your project → Manage API keys**: name the key,
+choose whether it may write, optionally set an expiry date, and copy the secret
+from the confirmation — it is shown once and never again. The same screen lists
+every key of the project and revokes them. Only project admins can reach it.
+
+For unattended setups there is an equivalent CLI, which authenticates with
+`CONVEX_BRIDGE_SECRET` instead of a user session:
+
 ```bash
 pnpm api:key --nombre "n8n stock" --proyecto 1 --scopes read,write
 ```
@@ -46,9 +54,8 @@ Options:
 | `--scopes`   | `read`, `write`, or `read,write`. Defaults to `read`.            |
 | `--expira`   | Expiration date (`YYYY-MM-DD`). Does not expire by default.      |
 
-The key is shown **only once**: only its SHA-256 hash is stored in Convex. API
-keys can be inspected or deactivated from the Convex dashboard while the
-management UI is being completed.
+The key is shown **only once**, by either route: only its SHA-256 hash is stored
+in Convex. A lost key cannot be recovered, only revoked and replaced.
 
 ---
 

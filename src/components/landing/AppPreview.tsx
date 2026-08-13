@@ -1,3 +1,5 @@
+import { t } from "@/i18n/t";
+
 import { APP_DOMAIN } from "./content";
 import { CARD, Label } from "./ui";
 
@@ -31,10 +33,10 @@ function curve(values: number[]): string {
 }
 
 const NAV = [
-  { label: "Inicio", active: true, icon: <><path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" /><path d="M9 21v-7h6v7" /></> },
-  { label: "Stock", active: false, icon: <><path d="m21 8-9-5-9 5 9 5 9-5Z" /><path d="m3 12 9 5 9-5" /></> },
-  { label: "Transacciones", active: false, icon: <><path d="M12 2v20" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></> },
-  { label: "Historial", active: false, icon: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></> },
+  { label: t("nav.home"), active: true, icon: <><path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" /><path d="M9 21v-7h6v7" /></> },
+  { label: t("nav.stock"), active: false, icon: <><path d="m21 8-9-5-9 5 9 5 9-5Z" /><path d="m3 12 9 5 9-5" /></> },
+  { label: t("nav.transactions"), active: false, icon: <><path d="M12 2v20" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></> },
+  { label: t("nav.history"), active: false, icon: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></> },
 ];
 
 /** `compact` drops the sidebar, for the narrow columns of the split layout. */
@@ -66,11 +68,34 @@ export function AppPreview({ compact = false, className = "" }: { compact?: bool
           </aside>
         )}
 
-        <div className="min-w-0 flex-1 space-y-4 p-4">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <StatTile tone="blue" label="Balance Febrero" value="4.820 €" foot="Ingresos 18.420 € · Gastos 13.600 €" />
-            <StatTile tone="purple" label="Saldo IVA T1" value="-1.096 €" valueClass="text-emerald-400" foot="S: 2.140 € · R: 1.044 €" />
-            <StatTile tone="amber" label="Proyección Febrero" value="19.840 €" foot="Día 26/28" progress={93} />
+        <div className="min-w-0 flex-1 space-y-3 p-3 sm:space-y-4 sm:p-4">
+          <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
+            <StatTile
+              tone="blue"
+              label={t("dashboard.balanceMonth", { month: t("landing.preview.month") })}
+              value={t("landing.preview.balanceValue")}
+              foot={t("landing.preview.balanceFoot", {
+                income: t("landing.preview.balanceIncome"),
+                expenses: t("landing.preview.balanceExpenses"),
+              })}
+            />
+            <StatTile
+              tone="purple"
+              label={`${t("finance.vatBalance")} ${t("dashboard.quarterShort", { n: 1 })}`}
+              value={t("landing.preview.vatValue")}
+              valueClass="text-emerald-400"
+              foot={t("landing.preview.vatFoot", {
+                supported: t("landing.preview.vatSupported"),
+                charged: t("landing.preview.vatCharged"),
+              })}
+            />
+            <StatTile
+              tone="amber"
+              label={t("dashboard.projection", { month: t("landing.preview.month") })}
+              value={t("landing.preview.projectionValue")}
+              foot={t("dashboard.day", { current: 26, total: 28 })}
+              progress={93}
+            />
           </div>
 
           <RevenuePreview />
@@ -83,8 +108,8 @@ export function AppPreview({ compact = false, className = "" }: { compact?: bool
 /** The still of `RevenueChart`: same header, same emerald filled line. */
 function RevenuePreview() {
   return (
-    <div className={`${CARD} p-4`}>
-      <div className="mb-5 flex items-center justify-between gap-4">
+    <div className={`${CARD} p-3.5 sm:p-4`}>
+      <div className="mb-4 flex items-center justify-between gap-4 sm:mb-5">
         <div className="flex items-center gap-3">
           <span className="rounded-lg bg-blue-500/10 p-2 text-blue-400">
             <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -92,16 +117,16 @@ function RevenuePreview() {
             </svg>
           </span>
           <div>
-            <h3 className="text-sm font-bold text-white">Evolución de Ingresos</h3>
+            <h3 className="text-sm font-bold text-white">{t("chart.title")}</h3>
             <p className="text-[11px] text-slate-400">
-              Total del periodo: <span className="font-bold text-emerald-400">18.420 €</span>
+              {t("chart.totalPeriod")} <span className="font-bold text-emerald-400">{t("landing.preview.revenueTotal")}</span>
             </p>
           </div>
         </div>
         <div className="hidden rounded-lg border border-white/5 bg-white/5 p-1 text-[11px] font-medium sm:flex">
-          <span className="rounded-md px-2.5 py-1 text-slate-400">7 días</span>
-          <span className="rounded-md bg-white/10 px-2.5 py-1 text-white">30 días</span>
-          <span className="rounded-md px-2.5 py-1 text-slate-400">90 días</span>
+          <span className="rounded-md px-2.5 py-1 text-slate-400">{t("chart.days7")}</span>
+          <span className="rounded-md bg-white/10 px-2.5 py-1 text-white">{t("chart.days30")}</span>
+          <span className="rounded-md px-2.5 py-1 text-slate-400">{t("chart.days90")}</span>
         </div>
       </div>
 
@@ -146,9 +171,9 @@ function StatTile({
   progress?: number;
 }) {
   return (
-    <div className={`${CARD} p-4`}>
-      <Label tone={tone} className="mb-3 text-[10px]">{label}</Label>
-      <p className={`text-2xl font-bold ${valueClass}`}>{value}</p>
+    <div className={`${CARD} p-3.5 sm:p-4`}>
+      <Label tone={tone} className="mb-2.5 text-[10px] sm:mb-3">{label}</Label>
+      <p className={`text-xl font-bold sm:text-2xl ${valueClass}`}>{value}</p>
       {progress !== undefined && (
         <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/5">
           <div className="h-full rounded-full bg-amber-500/50" style={{ width: `${progress}%` }} />

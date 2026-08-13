@@ -556,20 +556,24 @@ export class BackendClient {
             activa: boolean;
             expira_en: string | null;
             ultimo_uso_en: string | null;
-        } | null>(api.domain.apiKeyByHash, {
+        } | null>(api.apiKeys.byHash, {
             bridgeSecret: this.config.bridgeSecret,
             keyHash,
         });
     }
 
     touchApiKey(keyId: string, lastUsedAt: string) {
-        return this.mutation(api.domain.touchApiKey, {
+        return this.mutation(api.apiKeys.touch, {
             bridgeSecret: this.config.bridgeSecret,
             keyId,
             lastUsedAt,
         });
     }
 
+    /**
+     * Mints a key for the signed-in admin. The actor travels with the call, so
+     * Convex refuses it unless the session administers `projectId`.
+     */
     createApiKey(values: {
         name: string;
         projectId: number;
@@ -578,15 +582,30 @@ export class BackendClient {
         scopes: Array<"read" | "write">;
         expiresAt?: string;
     }) {
-        return this.mutation(api.domain.createApiKey, {
-            bridgeSecret: this.config.bridgeSecret,
-            name: values.name,
-            projectLegacyId: values.projectId,
-            keyHash: values.keyHash,
-            keyPrefix: values.keyPrefix,
-            scopes: values.scopes,
-            ...(values.expiresAt ? { expiresAt: values.expiresAt } : {}),
-        });
+        return this.mutation<{
+            id: string;
+            nombre: string;
+            proyecto_id: number;
+            scopes: Array<"read" | "write">;
+            expira_en: string | null;
+        }>(
+            api.apiKeys.create,
+            this.args({
+                name: values.name,
+                projectLegacyId: values.projectId,
+                keyHash: values.keyHash,
+                keyPrefix: values.keyPrefix,
+                scopes: values.scopes,
+                ...(values.expiresAt ? { expiresAt: values.expiresAt } : {}),
+            }),
+        );
+    }
+
+    revokeApiKey(keyId: string) {
+        return this.mutation<{ id: string; nombre: string }>(
+            api.apiKeys.revoke,
+            this.args({ keyId }),
+        );
     }
 
     reserveIdempotency(key: string, endpoint: string, requestHash: string) {

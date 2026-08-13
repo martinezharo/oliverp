@@ -13,6 +13,8 @@ import * as accountDelete from "@/internal/api/account/delete";
 import * as demoExit from "@/internal/api/demo/exit";
 import * as demoStart from "@/internal/api/demo/start";
 import * as demoStatus from "@/internal/api/demo/status";
+import * as keyCreate from "@/internal/api/keys/create";
+import * as keyRevoke from "@/internal/api/keys/revoke";
 import * as productCreate from "@/internal/api/products/create";
 import * as pluginResolve from "@/internal/api/plugins/resolve";
 import * as projectCreate from "@/internal/api/projects/create";
@@ -57,6 +59,7 @@ const exactRoutes = new Map<string, LegacyModule>([
   ["/api/auth/identity", authIdentity], ["/api/auth/signin", authSignIn], ["/api/auth/signout", authSignOut], ["/api/auth/signup", authSignUp],
   ["/api/account/delete", accountDelete],
   ["/api/demo/exit", demoExit], ["/api/demo/start", demoStart], ["/api/demo/status", demoStatus],
+  ["/api/keys/create", keyCreate], ["/api/keys/revoke", keyRevoke],
   ["/api/plugins/resolve", pluginResolve], ["/api/products/create", productCreate], ["/api/projects/create", projectCreate], ["/api/projects/delete", projectDelete], ["/api/purchases/create", purchaseCreate], ["/api/purchases/get", purchaseGet], ["/api/purchases/update", purchaseUpdate],
   ["/api/sales/create", saleCreate], ["/api/sales/get", saleGet], ["/api/sales/init-data", saleInit], ["/api/sales/update", saleUpdate],
   ["/api/stats/evolution", statsEvolution], ["/api/stock/adjust", stockAdjust], ["/api/stock/movements", stockMovements],

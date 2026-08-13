@@ -1,9 +1,10 @@
 import Link from "next/link";
 
 import { Logo } from "@/components/ui/Logo";
-import { APP_ROOT, appPath } from "@/lib/navigation";
+import { t } from "@/i18n/t";
+import { APP_ROOT } from "@/lib/navigation";
 
-import { DEMO_HREF, GITHUB_HREF, GITHUB_REPO } from "./content";
+import { DEMO_HREF, FOOTER, type FooterLinkSpec } from "./content";
 import { TONES, type Tone } from "./tones";
 
 /**
@@ -16,6 +17,37 @@ import { TONES, type Tone } from "./tones";
  */
 
 export const CARD = "rounded-3xl border border-white/5 bg-[#14151a]";
+
+/**
+ * The shape every call to action shares.
+ *
+ * Note that `display` deliberately lives here and nowhere else: a caller that
+ * also passed a display utility through `className` would be fighting this one
+ * at equal specificity, and which of the two won would come down to the order
+ * Tailwind happened to emit them in. Callers that need a button to disappear at
+ * a breakpoint wrap it instead — see `LandingNav`.
+ */
+/**
+ * The transparent border is not decoration: the outlined variants only override
+ * its colour, so a filled and an outlined button end up exactly the same height
+ * and line up when they sit next to — or stacked on top of — each other.
+ */
+const BUTTON = "inline-flex items-center justify-center gap-2 rounded-xl border border-transparent transition-all duration-200";
+
+/**
+ * `lg` is the in-page size and `md` the one the header uses. Both keep at least
+ * 44px of height so they stay comfortable to tap.
+ */
+const SIZES = {
+  md: "min-h-11 px-4 py-2.5 text-sm",
+  lg: "min-h-13 px-5 py-3.5 text-base sm:px-6",
+} as const;
+
+/** Stacks a row of calls to action full width until there is room beside them. */
+export const CTA_ROW = "flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center";
+
+/** Pairs with `CTA_ROW`: full width while stacked, intrinsic once side by side. */
+export const CTA_ITEM = "w-full sm:w-auto";
 
 export function ArrowRight({ className = "h-4 w-4" }: { className?: string }) {
   return (
@@ -42,13 +74,15 @@ export function Wordmark({ className = "" }: { className?: string }) {
 export function EnterButton({
   size = "md",
   variant = "solid",
+  short = false,
   className = "",
 }: {
   size?: "md" | "lg";
   variant?: "solid" | "ghost";
+  /** Drops the "the ERP" tail until there is width for it. For the header on phones. */
+  short?: boolean;
   className?: string;
 }) {
-  const padding = size === "lg" ? "px-6 py-3.5 text-base" : "px-4 py-2.5 text-sm";
   const surface =
     variant === "solid"
       ? "bg-linear-to-r from-primary-500 to-indigo-600 font-bold text-white shadow-lg shadow-primary-500/20 hover:shadow-primary-500/40"
@@ -56,28 +90,42 @@ export function EnterButton({
   return (
     <Link
       href={APP_ROOT}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl transition-all duration-200 hover:scale-[1.02] ${surface} ${padding} ${className}`}
+      className={`${BUTTON} whitespace-nowrap hover:scale-[1.02] ${surface} ${SIZES[size]} ${className}`}
     >
-      Entrar al ERP
-      <ArrowRight />
+      {/* One flex item, so the `gap-2` above separates the label from the arrow
+          and not the verb from the rest of its own sentence. */}
+      <span>
+        {t("landing.cta.enter")}
+        {short ? (
+          <span className="hidden sm:inline">&nbsp;{t("landing.cta.enterSuffix")}</span>
+        ) : (
+          <>&nbsp;{t("landing.cta.enterSuffix")}</>
+        )}
+      </span>
+      <ArrowRight className="h-4 w-4 shrink-0" />
     </Link>
   );
 }
 
+function EyeIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
+      <circle cx="12" cy="12" r="2.5" />
+    </svg>
+  );
+}
+
 export function DemoButton({ size = "md", className = "" }: { size?: "md" | "lg"; className?: string }) {
-  const padding = size === "lg" ? "px-6 py-3.5 text-base" : "px-4 py-2.5 text-sm";
   return (
     // The demo endpoint sets a cookie on the Worker and redirects, so it has to
     // be a native navigation rather than a client-side route change.
     <a
       href={DEMO_HREF}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl border border-amber-400/20 bg-amber-400/5 font-semibold text-amber-100 transition-all hover:border-amber-300/40 hover:bg-amber-400/10 ${padding} ${className}`}
+      className={`${BUTTON} whitespace-nowrap border-amber-400/20 bg-amber-400/5 font-semibold text-amber-100 hover:border-amber-300/40 hover:bg-amber-400/10 ${SIZES[size]} ${className}`}
     >
-      <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-amber-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
-        <circle cx="12" cy="12" r="2.5" />
-      </svg>
-      Probar la demo
+      <EyeIcon className="h-4 w-4 shrink-0 text-amber-300" />
+      {t("landing.cta.demo")}
     </a>
   );
 }
@@ -96,7 +144,7 @@ export function DemoCta({ label, className = "" }: { label: string; className?: 
     // Native navigation, like `DemoButton`: the cookie is set on the redirect.
     <a
       href={DEMO_HREF}
-      className={`inline-flex items-center justify-center gap-2 rounded-xl bg-linear-to-r from-amber-400 to-amber-500 px-6 py-3.5 font-bold text-amber-950 shadow-lg shadow-amber-500/20 transition-all hover:scale-[1.02] hover:shadow-amber-500/40 ${className}`}
+      className={`${BUTTON} whitespace-nowrap bg-linear-to-r from-amber-400 to-amber-500 font-bold text-amber-950 shadow-lg shadow-amber-500/20 hover:scale-[1.02] hover:shadow-amber-500/40 ${SIZES.lg} ${className}`}
     >
       {label}
       <ArrowRight />
@@ -114,21 +162,49 @@ export function Label({ tone, children, className = "" }: { tone?: Tone; childre
   );
 }
 
+/**
+ * A footer link, padded to stay a comfortable tap target. The negative inset
+ * keeps that padding from pushing the label out of alignment with the column
+ * heading above it.
+ */
+function FooterLink({ href, label, native = false, newTab = false }: FooterLinkSpec) {
+  const className = "-mx-2 inline-flex w-fit items-center gap-2 rounded-lg px-2 py-1.5 transition-colors hover:text-white";
+  return native ? (
+    <a href={href} className={className} {...(newTab && { target: "_blank", rel: "noreferrer" })}>{label}</a>
+  ) : (
+    <Link href={href} className={className}>{label}</Link>
+  );
+}
+
 export function LandingFooter() {
   return (
-    <footer className="border-t border-white/5">
-      <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-6 px-6 py-10 text-sm text-slate-500">
-        <Wordmark />
-        <div className="flex flex-wrap items-center gap-6">
-          <Link href={APP_ROOT} className="transition-colors hover:text-white">Entrar</Link>
-          <a href={DEMO_HREF} className="transition-colors hover:text-white">Demo</a>
-          <Link href={appPath("documentacion")} className="transition-colors hover:text-white">Documentación</Link>
-          <a href={GITHUB_HREF} target="_blank" rel="noreferrer" className="flex items-center gap-2 transition-colors hover:text-white">
-            <GitHubMark className="h-4 w-4" />
-            {GITHUB_REPO}
-          </a>
+    <footer className="border-t border-white/5 bg-white/[0.015]">
+      <div className="mx-auto w-full max-w-6xl px-5 py-12 text-sm text-slate-400 sm:px-6 sm:py-14">
+        {/* The brand block sits above the columns on a phone and beside them
+            from `md`, where there is width for the tagline to hold its own. */}
+        <div className="flex flex-col gap-10 md:flex-row md:justify-between md:gap-16">
+          <div className="max-w-xs">
+            <Wordmark className="inline-block" />
+            <p className="mt-4 text-sm leading-relaxed text-slate-500">{FOOTER.tagline}</p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-8 sm:gap-16 md:shrink-0">
+            {FOOTER.groups.map((group) => (
+              <div key={group.title}>
+                <Label className="mb-3">{group.title}</Label>
+                <ul className="flex flex-col gap-0.5">
+                  {group.links.map((link) => (
+                    <li key={link.href}>
+                      <FooterLink {...link} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
         </div>
-        <span className="font-mono text-xs text-slate-600">MIT · © 2026 OlivERP</span>
+
+        <p className="mt-10 border-t border-white/5 pt-6 font-mono text-xs text-slate-600 sm:mt-12">{FOOTER.legal}</p>
       </div>
     </footer>
   );

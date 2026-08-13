@@ -66,13 +66,6 @@ export default function AppLayout({
               </a>
             )}
 
-            {userAvailable && !demo && (
-              <button type="button" onClick={() => void session.signOut()} className="group relative flex h-10 w-10 items-center justify-center rounded-full bg-white/5 transition-colors hover:bg-red-500/20" title={t("layout.signOut")}>
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-slate-400 group-hover:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                </svg>
-              </button>
-            )}
           </div>
         </header>
 

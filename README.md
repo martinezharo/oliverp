@@ -178,7 +178,7 @@ shell with `pnpm exec convex run`.
 | `pnpm build` | Build the Next application |
 | `pnpm preview` | Build and preview the OpenNext Worker |
 | `pnpm deploy` | Deploy Convex functions, then the Worker |
-| `pnpm api:key --nombre "..."` | Create an API key |
+| `pnpm api:key --nombre "..."` | Create an API key without a user session (the app does it from Settings) |
 
 ## License
 

@@ -380,6 +380,125 @@ describe("erasure", () => {
   });
 });
 
+describe("API key administration", () => {
+  const key = {
+    name: "n8n",
+    keyHash: "hash-1",
+    keyPrefix: "erp_sk_abc123",
+    scopes: ["read"] as Array<"read" | "write">,
+  };
+
+  it("mints a key for an admin of the project and lists it back", async () => {
+    const t = convexTest(schema, modules);
+    const { alice } = await seedTwoTenants(t);
+    const caller = asUser(t, alice.userId);
+
+    const created = await caller.mutation(api.apiKeys.create, {
+      bridgeSecret: SECRET,
+      actor: sessionActor,
+      projectLegacyId: 1,
+      ...key,
+    });
+    expect(created).toMatchObject({ nombre: "n8n", proyecto_id: 1 });
+
+    const listed = await caller.query(api.apiKeys.list, { projectLegacyId: 1 });
+    expect(listed).toMatchObject([
+      { nombre: "n8n", prefijo: "erp_sk_abc123", scopes: ["read"], activa: true },
+    ]);
+    // The hash is what proves a presented key: it must never come back out.
+    expect(JSON.stringify(listed)).not.toContain("hash-1");
+  });
+
+  it("refuses to mint a key for a project the user does not administer", async () => {
+    const t = convexTest(schema, modules);
+    const { alice } = await seedTwoTenants(t);
+
+    await expect(
+      asUser(t, alice.userId).mutation(api.apiKeys.create, {
+        bridgeSecret: SECRET,
+        actor: sessionActor,
+        projectLegacyId: 2,
+        ...key,
+      }),
+    ).rejects.toThrow(/not a member/i);
+  });
+
+  it("refuses to mint a key with an API key as the actor", async () => {
+    const t = convexTest(schema, modules);
+    await seedTwoTenants(t);
+
+    await expect(
+      t.mutation(api.apiKeys.create, {
+        bridgeSecret: SECRET,
+        actor: { kind: "api_key", projectLegacyId: 1, apiKeyId: "alice-key" },
+        projectLegacyId: 1,
+        ...key,
+      }),
+    ).rejects.toThrow(/administrative operations/i);
+  });
+
+  it("hides another tenant's keys instead of failing loudly", async () => {
+    const t = convexTest(schema, modules);
+    const { alice, bob } = await seedTwoTenants(t);
+
+    await asUser(t, bob.userId).mutation(api.apiKeys.create, {
+      bridgeSecret: SECRET,
+      actor: sessionActor,
+      projectLegacyId: 2,
+      ...key,
+    });
+
+    expect(await asUser(t, alice.userId).query(api.apiKeys.list, { projectLegacyId: 2 })).toBeNull();
+    expect(await t.query(api.apiKeys.list, { projectLegacyId: 2 })).toBeNull();
+  });
+
+  it("refuses to revoke a key belonging to another tenant", async () => {
+    const t = convexTest(schema, modules);
+    const { alice, bob } = await seedTwoTenants(t);
+
+    const created = await asUser(t, bob.userId).mutation(api.apiKeys.create, {
+      bridgeSecret: SECRET,
+      actor: sessionActor,
+      projectLegacyId: 2,
+      ...key,
+    });
+
+    await expect(
+      asUser(t, alice.userId).mutation(api.apiKeys.revoke, {
+        bridgeSecret: SECRET,
+        actor: sessionActor,
+        keyId: created.id,
+      }),
+    ).rejects.toThrow(/not a member/i);
+
+    expect(await t.run(async (ctx) => (await ctx.db.query("apiKeys").collect()).length)).toBe(1);
+  });
+
+  it("revokes a key so the credential can no longer be resolved", async () => {
+    const t = convexTest(schema, modules);
+    const { alice } = await seedTwoTenants(t);
+    const caller = asUser(t, alice.userId);
+
+    const created = await caller.mutation(api.apiKeys.create, {
+      bridgeSecret: SECRET,
+      actor: sessionActor,
+      projectLegacyId: 1,
+      ...key,
+    });
+
+    await caller.mutation(api.apiKeys.revoke, {
+      bridgeSecret: SECRET,
+      actor: sessionActor,
+      keyId: created.id,
+    });
+
+    expect(await caller.query(api.apiKeys.list, { projectLegacyId: 1 })).toEqual([]);
+    expect(
+      await t.query(api.apiKeys.byHash, { bridgeSecret: SECRET, keyHash: "hash-1" }),
+    ).toBeNull();
+  });
+});
+
 describe("write budget", () => {
   it("stops an actor that floods the backend with writes", async () => {
     const t = convexTest(schema, modules);

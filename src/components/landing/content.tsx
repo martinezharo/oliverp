@@ -1,3 +1,6 @@
+import { t } from "@/i18n/t";
+import { APP_ROOT, appPath } from "@/lib/navigation";
+
 import type { Tone } from "./tones";
 
 /**
@@ -19,10 +22,10 @@ export const GITHUB_REPO = "martinezharo/oliverp";
 export const APP_DOMAIN = "oliverp.4oli.com";
 
 export const HERO = {
-  eyebrow: "Gratis y de código abierto",
-  title: ["El ERP que ", "no", " te pide ser contable"] as const,
-  lede: "Apunta lo que vendes y lo que compras, como se lo contarías a alguien. El stock, el IVA y el balance se calculan solos.",
-  note: "Demo con datos de ejemplo · sin registro · sin tarjeta",
+  eyebrow: t("landing.hero.eyebrow"),
+  title: [t("landing.hero.title.before"), t("landing.hero.title.highlight"), t("landing.hero.title.after")] as const,
+  lede: t("landing.hero.lede"),
+  note: t("landing.hero.note"),
 };
 
 export type Module = {
@@ -35,8 +38,8 @@ export type Module = {
 
 export const MODULES: Module[] = [
   {
-    title: "Ventas y compras",
-    description: "Varias líneas de producto, unidades y precio. El IVA repercutido o soportado sale solo y el stock se mueve con la operación.",
+    title: t("landing.modules.sales.title"),
+    description: t("landing.modules.sales.description"),
     tone: "indigo",
     icon: (
       <>
@@ -47,8 +50,8 @@ export const MODULES: Module[] = [
     ),
   },
   {
-    title: "Inventario y stock",
-    description: "Existencias por producto, valoración a coste y a venta, beneficio por unidad y los días que te quedan antes de agotarlo.",
+    title: t("landing.modules.stock.title"),
+    description: t("landing.modules.stock.description"),
     tone: "emerald",
     icon: (
       <>
@@ -58,8 +61,8 @@ export const MODULES: Module[] = [
     ),
   },
   {
-    title: "Transacciones",
-    description: "Los ingresos y gastos que no son una venta redonda, en modo diario o en lista, con el importe y el IVA separados.",
+    title: t("landing.modules.transactions.title"),
+    description: t("landing.modules.transactions.description"),
     tone: "pink",
     icon: (
       <>
@@ -69,8 +72,8 @@ export const MODULES: Module[] = [
     ),
   },
   {
-    title: "Dashboard y proyección",
-    description: "Balance del mes y del trimestre, saldo de IVA separado entre soportado y repercutido, y una proyección de cómo va a cerrar el mes.",
+    title: t("landing.modules.dashboard.title"),
+    description: t("landing.modules.dashboard.description"),
     tone: "blue",
     icon: (
       <>
@@ -80,8 +83,8 @@ export const MODULES: Module[] = [
     ),
   },
   {
-    title: "Historial",
-    description: "Todo lo registrado agrupado por meses, trimestres y años, para mirar atrás sin montar una hoja de cálculo.",
+    title: t("landing.modules.history.title"),
+    description: t("landing.modules.history.description"),
     tone: "purple",
     icon: (
       <>
@@ -91,8 +94,8 @@ export const MODULES: Module[] = [
     ),
   },
   {
-    title: "Tus propios plugins",
-    description: "¿Tu negocio tiene una regla rara? Escríbela en un repositorio tuyo, revísala y actívala sobre tu proyecto.",
+    title: t("landing.modules.plugins.title"),
+    description: t("landing.modules.plugins.description"),
     tone: "amber",
     icon: (
       <>
@@ -111,31 +114,67 @@ export const MODULES: Module[] = [
 export const CLAIMS = [
   {
     tone: "blue" as Tone,
-    title: "Se usa sin manual",
-    description: "Rellenas el formulario como quien apunta la venta en una libreta. Nadie te pide una cuenta contable ni un asiento.",
+    title: t("landing.claims.noManual.title"),
+    description: t("landing.claims.noManual.description"),
   },
   {
     tone: "emerald" as Tone,
-    title: "Gratis y de código abierto",
-    description: "Sin planes, sin límites y sin tarjeta. El código está publicado y puedes montarlo en tu propio servidor.",
+    title: t("landing.claims.openSource.title"),
+    description: t("landing.claims.openSource.description"),
     repo: true,
   },
   {
     tone: "purple" as Tone,
-    title: "Tus agentes también lo usan",
-    description: "Cada pantalla tiene detrás un endpoint documentado. Dale la URL del contrato a tu GPT, a n8n o a Make y se apaña solo.",
+    title: t("landing.claims.agents.title"),
+    description: t("landing.claims.agents.description"),
     code: `${APP_DOMAIN}/api/v1/openapi.json`,
   },
 ];
 
 export const DEMO = {
-  eyebrow: "Sin registro",
-  title: "Entra y toca todo. Los datos son de mentira.",
-  description: "Un negocio de ejemplo con ventas, stock y un trimestre de historial ya cargados.",
-  cta: "Abrir la demo",
+  eyebrow: t("landing.demo.eyebrow"),
+  title: t("landing.demo.title"),
+  description: t("landing.demo.description"),
+  cta: t("landing.demo.cta"),
 };
 
 export const NAV_LINKS = [
-  { href: "#modulos", label: "Módulos" },
-  { href: "#demo", label: "Demo" },
+  { href: "#modulos", label: t("landing.nav.modules") },
+  { href: "#demo", label: t("landing.nav.demo") },
 ];
+
+export type FooterLinkSpec = {
+  href: string;
+  label: string;
+  /** A plain anchor rather than a `Link`: the demo sets its cookie on the
+   *  redirect, and GitHub leaves the site. */
+  native?: boolean;
+  newTab?: boolean;
+};
+
+/**
+ * The footer, in two columns so the four links read as two ideas — the product
+ * you can use and the project behind it — instead of one undifferentiated row.
+ */
+export const FOOTER = {
+  tagline: t("landing.footer.tagline"),
+  legal: t("landing.footer.legal"),
+  groups: [
+    {
+      title: t("landing.footer.product"),
+      links: [
+        { href: APP_ROOT, label: t("landing.footer.enter") },
+        { href: DEMO_HREF, label: t("landing.footer.demo"), native: true },
+      ] satisfies FooterLinkSpec[],
+    },
+    {
+      title: t("landing.footer.project"),
+      links: [
+        { href: appPath("documentacion"), label: t("landing.footer.docs") },
+        // A wrapping label rather than the `owner/repo` slug: the slug is one
+        // unbreakable 157px run and these columns are ~124px wide at 320px.
+        { href: GITHUB_HREF, label: t("landing.footer.github"), native: true, newTab: true },
+      ] satisfies FooterLinkSpec[],
+    },
+  ],
+};
