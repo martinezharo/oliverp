@@ -3,6 +3,7 @@ import {
     nextjsMiddlewareRedirect,
 } from "@convex-dev/auth/nextjs/server";
 
+import { AUTH_COOKIE_MAX_AGE_SECONDS } from "@convex/lib/session";
 import { routePolicy } from "@/lib/auth/routes";
 import { DEMO_MODE_COOKIE } from "@/lib/runtime";
 
@@ -34,6 +35,11 @@ export default convexAuthNextjsMiddleware(async (request, { convexAuth }) => {
     }
 
     if (!authenticated) return nextjsMiddlewareRedirect(request, "/login");
+}, {
+    // Without this the auth cookies are written without Max-Age, so the
+    // browser drops them the moment it ends its session — closing the tab on
+    // mobile was enough to be signed out. See `convex/lib/session.ts`.
+    cookieConfig: { maxAge: AUTH_COOKIE_MAX_AGE_SECONDS },
 });
 
 export const config = {

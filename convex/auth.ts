@@ -2,6 +2,7 @@ import GitHub from "@auth/core/providers/github";
 import { convexAuth } from "@convex-dev/auth/server";
 import type { Id } from "./_generated/dataModel";
 import { query } from "./_generated/server";
+import { SESSION_INACTIVE_DURATION_MS, SESSION_TOTAL_DURATION_MS } from "./lib/session";
 
 /**
  * Post-login destinations allowed in addition to SITE_URL.
@@ -36,6 +37,10 @@ function canonicalSiteUrl() {
  */
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [GitHub],
+  session: {
+    totalDurationMs: SESSION_TOTAL_DURATION_MS,
+    inactiveDurationMs: SESSION_INACTIVE_DURATION_MS,
+  },
   callbacks: {
     async redirect({ redirectTo }) {
       const siteUrl = canonicalSiteUrl();
