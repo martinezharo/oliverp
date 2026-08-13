@@ -21,6 +21,7 @@ pnpm-debug.log*
 
 # environment variables
 .env
+.env.local
 .env.production
 
 # macOS-specific files
@@ -34,8 +35,3 @@ pnpm-debug.log*
 
 # vscode setting folder
 .vscode/
-
-# agents settings
-.claude/
-.agents/
-.env.local
