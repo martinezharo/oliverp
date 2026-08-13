@@ -9,10 +9,21 @@ committing them:
 - `ERP_API_KEY`: a project-pinned `erp_sk_...` key with `write` scope
 - `ERP_PROJECT_ID`: the ERP project id, normally `1` for Octopus Control
 
-The workflow searches for Wallapop and Vinted sale-confirmation messages,
-parses their plain-text or HTML bodies, and posts the structured event to
-`/api/v1/importaciones/marketplace`. The Gmail message id is sent as both the
-source id and the idempotency key, so polling or delivery retries are safe.
+The workflow searches for Wallapop and Vinted sale-confirmation messages. Add
+installation-specific senders through the private n8n environment variable
+`ERP_MARKETPLACE_EXTRA_GMAIL_QUERY`; the value is appended as a Gmail search
+clause and is never stored in this repository. For example:
+
+```dotenv
+ERP_MARKETPLACE_EXTRA_GMAIL_QUERY='from:your-email@example.com subject:"Venta confirmada"'
+```
+
+Multiple senders can be combined with Gmail's `OR` syntax. The workflow parses
+plain-text and Gmail HTML bodies, including Wallapop messages where the
+product, price, shipping and purchase date are separate HTML elements, and
+posts the structured event to `/api/v1/importaciones/marketplace`. The Gmail
+message id is sent as both the source id and the idempotency key, so polling or
+delivery retries are safe.
 
 Before activating it, map each exact listing title to its product and
 marketplace. For an existing product:
