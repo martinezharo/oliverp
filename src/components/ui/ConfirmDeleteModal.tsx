@@ -5,6 +5,7 @@ import { useRef, useState } from "react";
 import { t } from "@/i18n/t";
 
 import Modal, { useDialogOpen } from "./Modal";
+import { Spinner } from "./Spinner";
 import { input } from "./form";
 
 const warningIcon = (
@@ -139,9 +140,7 @@ export default function ConfirmDeleteModal({
             className="flex items-center gap-2 rounded-lg bg-red-500 px-6 py-2.5 text-sm font-medium text-white shadow-lg shadow-red-500/20 transition-all hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
           >
             {busy ? (
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M21 12a9 9 0 1 1-6.219-8.56" strokeLinecap="round" />
-              </svg>
+              <Spinner />
             ) : (
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 6h18" />

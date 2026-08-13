@@ -82,9 +82,12 @@ const es: Dict = {
   "login.welcome": "Bienvenido",
   "login.subtitle": "Accede con la cuenta de GitHub autorizada",
   "login.signInWithGitHub": "Continuar con GitHub",
+  "login.preparing": "Preparando el acceso…",
+  "login.redirecting": "Redirigiendo a GitHub…",
   "login.demoDivider": "o prueba sin registrarte",
   "login.demoCta": "Ver el modo demo",
   "login.demoDescription": "Explora la aplicación con datos de ejemplo",
+  "login.demoLoading": "Cargando la demo…",
   "login.githubError": "No se pudo iniciar sesión. Comprueba que estás usando la cuenta de GitHub autorizada.",
 
   // Stock page + table
@@ -426,9 +429,12 @@ const en: Dict = {
   "login.welcome": "Welcome",
   "login.subtitle": "Use the authorized GitHub account to sign in",
   "login.signInWithGitHub": "Continue with GitHub",
+  "login.preparing": "Getting things ready…",
+  "login.redirecting": "Redirecting to GitHub…",
   "login.demoDivider": "or try it without signing up",
   "login.demoCta": "View demo mode",
   "login.demoDescription": "Explore the app with sample data",
+  "login.demoLoading": "Loading the demo…",
   "login.githubError": "Unable to sign in. Check that you are using the authorized GitHub account.",
 
   // Stock page + table
