@@ -10,9 +10,8 @@ import { Spinner } from "@/components/ui/Spinner";
 import { primaryButton } from "@/components/ui/button";
 import { fieldLabel, input } from "@/components/ui/form";
 import { apiErrorMessage, apiJson } from "@/lib/client-api";
-import { formatDate } from "@/lib/format";
 import { mockApiKeys } from "@/lib/mock-data";
-import { t } from "@/i18n/t";
+import { useT } from "@/i18n/LocaleProvider";
 import type { ApiKeyRow } from "@/types/erp";
 
 /** A key is only ever shown once, right after it is minted. */
@@ -38,6 +37,7 @@ const holdBack = "animate-[fade-in_0.2s_ease-out_0.35s_both]";
 const settle = "animate-[fade-in_0.2s_ease-out]";
 
 function CopyButton({ value }: { value: string }) {
+  const { t } = useT();
   const [copied, setCopied] = useState(false);
 
   return (
@@ -61,6 +61,7 @@ function CopyButton({ value }: { value: string }) {
  * dot-separated facts, with an expired key called out in amber.
  */
 function KeyMeta({ row, now }: { row: ApiKeyRow; now: number }) {
+  const { t, formatDate } = useT();
   const expired = row.expira_en !== null && new Date(row.expira_en).getTime() < now;
 
   return (
@@ -103,6 +104,7 @@ export default function ApiKeysModal({
   demo: boolean;
   onClose: () => void;
 }) {
+  const { t } = useT();
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   useDialogOpen(true, dialogRef, onClose);
 
@@ -146,7 +148,7 @@ export default function ApiKeysModal({
       setExpiresAt("");
       setScope("read");
     } catch (cause) {
-      setError(apiErrorMessage(cause, t("settings.keys.createError")));
+      setError(apiErrorMessage(t, cause, t("settings.keys.createError")));
     } finally {
       setBusy(false);
     }
@@ -163,7 +165,7 @@ export default function ApiKeysModal({
         body: JSON.stringify({ keyId: id }),
       });
     } catch (cause) {
-      setError(apiErrorMessage(cause, t("settings.keys.revokeError")));
+      setError(apiErrorMessage(t, cause, t("settings.keys.revokeError")));
     } finally {
       setRevoking(null);
     }

@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 
 import { apiErrorMessage, apiJson } from "@/lib/client-api";
-import { t } from "@/i18n/t";
+import { useT } from "@/i18n/LocaleProvider";
+import type { Translate } from "@/i18n/t";
 
 /** What the shell hands every operation modal. */
 export type OperationModalProps = {
@@ -78,6 +79,7 @@ export function useExistingRecord<T>(
     onLoad: (record: T) => void;
   },
 ) {
+  const { t } = useT();
   const [loading, setLoading] = useState(transactionId !== null && !demo);
   const [error, setError] = useState<string | null>(null);
   // Held in a ref so callers can pass an inline closure over their setters
@@ -92,20 +94,21 @@ export function useExistingRecord<T>(
       .then((record) => { if (active) apply.current(record); })
       .catch((cause) => {
         if (!active) return;
-        const message = apiErrorMessage(cause, t(errorKey));
+        const message = apiErrorMessage(t, cause, t(errorKey));
         setError(message);
         window.alert(message);
       })
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
-  }, [demo, endpoint, errorKey, projectId, transactionId]);
+    // `t` is a cached, per-language constant, so it never restarts this.
+  }, [demo, endpoint, errorKey, projectId, t, transactionId]);
 
   return { loading, error };
 }
 
 /** Reports a failed save the way every operation form does. */
-export function reportSaveError(cause: unknown, fallbackKey = "common.unknown") {
-  window.alert(`${t("common.saveErrorPrefix")} ${apiErrorMessage(cause, t(fallbackKey))}`);
+export function reportSaveError(t: Translate, cause: unknown, fallbackKey = "common.unknown") {
+  window.alert(`${t("common.saveErrorPrefix")} ${apiErrorMessage(t, cause, t(fallbackKey))}`);
 }
 
 /**

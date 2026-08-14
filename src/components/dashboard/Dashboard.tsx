@@ -1,7 +1,7 @@
 "use client";
 
 import EmptyProject from "@/components/ui/EmptyProject";
-import { t } from "@/i18n/t";
+import { useT } from "@/i18n/LocaleProvider";
 import { useErpContext, type ModalKind } from "@/hooks/useErpContext";
 import { useFinanceRows } from "@/hooks/useErpData";
 
@@ -9,6 +9,7 @@ import DashboardStats from "./DashboardStats";
 import RevenueChart from "./RevenueChart";
 
 export default function Dashboard() {
+  const { t } = useT();
   const { projectId, openModal } = useErpContext();
   const rows = useFinanceRows();
 
@@ -124,6 +125,7 @@ function ActionCard({
   /** Paths of the oversized background icon. */
   watermark: React.ReactNode;
 }) {
+  const { t } = useT();
   const colors = cardTone[tone];
 
   return (
@@ -159,6 +161,7 @@ function ActionCard({
 }
 
 function StatsSkeleton() {
+  const { t } = useT();
   return (
     <div className="mb-8 grid animate-pulse grid-cols-1 gap-6 md:grid-cols-4" aria-busy="true" aria-label={t("common.loadingData")}>
       {[0, 1, 2, 3].map((slot) => <div key={slot} className="h-28 rounded-2xl bg-white/5" />)}

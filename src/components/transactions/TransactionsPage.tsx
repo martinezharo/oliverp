@@ -5,7 +5,8 @@ import { useEffect, useMemo, useState } from "react";
 
 import EmptyProject from "@/components/ui/EmptyProject";
 import Pagination from "@/components/ui/Pagination";
-import { t } from "@/i18n/t";
+import { useHref, useT } from "@/i18n/LocaleProvider";
+import { appPath } from "@/lib/navigation";
 import { useErpContext } from "@/hooks/useErpContext";
 import { useFinanceRows, useTransactions } from "@/hooks/useErpData";
 import { filterTransactions } from "@/lib/transactions";
@@ -26,6 +27,8 @@ function optionalAmount(value: string): number | undefined {
 }
 
 export default function TransactionsPage() {
+  const { t } = useT();
+  const href = useHref();
   const { projectId, demo, openModal } = useErpContext();
   const searchParams = useSearchParams();
   const page = Math.max(1, Number.parseInt(searchParams?.get("page") || "1", 10));
@@ -120,7 +123,7 @@ export default function TransactionsPage() {
             <Pagination
               currentPage={page}
               totalPages={Math.ceil((financeRows?.length ?? 0) / PAGE_SIZE_DAILY)}
-              baseUrl={`/transacciones?projectId=${projectId}`}
+              baseUrl={`${href(appPath("transacciones"))}?projectId=${projectId}`}
             />
           </div>
         </>
@@ -135,6 +138,7 @@ export default function TransactionsPage() {
 }
 
 function ListSkeleton() {
+  const { t } = useT();
   return (
     <div className="animate-pulse space-y-4" aria-busy="true" aria-label={t("common.loadingData")}>
       {[0, 1, 2, 3, 4, 5].map((slot) => <div key={slot} className="h-24 rounded-2xl bg-white/5" />)}

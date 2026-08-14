@@ -1,8 +1,7 @@
 "use client";
 
 import { apiJson } from "@/lib/client-api";
-import { formatCurrency, formatDate } from "@/lib/format";
-import { t } from "@/i18n/t";
+import { useT } from "@/i18n/LocaleProvider";
 import { useErpContext, type ModalKind } from "@/hooks/useErpContext";
 import { transactionDeleteUrl } from "@/lib/transactions";
 
@@ -42,6 +41,7 @@ export default function TransactionRow({
   demo?: boolean;
   onOpenModal?: OpenModal;
 }) {
+  const { formatCurrency, formatDate } = useT();
   const income = isIncome(item);
 
   return (
@@ -72,6 +72,7 @@ export default function TransactionRow({
 
 /** Edit and delete. Deleting is confirmed, and Convex pushes the removal. */
 export function ActionButtons({ item, onOpenModal }: { item: Transaction; onOpenModal: OpenModal }) {
+  const { t } = useT();
   const { projectId } = useErpContext();
 
   async function remove() {

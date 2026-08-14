@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 import Modal, { useDialogOpen } from "@/components/ui/Modal";
 import { fieldLabel, input } from "@/components/ui/form";
 import { apiErrorMessage, apiJson } from "@/lib/client-api";
-import { t } from "@/i18n/t";
+import { useT } from "@/i18n/LocaleProvider";
 
 import type { Project } from "@/hooks/useErpContext";
 
@@ -25,6 +25,7 @@ export default function ProjectModal({
   onClose: () => void;
   onCreated: (project: Project) => void;
 }) {
+  const { t } = useT();
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   useDialogOpen(true, dialogRef, onClose);
   const [name, setName] = useState("");
@@ -44,7 +45,7 @@ export default function ProjectModal({
       });
       onCreated(body.data);
     } catch (cause) {
-      setError(apiErrorMessage(cause, t("modal.project.createError")));
+      setError(apiErrorMessage(t, cause, t("modal.project.createError")));
     } finally {
       setBusy(false);
     }

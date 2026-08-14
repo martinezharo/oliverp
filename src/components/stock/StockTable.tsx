@@ -2,14 +2,14 @@
 
 import { useMemo, useState } from "react";
 
-import { t } from "@/i18n/t";
-import { formatCurrency, formatNumber } from "@/lib/format";
+import { useT } from "@/i18n/LocaleProvider";
 import { getProductNameKey } from "@/lib/mock-data";
 import { nextSort, sortStock, type Sort, type SortColumn } from "@/lib/stock";
 
 import type { StockRow } from "@/types/erp";
 
 export default function StockTable({ data, onOpenHistory }: { data: StockRow[]; onOpenHistory: (product: StockRow) => void }) {
+  const { t, formatCurrency, formatNumber } = useT();
   const [sort, setSort] = useState<Sort>({ column: "name", direction: "asc" });
 
   const sorted = useMemo(() => sortStock(data, sort), [data, sort]);
@@ -98,6 +98,7 @@ const badge = "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-
 
 /** How long the current stock lasts at the recent sales rate. */
 function StockStatus({ item }: { item: StockRow }) {
+  const { t } = useT();
   const days = item.dias_stock_restante;
 
   if (item.stock_actual <= 0) {

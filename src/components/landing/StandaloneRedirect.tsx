@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
+import { useHref } from "@/i18n/LocaleProvider";
 import { isRunningStandalone } from "@/lib/install-prompt";
 import { APP_ROOT } from "@/lib/navigation";
 
@@ -20,10 +21,11 @@ import { APP_ROOT } from "@/lib/navigation";
  */
 export function StandaloneRedirect() {
   const router = useRouter();
+  const href = useHref();
 
   useEffect(() => {
-    if (isRunningStandalone()) router.replace(APP_ROOT);
-  }, [router]);
+    if (isRunningStandalone()) router.replace(href(APP_ROOT));
+  }, [href, router]);
 
   return null;
 }

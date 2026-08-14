@@ -1,10 +1,8 @@
 import Link from "next/link";
 
 import { Logo } from "@/components/ui/Logo";
-import { t } from "@/i18n/t";
-import { APP_ROOT } from "@/lib/navigation";
 
-import { DEMO_HREF, FOOTER, type FooterLinkSpec } from "./content";
+import { DEMO_HREF, type FooterLinkSpec, type LandingContent } from "./content";
 import { TONES, type Tone } from "./tones";
 
 /**
@@ -58,10 +56,13 @@ export function ArrowRight({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
-/** The application logo, linking home. */
-export function Wordmark({ className = "" }: { className?: string }) {
+/**
+ * The application logo, linking home — the home of the language being read,
+ * so the Spanish footer does not quietly send you back to the English page.
+ */
+export function Wordmark({ href, className = "" }: { href: string; className?: string }) {
   return (
-    <Link href="/" className={className}>
+    <Link href={href} className={className}>
       <Logo />
     </Link>
   );
@@ -72,11 +73,14 @@ export function Wordmark({ className = "" }: { className?: string }) {
  * demo, which closes the page — so two filled buttons never compete.
  */
 export function EnterButton({
+  cta,
   size = "md",
   variant = "solid",
   short = false,
   className = "",
 }: {
+  /** The labels and the destination, both of which are the page's language. */
+  cta: LandingContent["cta"];
   size?: "md" | "lg";
   variant?: "solid" | "ghost";
   /** Drops the "the ERP" tail until there is width for it. For the header on phones. */
@@ -89,17 +93,17 @@ export function EnterButton({
       : "border border-white/10 bg-white/5 font-semibold text-white hover:bg-white/10";
   return (
     <Link
-      href={APP_ROOT}
+      href={cta.enterHref}
       className={`${BUTTON} whitespace-nowrap hover:scale-[1.02] ${surface} ${SIZES[size]} ${className}`}
     >
       {/* One flex item, so the `gap-2` above separates the label from the arrow
           and not the verb from the rest of its own sentence. */}
       <span>
-        {t("landing.cta.enter")}
+        {cta.enter}
         {short ? (
-          <span className="hidden sm:inline">&nbsp;{t("landing.cta.enterSuffix")}</span>
+          <span className="hidden sm:inline">&nbsp;{cta.enterSuffix}</span>
         ) : (
-          <>&nbsp;{t("landing.cta.enterSuffix")}</>
+          <>&nbsp;{cta.enterSuffix}</>
         )}
       </span>
       <ArrowRight className="h-4 w-4 shrink-0" />
@@ -116,7 +120,7 @@ function EyeIcon({ className = "h-4 w-4" }: { className?: string }) {
   );
 }
 
-export function DemoButton({ size = "md", className = "" }: { size?: "md" | "lg"; className?: string }) {
+export function DemoButton({ label, size = "md", className = "" }: { label: string; size?: "md" | "lg"; className?: string }) {
   return (
     // The demo endpoint sets a cookie on the Worker and redirects, so it has to
     // be a native navigation rather than a client-side route change.
@@ -125,7 +129,7 @@ export function DemoButton({ size = "md", className = "" }: { size?: "md" | "lg"
       className={`${BUTTON} whitespace-nowrap border-amber-400/20 bg-amber-400/5 font-semibold text-amber-100 hover:border-amber-300/40 hover:bg-amber-400/10 ${SIZES[size]} ${className}`}
     >
       <EyeIcon className="h-4 w-4 shrink-0 text-amber-300" />
-      {t("landing.cta.demo")}
+      {label}
     </a>
   );
 }
@@ -176,7 +180,7 @@ function FooterLink({ href, label, native = false, newTab = false }: FooterLinkS
   );
 }
 
-export function LandingFooter() {
+export function LandingFooter({ footer, homeHref }: { footer: LandingContent["footer"]; homeHref: string }) {
   return (
     <footer className="border-t border-white/5 bg-white/[0.015]">
       <div className="mx-auto w-full max-w-6xl px-5 py-12 text-sm text-slate-400 sm:px-6 sm:py-14">
@@ -184,12 +188,12 @@ export function LandingFooter() {
             from `md`, where there is width for the tagline to hold its own. */}
         <div className="flex flex-col gap-10 md:flex-row md:justify-between md:gap-16">
           <div className="max-w-xs">
-            <Wordmark className="inline-block" />
-            <p className="mt-4 text-sm leading-relaxed text-slate-500">{FOOTER.tagline}</p>
+            <Wordmark href={homeHref} className="inline-block" />
+            <p className="mt-4 text-sm leading-relaxed text-slate-500">{footer.tagline}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-8 sm:gap-16 md:shrink-0">
-            {FOOTER.groups.map((group) => (
+            {footer.groups.map((group) => (
               <div key={group.title}>
                 <Label className="mb-3">{group.title}</Label>
                 <ul className="flex flex-col gap-0.5">
@@ -204,7 +208,7 @@ export function LandingFooter() {
           </div>
         </div>
 
-        <p className="mt-10 border-t border-white/5 pt-6 font-mono text-xs text-slate-600 sm:mt-12">{FOOTER.legal}</p>
+        <p className="mt-10 border-t border-white/5 pt-6 font-mono text-xs text-slate-600 sm:mt-12">{footer.legal}</p>
       </div>
     </footer>
   );

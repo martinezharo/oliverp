@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+import { DEFAULT_LOCALE, LOCALES } from "./src/i18n/locale";
+
 /**
  * The app talks to exactly two origins: itself and the Convex deployment
  * (HTTPS for queries, WSS for the reactive subscription). `connect-src` is
@@ -46,6 +48,45 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["dev-oli.tail74d55a.ts.net"],
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
+  },
+
+  /**
+   * English has no prefix of its own: `/app/stock` is English and
+   * `/es/app/stock` is Spanish. `/en/app/stock` would be a second address for
+   * a page that already has one, so it is sent to the canonical form rather
+   * than served — permanently, because that is what it is.
+   */
+  async redirects() {
+    return [
+      { source: `/${DEFAULT_LOCALE}`, destination: "/", permanent: true },
+      { source: `/${DEFAULT_LOCALE}/:path*`, destination: "/:path*", permanent: true },
+    ];
+  },
+
+  /**
+   * …which leaves the unprefixed addresses to be filled in with the default
+   * language so they reach `app/[lang]`.
+   *
+   * `afterFiles` runs once the filesystem has had its turn, so
+   * `/manifest.webmanifest`, `/sw.js` and everything in `public/` are served
+   * as themselves and never rewritten into a language that has no such page.
+   */
+  async rewrites() {
+    return {
+      beforeFiles: [],
+      afterFiles: [
+        { source: "/", destination: `/${DEFAULT_LOCALE}` },
+        {
+          // Every path that does not already name a language, and is not the
+          // API — that one speaks JSON to programs, which have no language.
+          // The lookahead ends at a slash or at the end of the path, so
+          // `/english` and `/apiary` are pages like any other.
+          source: `/:path((?!(?:${[...LOCALES, "api"].join("|")})(?:/|$)).*)`,
+          destination: `/${DEFAULT_LOCALE}/:path`,
+        },
+      ],
+      fallback: [],
+    };
   },
 };
 

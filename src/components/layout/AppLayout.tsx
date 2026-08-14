@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, type ReactNode } from "react";
 
-import { t } from "@/i18n/t";
+import { useT } from "@/i18n/LocaleProvider";
 import { useCloudSession } from "@/hooks/useCloudSession";
 import type { Project } from "@/hooks/useErpContext";
 
@@ -27,6 +27,7 @@ export default function AppLayout({
   onNewProject?: () => void;
   children: ReactNode;
 }) {
+  const { t } = useT();
   const session = useCloudSession();
   const mainRef = useRef<HTMLElement>(null);
   const search = projectId ? `?projectId=${projectId}` : "";

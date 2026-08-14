@@ -1,8 +1,11 @@
 // Translation dictionaries for the app (Spanish base + English).
 // Keys are flat and namespaced. The same dictionaries are used by server API
 // code and client components.
+//
+// Which languages exist, and how one is chosen, is `i18n/locale.ts`; this file
+// is only the strings. Read them through `useT()` or `getTranslator()`.
 
-export type Lang = "es" | "en";
+import type { Lang } from "./locale";
 
 type Dict = Record<string, string>;
 
@@ -398,6 +401,13 @@ const es: Dict = {
   "settings.install.installedMeta": "Ya estás usando OlivERP como aplicación.",
   "settings.install.manual":
     "Este navegador la instala desde su propio menú: busca «Añadir a la pantalla de inicio» o «Instalar aplicación».",
+  // Language switcher
+  "language.label": "Idioma",
+  "language.es.short": "ES",
+  "language.en.short": "EN",
+  "language.es": "Español",
+  "language.en": "English",
+
   "offline.title": "OlivERP | Sin conexión",
   "offline.heading": "Sin conexión",
   "offline.description":
@@ -484,6 +494,7 @@ const es: Dict = {
   "landing.preview.vatCharged": "1.044 €",
   "landing.preview.projectionValue": "19.840 €",
   "landing.preview.revenueTotal": "18.420 €",
+  "landing.preview.alt": "Captura del panel de OlivERP: el balance del mes, el IVA del trimestre, la proyección de cierre y la gráfica de evolución de ingresos.",
 };
 
 const en: Dict = {
@@ -875,6 +886,13 @@ const en: Dict = {
   "settings.install.installedMeta": "You are already using OlivERP as an app.",
   "settings.install.manual":
     "This browser installs it from its own menu: look for “Add to Home Screen” or “Install app”.",
+  // Language switcher
+  "language.label": "Language",
+  "language.es.short": "ES",
+  "language.en.short": "EN",
+  "language.es": "Spanish",
+  "language.en": "English",
+
   "offline.title": "OlivERP | Offline",
   "offline.heading": "You are offline",
   "offline.description":
@@ -961,6 +979,7 @@ const en: Dict = {
   "landing.preview.vatCharged": "€1,044",
   "landing.preview.projectionValue": "€19,840",
   "landing.preview.revenueTotal": "€18,420",
+  "landing.preview.alt": "A still of the OlivERP dashboard: the balance for the month, the quarter's VAT, the projected close and the revenue evolution chart.",
 };
 
 export const ui: Record<Lang, Dict> = { es, en };

@@ -5,7 +5,7 @@ import { useRef, useState } from "react";
 import Modal, { useDialogOpen } from "@/components/ui/Modal";
 import { fieldLabel, input } from "@/components/ui/form";
 import { apiJson } from "@/lib/client-api";
-import { t } from "@/i18n/t";
+import { useT } from "@/i18n/LocaleProvider";
 
 import { reportSaveError, type OperationModalProps } from "./shared";
 
@@ -20,6 +20,7 @@ const icon = (
 
 /** Registers a new product in the catalogue; prices come from operations. */
 export default function ProductModal({ projectId, demo, onClose, onSaved }: Omit<OperationModalProps, "transactionId">) {
+  const { t } = useT();
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   useDialogOpen(true, dialogRef, onClose);
   const [name, setName] = useState("");
@@ -37,7 +38,7 @@ export default function ProductModal({ projectId, demo, onClose, onSaved }: Omit
       });
       onSaved();
     } catch (cause) {
-      reportSaveError(cause, "modal.product.createError");
+      reportSaveError(t, cause, "modal.product.createError");
     } finally {
       setBusy(false);
     }

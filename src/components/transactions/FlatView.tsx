@@ -1,7 +1,6 @@
 "use client";
 
-import { t } from "@/i18n/t";
-import { formatCurrency } from "@/lib/format";
+import { useT } from "@/i18n/LocaleProvider";
 
 import TransactionRow, { ActionButtons, isIncome, type OpenModal } from "./TransactionRow";
 
@@ -19,6 +18,7 @@ export default function FlatView({
   demo: boolean;
   onOpenModal: OpenModal;
 }) {
+  const { t } = useT();
   if (rows.length === 0) {
     return (
       <div className="rounded-2xl border border-white/5 bg-white/5 p-8 text-center italic text-slate-500">
@@ -60,6 +60,7 @@ export default function FlatView({
 }
 
 function MobileTransaction({ item, demo, onOpenModal }: { item: Transaction; demo: boolean; onOpenModal: OpenModal }) {
+  const { formatCurrency } = useT();
   const income = isIncome(item);
 
   return (
@@ -90,6 +91,7 @@ function MobileTransaction({ item, demo, onOpenModal }: { item: Transaction; dem
  * the filters it pages through are local too.
  */
 export function FlatPager({ page, total, onPageChange }: { page: number; total: number; onPageChange: (page: number) => void }) {
+  const { t } = useT();
   const totalPages = Math.ceil(total / PAGE_SIZE_FLAT);
   if (totalPages <= 1) return null;
 

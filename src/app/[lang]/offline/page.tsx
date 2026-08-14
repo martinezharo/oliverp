@@ -1,10 +1,17 @@
 import type { Metadata } from "next";
 
 import { LogoMark } from "@/components/ui/Logo";
-import { t } from "@/i18n/t";
+import { localeHref } from "@/i18n/locale";
+import { resolveLang, type LangParams } from "@/i18n/params";
+import { getTranslator } from "@/i18n/t";
 import { APP_ROOT } from "@/lib/navigation";
 
-export const metadata: Metadata = { title: t("offline.title") };
+export async function generateMetadata(props: LangParams): Promise<Metadata> {
+  const lang = await resolveLang(props);
+  // Nothing links here and nothing should index it: it is the page a browser
+  // shows itself when the network is gone.
+  return { title: getTranslator(lang).t("offline.title"), robots: { index: false, follow: false } };
+}
 
 /**
  * What the installed application shows when there is no network.
@@ -18,7 +25,10 @@ export const metadata: Metadata = { title: t("offline.title") };
  * worker will retry over the network does the same thing and still works when
  * scripting is the thing that failed.
  */
-export default function OfflinePage() {
+export default async function OfflinePage(props: LangParams) {
+  const lang = await resolveLang(props);
+  const { t } = getTranslator(lang);
+
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#0f1016] p-6">
       <div className="w-full max-w-sm text-center">
@@ -26,7 +36,7 @@ export default function OfflinePage() {
         <h1 className="mt-6 text-2xl font-bold tracking-tight text-white">{t("offline.heading")}</h1>
         <p className="mt-3 text-sm leading-relaxed text-slate-400">{t("offline.description")}</p>
         <a
-          href={APP_ROOT}
+          href={localeHref(lang, APP_ROOT)}
           className="mt-8 inline-flex items-center justify-center rounded-xl bg-linear-to-r from-primary-500 to-indigo-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-primary-500/20 transition-transform hover:scale-[1.02]"
         >
           {t("offline.retry")}

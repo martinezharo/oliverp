@@ -1,5 +1,4 @@
-import { t } from "@/i18n/t";
-import { formatDate } from "@/lib/format";
+import type { Translator } from "@/i18n/t";
 
 import type { FinanceRow } from "@/types/erp";
 
@@ -86,8 +85,18 @@ export type Grouping = "month" | "quarter" | "year" | "total";
 
 export type Group = Totals & { key: string; label: string; sortKey: string };
 
-/** How a row's date maps onto the bucket it is counted in. */
-export function bucketOf(date: Date, view: Grouping): { key: string; label: string; sortKey: string } {
+/**
+ * How a row's date maps onto the bucket it is counted in.
+ *
+ * The label is the only part that is not arithmetic, and it is language: the
+ * translator is passed in rather than imported so a rollup computed for a
+ * Spanish page cannot come back labelled "Feb 2026".
+ */
+export function bucketOf(
+  date: Date,
+  view: Grouping,
+  { t, formatDate }: Translator,
+): { key: string; label: string; sortKey: string } {
   const year = date.getFullYear();
 
   if (view === "month") {
@@ -111,11 +120,11 @@ export function bucketOf(date: Date, view: Grouping): { key: string; label: stri
 }
 
 /** Folds the daily rows into periods, newest period first. */
-export function groupFinanceRows(rows: FinanceRow[], view: Grouping): Group[] {
+export function groupFinanceRows(rows: FinanceRow[], view: Grouping, translator: Translator): Group[] {
   const groups = new Map<string, Group>();
 
   for (const row of rows) {
-    const bucket = bucketOf(new Date(row.dia), view);
+    const bucket = bucketOf(new Date(row.dia), view, translator);
     const group = groups.get(bucket.key) ?? { ...bucket, ...zeroTotals() };
     addRow(group, row);
     groups.set(bucket.key, group);

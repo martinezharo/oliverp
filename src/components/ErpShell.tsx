@@ -2,7 +2,7 @@
 
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 import AppLayout from "@/components/layout/AppLayout";
@@ -10,7 +10,7 @@ import OperationModals from "@/components/operations/OperationModals";
 import ProjectModal from "@/components/projects/ProjectModal";
 import { ErpContext, type ModalKind, type ModalRequest, type Project } from "@/hooks/useErpContext";
 import { useCloudSession } from "@/hooks/useCloudSession";
-import { t } from "@/i18n/t";
+import { useAppPathname, useHref, useT } from "@/i18n/LocaleProvider";
 import { mockProjects } from "@/lib/mock-data";
 import { APP_ROOT, titleKeyFor } from "@/lib/navigation";
 
@@ -23,9 +23,13 @@ import { APP_ROOT, titleKeyFor } from "@/lib/navigation";
  * page itself — changes.
  */
 export default function ErpShell({ demo, children }: { demo: boolean; children: React.ReactNode }) {
+  const { t } = useT();
   const session = useCloudSession();
   const router = useRouter();
-  const pathname = usePathname() ?? APP_ROOT;
+  // The language sits in front of the URL; the route table is written without
+  // it, so the shell reasons about the path underneath.
+  const pathname = useAppPathname();
+  const href = useHref();
   const searchParams = useSearchParams();
   const [modal, setModal] = useState<ModalRequest | null>(null);
   const [projectModal, setProjectModal] = useState(false);
@@ -50,8 +54,8 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
   // query, so the redirect fires as early as possible.
   const signedOut = !demo && ((session.authKnown && !session.authenticated) || (session.ready && !authenticated));
   useEffect(() => {
-    if (signedOut) router.replace("/login");
-  }, [router, signedOut]);
+    if (signedOut) router.replace(href("/login"));
+  }, [href, router, signedOut]);
 
   // Without a project the app has nothing to show, so the creation dialog is
   // opened on every visit until one exists.
@@ -59,7 +63,7 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
 
   function projectCreated(project: Project) {
     setProjectModal(false);
-    router.replace(`${pathname}?projectId=${project.id}`);
+    router.replace(`${href(pathname)}?projectId=${project.id}`);
   }
 
   function openModal(kind: Exclude<ModalKind, null>, id?: number) {
@@ -112,6 +116,7 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
 }
 
 function ShellSkeleton() {
+  const { t } = useT();
   return (
     <div className="animate-pulse space-y-6" aria-busy="true" aria-label={t("common.loading")}>
       <div className="h-10 w-64 rounded-xl bg-white/5" />
@@ -126,6 +131,7 @@ function ShellSkeleton() {
 }
 
 function DemoBanner({ full }: { full: boolean }) {
+  const { t } = useT();
   return (
     <div className="mb-6 flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">

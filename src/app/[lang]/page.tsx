@@ -1,17 +1,32 @@
 import type { Metadata } from "next";
 
 import { AppPreview } from "@/components/landing/AppPreview";
-import { CLAIMS, DEMO, GITHUB_HREF, GITHUB_REPO, HERO, MODULES } from "@/components/landing/content";
+import { GITHUB_HREF, GITHUB_REPO, landingContent } from "@/components/landing/content";
 import { LandingNav } from "@/components/landing/LandingNav";
 import { StandaloneRedirect } from "@/components/landing/StandaloneRedirect";
-import { t } from "@/i18n/t";
+import { StructuredData } from "@/components/landing/StructuredData";
+import { localeAlternates } from "@/i18n/metadata";
+import { resolveLang, type LangParams } from "@/i18n/params";
+import { getTranslator } from "@/i18n/t";
 import { TONES } from "@/components/landing/tones";
 import { CARD, CTA_ITEM, CTA_ROW, DemoButton, DemoCta, EnterButton, GitHubMark, Label, LandingFooter } from "@/components/landing/ui";
 
-export const metadata: Metadata = {
-  title: t("landing.meta.title"),
-  description: t("landing.meta.description"),
-};
+export async function generateMetadata(props: LangParams): Promise<Metadata> {
+  const lang = await resolveLang(props);
+  const { t } = getTranslator(lang);
+  const title = t("landing.meta.title");
+  const description = t("landing.meta.description");
+
+  return {
+    title,
+    description,
+    alternates: localeAlternates(lang, "/"),
+    // The still of the dashboard the page itself opens with, so a shared link
+    // previews the product rather than a logo on a dark square.
+    openGraph: { title, description, url: localeAlternates(lang, "/").canonical as string, images: ["/dashboard_preview.png"] },
+    twitter: { title, description, images: ["/dashboard_preview.png"] },
+  };
+}
 
 /**
  * Nothing here reads the request, but the root layout hands the Convex URL to
@@ -28,10 +43,16 @@ export const dynamic = "force-dynamic";
  * it, and a way in. It is a server component built from the same surfaces as
  * the application — see `components/landing/ui.tsx`.
  */
-export default function Landing() {
+export default async function Landing(props: LangParams) {
+  const lang = await resolveLang(props);
+  const translator = getTranslator(lang);
+  const { t } = translator;
+  const { hero, modules, claims, demo, cta, footer } = landingContent(translator);
+
   return (
     <div className="min-h-screen">
       <StandaloneRedirect />
+      <StructuredData lang={lang} t={t} />
       <LandingNav />
 
       <main>
@@ -43,27 +64,27 @@ export default function Landing() {
             <div>
               <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/5 px-3 py-1.5 font-mono text-[10px] uppercase tracking-widest text-emerald-300 sm:px-3.5 sm:text-[11px]">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
-                {HERO.eyebrow}
+                {hero.eyebrow}
               </span>
 
               <h1 className="mt-5 text-balance text-[2.5rem] font-bold leading-[1.08] tracking-tight text-white sm:mt-6 sm:text-5xl sm:leading-[1.05] lg:text-6xl">
-                {HERO.title[0]}
-                <span className="bg-linear-to-r from-primary-400 to-indigo-400 bg-clip-text text-transparent">{HERO.title[1]}</span>
-                {HERO.title[2]}
+                {hero.title[0]}
+                <span className="bg-linear-to-r from-primary-400 to-indigo-400 bg-clip-text text-transparent">{hero.title[1]}</span>
+                {hero.title[2]}
               </h1>
 
-              <p className="mt-5 max-w-md text-base leading-relaxed text-slate-400 sm:mt-6 sm:text-lg">{HERO.lede}</p>
+              <p className="mt-5 max-w-md text-base leading-relaxed text-slate-400 sm:mt-6 sm:text-lg">{hero.lede}</p>
 
               <div className={`mt-8 sm:mt-9 ${CTA_ROW}`}>
-                <EnterButton size="lg" className={CTA_ITEM} />
-                <DemoButton size="lg" className={CTA_ITEM} />
+                <EnterButton cta={cta} size="lg" className={CTA_ITEM} />
+                <DemoButton label={cta.demo} size="lg" className={CTA_ITEM} />
               </div>
 
-              <p className="mt-5 font-mono text-[11px] leading-relaxed text-slate-600 sm:text-xs">{HERO.note}</p>
+              <p className="mt-5 font-mono text-[11px] leading-relaxed text-slate-600 sm:text-xs">{hero.note}</p>
             </div>
 
             <div className="relative">
-              <AppPreview compact />
+              <AppPreview t={t} compact />
             </div>
           </div>
         </section>
@@ -79,14 +100,14 @@ export default function Landing() {
             <p className="mt-4 text-slate-400">
               {t("landing.modules.description")}
             </p>
-            <EnterButton className="mt-7 w-full sm:mt-8 sm:w-auto" />
+            <EnterButton cta={cta} className="mt-7 w-full sm:mt-8 sm:w-auto" />
           </div>
 
           {/* The rows carry their own padding and pull it back with a negative
               margin, so the surface that appears on hover has room around the
               text instead of hugging it. */}
           <div className="-mx-3 border-t border-white/5 sm:-mx-5">
-            {MODULES.map((module) => {
+            {modules.map((module) => {
               const tone = TONES[module.tone];
               return (
                 <article
@@ -112,7 +133,7 @@ export default function Landing() {
           {/* Stacked, the cards need more air between them than they do as
               three columns, where the gap is horizontal. */}
           <div className="mx-auto grid max-w-6xl gap-9 px-5 py-14 sm:px-6 sm:py-20 md:grid-cols-3 md:gap-6">
-            {CLAIMS.map((claim) => (
+            {claims.map((claim) => (
               <div key={claim.title} className="border-t border-white/10 pt-6">
                 <span className={`mb-4 block h-2 w-2 rounded-full ${TONES[claim.tone].dot}`} />
                 <h3 className="text-lg font-bold text-white">{claim.title}</h3>
@@ -143,19 +164,19 @@ export default function Landing() {
         <section id="demo" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-16 sm:px-6 sm:py-24">
           <div className={`flex flex-wrap items-center justify-between gap-7 ${CARD} border-amber-400/20 p-6 sm:gap-8 sm:p-10`}>
             <div className="max-w-lg">
-              <Label tone="amber">{DEMO.eyebrow}</Label>
-              <h2 className="mt-4 text-2xl font-bold leading-tight tracking-tight text-amber-50 sm:text-3xl">{DEMO.title}</h2>
-              <p className="mt-3 text-slate-400">{DEMO.description}</p>
+              <Label tone="amber">{demo.eyebrow}</Label>
+              <h2 className="mt-4 text-2xl font-bold leading-tight tracking-tight text-amber-50 sm:text-3xl">{demo.title}</h2>
+              <p className="mt-3 text-slate-400">{demo.description}</p>
             </div>
             <div className={`w-full sm:w-auto ${CTA_ROW}`}>
-              <DemoCta label={DEMO.cta} className={CTA_ITEM} />
-              <EnterButton size="lg" variant="ghost" className={CTA_ITEM} />
+              <DemoCta label={demo.cta} className={CTA_ITEM} />
+              <EnterButton cta={cta} size="lg" variant="ghost" className={CTA_ITEM} />
             </div>
           </div>
         </section>
       </main>
 
-      <LandingFooter />
+      <LandingFooter footer={footer} homeHref={cta.homeHref} />
     </div>
   );
 }

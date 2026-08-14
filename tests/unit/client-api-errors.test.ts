@@ -1,6 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { getTranslator } from "../../src/i18n/t";
 import { ApiRequestError, apiErrorMessage, apiJson } from "../../src/lib/client-api";
 import { paginacionSchema } from "../../src/lib/api/schemas";
+
+const { t } = getTranslator("en");
 
 function respondWith(body: unknown, status: number) {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(body), {
@@ -30,14 +33,14 @@ describe("client API errors", () => {
     it("renders a known code in the UI language instead of the API's Spanish message", () => {
         const failure = new ApiRequestError("El cuerpo de la peticion no es valido.", 400, "validation_error");
 
-        expect(apiErrorMessage(failure, "fallback")).toBe("The request was not valid.");
+        expect(apiErrorMessage(t, failure, "fallback")).toBe("The request was not valid.");
     });
 
     it("falls back to the raw message for an unknown code", () => {
         const failure = new ApiRequestError("Something specific", 500, "brand_new_code");
 
-        expect(apiErrorMessage(failure, "fallback")).toBe("Something specific");
-        expect(apiErrorMessage({}, "fallback")).toBe("fallback");
+        expect(apiErrorMessage(t, failure, "fallback")).toBe("Something specific");
+        expect(apiErrorMessage(t, {}, "fallback")).toBe("fallback");
     });
 
     it("caps page_size at 100, which is why the UI pages through the inventory", () => {

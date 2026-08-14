@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import EmptyProject from "@/components/ui/EmptyProject";
-import { t } from "@/i18n/t";
+import { useT } from "@/i18n/LocaleProvider";
 import { useErpContext } from "@/hooks/useErpContext";
 import { useStockRows } from "@/hooks/useErpData";
 
@@ -13,6 +13,7 @@ import StockTable from "./StockTable";
 import type { StockRow } from "@/types/erp";
 
 export default function StockPage() {
+  const { t } = useT();
   const { projectId, openModal } = useErpContext();
   // One subscription for the whole inventory. The paged REST endpoint made the
   // browser walk pages in series on every visit to this route.
@@ -49,6 +50,7 @@ export default function StockPage() {
 }
 
 function TableSkeleton() {
+  const { t } = useT();
   return (
     <div className="animate-pulse space-y-2" aria-busy="true" aria-label={t("common.loadingData")}>
       <div className="h-12 rounded-t-2xl bg-white/5" />

@@ -16,7 +16,10 @@ test.describe("plugin and documentation workspace", () => {
     await expect(page.getByRole("heading", { name: "Add a private plugin" })).toBeVisible();
     await expect(page.getByPlaceholder("https://github.com/your-account/private-plugin")).toBeDisabled();
     await expect(page.getByText("There is no public catalog.")).toBeVisible();
-    await expect(page.getByText("No private plugins added")).toBeVisible();
+    // Scoped to `main`, like the assertions around it: demo mode's mock data
+    // is generated from `new Date()` on both sides of hydration, so React can
+    // briefly hold two copies of the page while it recovers from the mismatch.
+    await expect(page.getByRole("main").getByText("No private plugins added")).toBeVisible();
     await expect(page.locator("iframe")).toHaveCount(0);
 
     await page.screenshot({ path: "test-results/plugins-desktop.png", fullPage: true });
@@ -37,7 +40,10 @@ test.describe("plugin and documentation workspace", () => {
     await page.goto("/app/plugins");
     await expect(page.getByRole("heading", { name: "Plugins", level: 1 })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Add a private plugin" })).toBeVisible();
-    await expect(page.getByText("No private plugins added")).toBeVisible();
+    // Scoped to `main`, like the assertions around it: demo mode's mock data
+    // is generated from `new Date()` on both sides of hydration, so React can
+    // briefly hold two copies of the page while it recovers from the mismatch.
+    await expect(page.getByRole("main").getByText("No private plugins added")).toBeVisible();
 
     // The bottom bar only carries the operational routes; documentation and
     // the other secondary destinations live behind "More".

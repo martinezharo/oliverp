@@ -72,7 +72,10 @@ test("offers the install control in settings", async ({ page }) => {
   await expect(main.getByText(/installs it from its own menu/)).toBeVisible();
 
   // Replaying the event is what the real browser does; the row has to turn
-  // into a button when it happens.
+  // into a button when it happens. The listener is attached from the root on
+  // hydration, so the event has to wait for it — dispatched into a document
+  // that is still server-rendered markup, it lands on nobody.
+  await expect(main.getByRole("heading", { name: "Your projects" })).toBeVisible();
   await page.evaluate(() => {
     const event = new Event("beforeinstallprompt");
     Object.assign(event, {

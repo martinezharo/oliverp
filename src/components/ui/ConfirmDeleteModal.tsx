@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 
-import { t } from "@/i18n/t";
+import { useT } from "@/i18n/LocaleProvider";
 
 import Modal, { useDialogOpen } from "./Modal";
 import { Spinner } from "./Spinner";
@@ -47,6 +47,7 @@ export default function ConfirmDeleteModal({
   onConfirm: () => void;
   onClose: () => void;
 }) {
+  const { t } = useT();
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   useDialogOpen(true, dialogRef, onClose);
   const [typed, setTyped] = useState("");

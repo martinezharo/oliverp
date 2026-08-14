@@ -14,7 +14,7 @@ import { dangerButton, dangerSolidButton, secondaryButton } from "@/components/u
 import { apiErrorMessage, apiJson } from "@/lib/client-api";
 import { useCloudSession } from "@/hooks/useCloudSession";
 import { useErpContext } from "@/hooks/useErpContext";
-import { plural, t } from "@/i18n/t";
+import { useHref, useT } from "@/i18n/LocaleProvider";
 import { appPath } from "@/lib/navigation";
 
 type ProjectRow = {
@@ -36,9 +36,11 @@ type Pending = { kind: "project"; project: ProjectRow } | { kind: "account" };
 const accountButton = "sm:min-w-40";
 
 export default function SettingsPage() {
+  const { t, plural } = useT();
   const { demo } = useErpContext();
   const session = useCloudSession();
   const router = useRouter();
+  const href = useHref();
 
   const remote = useQuery(api.account.summary, demo || !session.user ? "skip" : {});
   const projects = demo ? demoProjects : (remote?.proyectos as ProjectRow[] | undefined);
@@ -55,7 +57,7 @@ export default function SettingsPage() {
     setSigningOut(true);
     try {
       await session.signOut();
-      router.replace("/login");
+      router.replace(href("/login"));
     } finally {
       setSigningOut(false);
     }
@@ -81,15 +83,15 @@ export default function SettingsPage() {
         // The project selector and every list read from Convex, which pushes
         // the removal to them; the route is replaced so a deleted project id
         // does not stay in the URL.
-        router.replace(appPath("ajustes"));
+        router.replace(href(appPath("ajustes")));
       } else {
         await apiJson("/api/account/delete", { method: "POST" });
         // The account is gone: end the session before anything can re-query.
         await session.signOut();
-        router.replace("/login");
+        router.replace(href("/login"));
       }
     } catch (cause) {
-      setError(apiErrorMessage(cause, t("settings.deleteError")));
+      setError(apiErrorMessage(t, cause, t("settings.deleteError")));
     } finally {
       setBusy(false);
     }

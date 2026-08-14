@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { t } from "@/i18n/t";
+import { useT } from "@/i18n/LocaleProvider";
 import { visiblePages } from "@/lib/pagination";
 
 /** Link-based pager: the page lives in the query string. */
@@ -13,6 +13,7 @@ export default function Pagination({
   totalPages: number;
   baseUrl: string;
 }) {
+  const { t } = useT();
   if (totalPages <= 1) return null;
 
   const pages = visiblePages(currentPage, totalPages);

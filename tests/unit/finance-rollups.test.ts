@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { getTranslator } from "../../src/i18n/t";
 import { groupFinanceRows, summarizeFinances } from "../../src/lib/finance";
 
 import type { FinanceRow } from "../../src/types/erp";
@@ -78,6 +79,10 @@ describe("finance summary", () => {
 });
 
 describe("finance grouping", () => {
+    // The rollup takes a translator because its labels are language; the
+    // arithmetic under test is the same in either.
+    const english = getTranslator("en");
+
     const rows = [
         row("2026-02-10", { ingresos: 100, balance: 60 }),
         row("2026-02-20", { ingresos: 50, balance: 30 }),
@@ -86,7 +91,7 @@ describe("finance grouping", () => {
     ];
 
     it("adds up the days of each month, newest month first", () => {
-        const groups = groupFinanceRows(rows, "month");
+        const groups = groupFinanceRows(rows, "month", english);
 
         expect(groups.map((group) => group.ingresos)).toEqual([10, 100 + 50, 7]);
         expect(groups[0].label).toContain("2026");
@@ -95,14 +100,14 @@ describe("finance grouping", () => {
     });
 
     it("folds months into their quarter", () => {
-        const groups = groupFinanceRows(rows, "quarter");
+        const groups = groupFinanceRows(rows, "quarter", english);
 
         expect(groups.map((group) => group.key)).toEqual(["2026-Q2", "2026-Q1", "2025-Q4"]);
         expect(groups[1].ingresos).toBe(150);
     });
 
     it("folds quarters into their year", () => {
-        const groups = groupFinanceRows(rows, "year");
+        const groups = groupFinanceRows(rows, "year", english);
 
         expect(groups.map((group) => group.key)).toEqual(["2026", "2025"]);
         expect(groups[0].ingresos).toBe(160);
@@ -110,7 +115,7 @@ describe("finance grouping", () => {
     });
 
     it("collapses everything into a single historic total", () => {
-        const groups = groupFinanceRows(rows, "total");
+        const groups = groupFinanceRows(rows, "total", english);
 
         expect(groups).toHaveLength(1);
         expect(groups[0].ingresos).toBe(167);
@@ -118,6 +123,6 @@ describe("finance grouping", () => {
     });
 
     it("has no groups without rows", () => {
-        expect(groupFinanceRows([], "month")).toEqual([]);
+        expect(groupFinanceRows([], "month", english)).toEqual([]);
     });
 });

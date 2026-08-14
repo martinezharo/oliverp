@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-import { t } from "@/i18n/t";
+import { useT } from "@/i18n/LocaleProvider";
 
 /**
  * The dialog shell every modal in the app is built on.
@@ -60,6 +60,7 @@ export default function Modal({
   /** Caps the frame at the viewport and scrolls the body inside it. */
   scrollable?: boolean;
 }) {
+  const { t } = useT();
   // A `<dialog>` is itself a scroll container capped by the UA at
   // `calc(100% - 38px)`, so a frame taller than that cap made the dialog scroll
   // *around* the panel: its scrollbars were painted on the backdrop, a stride

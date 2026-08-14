@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import { useErpContext } from "@/hooks/useErpContext";
+import { useHref, useT } from "@/i18n/LocaleProvider";
 import { apiErrorMessage, apiJson } from "@/lib/client-api";
 import { appPath } from "@/lib/navigation";
 import {
@@ -23,6 +24,10 @@ function hookCopy(hook: PluginHook): { label: string; detail: string } {
 }
 
 export default function PluginsPage() {
+  // Only the API error is translated: the rest of this screen's copy is still
+  // written in English in the markup and has no keys yet.
+  const { t } = useT();
+  const href = useHref();
   const { projectId, demo } = useErpContext();
   const installations = useQuery(api.plugins.list, !demo && projectId ? { projectLegacyId: projectId } : "skip");
   const installPlugin = useMutation(api.plugins.install);
@@ -50,7 +55,7 @@ export default function PluginsPage() {
       });
       setPending(plugin);
     } catch (cause) {
-      setError(apiErrorMessage(cause, "The private plugin manifest could not be loaded."));
+      setError(apiErrorMessage(t, cause, "The private plugin manifest could not be loaded."));
     } finally {
       setBusy(false);
     }
@@ -108,7 +113,7 @@ export default function PluginsPage() {
           <h1 className="bg-gradient-to-r from-white to-slate-400 bg-clip-text text-3xl font-bold tracking-tight text-transparent">Plugins</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">Connect your own private repositories. Their validated behavior applies to OlivERP and persists for the selected project. There is no public catalog.</p>
         </div>
-        <Link href={appPath("documentacion/plugins")} className="inline-flex items-center gap-2 self-start rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:border-primary-500/30 hover:text-white">Plugin documentation <ArrowIcon /></Link>
+        <Link href={href(appPath("documentacion/plugins"))} className="inline-flex items-center gap-2 self-start rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:border-primary-500/30 hover:text-white">Plugin documentation <ArrowIcon /></Link>
       </header>
 
       {!projectId ? <EmptyState title="Select a project" detail="Private plugins are added and activated independently for each project." /> : (

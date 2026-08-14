@@ -1,13 +1,13 @@
 "use client";
 
-import { t } from "@/i18n/t";
+import { useT } from "@/i18n/LocaleProvider";
 import { summarizeFinances } from "@/lib/finance";
-import { formatCurrency, formatDate, formatInteger } from "@/lib/format";
 
 import type { FinanceRow } from "@/types/erp";
 
 /** Month to date, quarter to date, and a straight-line projection of the month. */
 export default function DashboardStats({ transactions }: { transactions: FinanceRow[] }) {
+  const { t, formatCurrency, formatInteger, formatDate } = useT();
   const now = new Date();
   const { month, quarter, projection, currentDay, daysInMonth } = summarizeFinances(transactions, now);
   const monthName = formatDate(now, { month: "long" });

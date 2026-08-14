@@ -2,8 +2,7 @@
 
 import { useMemo, useState } from "react";
 
-import { t } from "@/i18n/t";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { useT } from "@/i18n/LocaleProvider";
 
 import TransactionRow from "./TransactionRow";
 
@@ -11,6 +10,7 @@ import type { FinanceRow, Transaction } from "@/types/erp";
 
 /** One expandable card per day, newest first. */
 export default function DailyView({ daily, transactions }: { daily: FinanceRow[]; transactions: Transaction[] }) {
+  const { t } = useT();
   return (
     <div className="space-y-4">
       {daily.length === 0 ? (
@@ -23,6 +23,7 @@ export default function DailyView({ daily, transactions }: { daily: FinanceRow[]
 }
 
 function DayCard({ row, transactions }: { row: FinanceRow; transactions: Transaction[] }) {
+  const { t, formatCurrency, formatDate } = useT();
   const [open, setOpen] = useState(false);
   const date = new Date(row.dia);
   const positive = row.balance >= 0;
@@ -101,6 +102,7 @@ function DayCard({ row, transactions }: { row: FinanceRow; transactions: Transac
 }
 
 function DetailsTable({ items }: { items: Transaction[] }) {
+  const { t, formatCurrency } = useT();
   if (!items.length) return <div className="py-4 text-center text-slate-500">{t("txn.noDetails")}</div>;
 
   return (

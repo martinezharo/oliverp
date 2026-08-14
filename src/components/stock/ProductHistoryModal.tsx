@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "react";
 
 import Modal, { useDialogOpen } from "@/components/ui/Modal";
 import { apiErrorMessage, apiJson } from "@/lib/client-api";
-import { formatCurrency, formatDate, today } from "@/lib/format";
+import { today } from "@/lib/format";
 import { getProductNameKey } from "@/lib/mock-data";
-import { t } from "@/i18n/t";
+import { useT } from "@/i18n/LocaleProvider";
 import { ui } from "@/i18n/ui";
 
 import type { StockRow } from "@/types/erp";
@@ -45,6 +45,7 @@ const icon = (
  * that never went through a sale.
  */
 export default function ProductHistoryModal({ product, onClose }: { product: StockRow | null; onClose: () => void }) {
+  const { t, formatCurrency, formatDate } = useT();
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   useDialogOpen(product !== null, dialogRef, onClose);
   const [loaded, setLoaded] = useState<{ product: number; movements: Movement[] } | null>(null);
@@ -91,7 +92,7 @@ export default function ProductHistoryModal({ product, onClose }: { product: Sto
       formElement.reset();
       setLoaded({ product: product.producto_id, movements: await fetchMovements(product.proyecto_id, product.producto_id) });
     } catch (cause) {
-      window.alert(`${t("common.saveErrorPrefix")} ${apiErrorMessage(cause, t("common.unknown"))}`);
+      window.alert(`${t("common.saveErrorPrefix")} ${apiErrorMessage(t, cause, t("common.unknown"))}`);
     } finally {
       setSaving(false);
     }

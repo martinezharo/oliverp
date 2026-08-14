@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import Badge from "@/components/ui/Badge";
 import { Row, Section } from "@/components/settings/rows";
 import { secondaryButton } from "@/components/ui/button";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
-import { t } from "@/i18n/t";
+import { useLang, useT } from "@/i18n/LocaleProvider";
 import { promptInstall } from "@/lib/install-prompt";
 
 /**
@@ -22,7 +23,9 @@ import { promptInstall } from "@/lib/install-prompt";
  *   sentence that explains where the browser keeps the option instead.
  */
 export function InstallApp() {
+  const { t } = useT();
   const { canPrompt, installed } = useInstallPrompt();
+  const lang = useLang();
   const [busy, setBusy] = useState(false);
 
   async function install() {
@@ -52,6 +55,12 @@ export function InstallApp() {
             {t(busy ? "settings.install.installing" : "settings.install.action")}
           </button>
         )}
+      </Row>
+
+      {/* The switcher lives beside the install control because both are about
+          this device and this reader rather than about the account's data. */}
+      <Row title={t("language.label")} meta={t(`language.${lang}`)}>
+        <LanguageSwitcher />
       </Row>
     </Section>
   );

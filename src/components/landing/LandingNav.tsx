@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 
-import { NAV_LINKS } from "./content";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useT } from "@/i18n/LocaleProvider";
+
+import { landingContent } from "./content";
 import { EnterButton, Wordmark } from "./ui";
 
 /**
@@ -13,7 +16,12 @@ import { EnterButton, Wordmark } from "./ui";
  * first screen is the product rather than a bar. Fixed rather than sticky so
  * the hero passes underneath it; pages compensate with their own top padding.
  */
-export function LandingNav({ links = NAV_LINKS }: { links?: { href: string; label: string }[] }) {
+export function LandingNav() {
+  const translator = useT();
+  // The nav is a client component for the scroll listener alone, so it builds
+  // its own copy rather than being handed it through a prop it would then have
+  // to serialize across the boundary on every render.
+  const { navLinks, cta } = landingContent(translator);
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -33,15 +41,18 @@ export function LandingNav({ links = NAV_LINKS }: { links?: { href: string; labe
           share 320px without wrapping, so the label drops to just the verb
           until there is room for the rest of it. */}
       <div className="safe-header mx-auto flex w-full max-w-6xl items-center gap-3 px-4 sm:gap-8 sm:px-6">
-        <Wordmark className="shrink-0" />
+        <Wordmark href={cta.homeHref} className="shrink-0" />
         <nav className="hidden gap-7 text-sm text-slate-400 md:flex">
-          {links.map((link) => (
+          {navLinks.map((link) => (
             <a key={link.href} href={link.href} className="transition-colors hover:text-white">
               {link.label}
             </a>
           ))}
         </nav>
-        <EnterButton short className="ml-auto shrink-0" />
+        {/* Hidden on the narrowest screens, where the wordmark and the call to
+            action already share 320px. The one in settings is always there. */}
+        <LanguageSwitcher className="ml-auto hidden shrink-0 sm:inline-flex" />
+        <EnterButton cta={cta} short className="ml-auto shrink-0 sm:ml-3" />
       </div>
     </header>
   );

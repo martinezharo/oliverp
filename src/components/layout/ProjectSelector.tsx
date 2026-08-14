@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import { t } from "@/i18n/t";
+import { useHref, useT } from "@/i18n/LocaleProvider";
 import { getProjectNameKey } from "@/lib/mock-data";
 
 import type { Project } from "@/hooks/useErpContext";
@@ -18,8 +18,10 @@ export default function ProjectSelector({
   currentPath: string;
   onNewProject: () => void;
 }) {
+  const { t } = useT();
+  const href = useHref();
   const activeProject = projects.find((project) => project.id === currentProjectId) ?? projects[0];
-  const projectUrl = (id: number) => `${currentPath}?projectId=${id}`;
+  const projectUrl = (id: number) => `${href(currentPath)}?projectId=${id}`;
 
   return (
     <div className="group relative">

@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
-import { t } from "@/i18n/t";
+import { DEFAULT_LOCALE } from "@/i18n/locale";
+import { getTranslator } from "@/i18n/t";
 import { APP_SECTIONS, appPath } from "@/lib/navigation";
 import {
   PWA_BACKGROUND_COLOR,
@@ -16,8 +17,15 @@ import {
  * pinned to a constant rather than derived from `start_url`: moving the entry
  * point later must not orphan everyone's installation and offer them a second
  * one beside it.
+ *
+ * There is one manifest per origin and it has no route of its own to carry a
+ * language, so it is written in the default one. What it names — the product,
+ * and three sections of it — is the same word in both languages more often
+ * than not, and an installed icon is labelled once, at install time.
  */
 export default function manifest(): MetadataRoute.Manifest {
+  const { t } = getTranslator(DEFAULT_LOCALE);
+
   return {
     id: "/?pwa",
     name: t("pwa.name"),

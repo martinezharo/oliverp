@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
-
 import LoginClient from "@/components/LoginClient";
-import { ui } from "@/i18n/ui";
+import { privatePageMetadata } from "@/i18n/page-metadata";
 
 // The screen no longer renders AppLayout, which used to carry this title.
-export const metadata: Metadata = { title: ui.en["title.login"] };
+// `noindex` for the same reason as the application it guards: a sign-in form
+// is nobody's search result, and both languages of it even less so.
+export const generateMetadata = privatePageMetadata("title.login");
 
 /**
  * The Convex URL is read from the Worker env at request time, so this route

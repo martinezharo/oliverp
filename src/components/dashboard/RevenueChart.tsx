@@ -6,8 +6,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useErpContext } from "@/hooks/useErpContext";
 import { getMockEvolution } from "@/lib/mock-data";
-import { formatCompact, formatCurrency, formatDate } from "@/lib/format";
-import { t } from "@/i18n/t";
+import { useT } from "@/i18n/LocaleProvider";
 
 type EvolutionRow = { date: string; ingresos: number; urp: number };
 
@@ -40,6 +39,7 @@ function fillGaps(rows: Array<{ dia: string; ingresos: number; urp: number }>, d
 }
 
 export default function RevenueChart({ projectId }: { projectId: number }) {
+  const { t, formatCurrency, formatCompact, formatDate } = useT();
   const { demo } = useErpContext();
   const [days, setDays] = useState(30);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -92,7 +92,10 @@ export default function RevenueChart({ projectId }: { projectId: number }) {
     });
 
     return () => { cancelled = true; };
-  }, [data]);
+    // The formatters and `t` are per-language constants, so listing them here
+    // does not make the chart rebuild on every render — only when the reader
+    // switches language, which is exactly when its axes should be redrawn.
+  }, [data, formatCompact, formatCurrency, formatDate, t]);
 
   useEffect(() => () => { chartRef.current?.destroy(); chartRef.current = null; }, []);
 

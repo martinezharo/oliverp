@@ -4,7 +4,8 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { Logo } from "@/components/ui/Logo";
-import { t } from "@/i18n/t";
+import { useHref, useT } from "@/i18n/LocaleProvider";
+import type { Translate } from "@/i18n/t";
 import { APP_SECTIONS, activeSectionPath, appPath, type AppSection } from "@/lib/navigation";
 
 type MenuItem = {
@@ -14,7 +15,7 @@ type MenuItem = {
   icon: string;
 };
 
-function toMenuItem(section: AppSection): MenuItem {
+function toMenuItem(section: AppSection, t: Translate): MenuItem {
   return {
     label: t(section.navKey),
     ...(section.mobileLabel === undefined ? {} : { mobileLabel: section.mobileLabel }),
@@ -27,8 +28,11 @@ function toMenuItem(section: AppSection): MenuItem {
 // stop being readable, so the navigation is split: the operational routes stay
 // on the bar and the rest move behind the "More" button. The sidebar on large
 // screens has room for everything and renders both groups inline.
-const primaryItems = APP_SECTIONS.filter((section) => section.group === "primary").map(toMenuItem);
-const overflowItems = APP_SECTIONS.filter((section) => section.group === "overflow").map(toMenuItem);
+//
+// The split is fixed, so it is computed once; only the labels are language and
+// those are resolved on render.
+const primarySections = APP_SECTIONS.filter((section) => section.group === "primary");
+const overflowSections = APP_SECTIONS.filter((section) => section.group === "overflow");
 
 const moreIcon = "M6 12h.01M12 12h.01M18 12h.01";
 // The toggle swaps to a cross while the panel is open, so a second tap on the
@@ -71,9 +75,10 @@ function NavLink({
   search: string;
   className?: string;
 }) {
+  const href = useHref();
   return (
     <Link
-      href={`${item.path}${search}`}
+      href={`${href(item.path)}${search}`}
       aria-current={active ? "page" : undefined}
       className={`group relative flex min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-xl px-0.5 py-2 transition-all duration-200 active:scale-95 lg:flex-none lg:flex-row lg:justify-start lg:px-3 lg:py-3 lg:active:scale-100 ${active ? "bg-primary-500/10 text-primary-400" : "text-slate-400 hover:bg-white/5 hover:text-white"} ${className}`}
     >
@@ -93,7 +98,11 @@ function NavLink({
 }
 
 export default function Sidebar({ currentPath, search }: { currentPath: string; search: string }) {
+  const { t } = useT();
+  const href = useHref();
   const [moreOpen, setMoreOpen] = useState(false);
+  const primaryItems = primarySections.map((section) => toMenuItem(section, t));
+  const overflowItems = overflowSections.map((section) => toMenuItem(section, t));
   // Anchored on the whole bar so a tap on the toggle or inside the panel is
   // never treated as a click outside.
   const moreRef = useRef<HTMLElement>(null);
@@ -131,7 +140,7 @@ export default function Sidebar({ currentPath, search }: { currentPath: string; 
     )}
     <aside ref={moreRef} className="safe-bottom-bar fixed bottom-0 left-0 right-0 z-40 flex flex-row border-t border-white/5 bg-[#0f1016]/95 backdrop-blur-xl transition-all duration-300 lg:bottom-auto lg:right-auto lg:top-0 lg:h-screen lg:w-64 lg:flex-col lg:border-r lg:border-t-0 lg:pb-0">
       <div className="hidden h-16 items-center justify-center border-b border-white/5 px-0 lg:flex lg:justify-start lg:px-6">
-        <Link href={appPath()}>
+        <Link href={href(appPath())}>
           <Logo nameClassName="hidden lg:block" />
         </Link>
       </div>
@@ -181,7 +190,7 @@ export default function Sidebar({ currentPath, search }: { currentPath: string; 
               return (
                 <Link
                   key={item.path}
-                  href={`${item.path}${search}`}
+                  href={`${href(item.path)}${search}`}
                   aria-current={active ? "page" : undefined}
                   // The shell survives route changes, so the sheet has to be
                   // dismissed explicitly when a destination is picked.

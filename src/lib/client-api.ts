@@ -1,6 +1,6 @@
 "use client";
 
-import { ui } from "@/i18n/ui";
+import type { Translate } from "@/i18n/t";
 
 import { getAuthToken } from "./authToken";
 
@@ -21,11 +21,18 @@ export class ApiRequestError extends Error {
   }
 }
 
-/** Renders an API failure in the UI language, falling back to `fallback`. */
-export function apiErrorMessage(cause: unknown, fallback: string): string {
+/**
+ * Renders an API failure in the page's language, falling back to `fallback`.
+ *
+ * `t` is passed in rather than imported: the caller is a component and already
+ * has one from `useT()`, and this way an error cannot end up being the one
+ * English sentence on a Spanish screen.
+ */
+export function apiErrorMessage(t: Translate, cause: unknown, fallback: string): string {
   if (cause instanceof ApiRequestError && cause.code) {
-    const translated = ui.en[`api.error.${cause.code}`];
-    if (translated) return translated;
+    const key = `api.error.${cause.code}`;
+    const translated = t(key);
+    if (translated !== key) return translated;
   }
   return cause instanceof Error && cause.message ? cause.message : fallback;
 }

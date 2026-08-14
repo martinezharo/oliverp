@@ -1,6 +1,6 @@
 "use client";
 
-import { t } from "@/i18n/t";
+import { useT } from "@/i18n/LocaleProvider";
 import { compactInput, fieldLabel, input } from "@/components/ui/form";
 
 import type { Item, Product } from "./shared";
@@ -37,6 +37,7 @@ const submitTone: Record<Tone, string> = {
 
 /** Shown while an existing operation is being fetched into the form. */
 export function LoadingNotice({ tone }: { tone: Tone }) {
+  const { t } = useT();
   return (
     <div className={`flex items-center gap-2 rounded-lg border px-3 py-2 text-xs ${noticeTone[tone]}`}>
       <span className={`h-3.5 w-3.5 animate-spin rounded-full border-2 ${spinnerTone[tone]}`} />
@@ -60,6 +61,7 @@ export function TotalAmountField({
   hint: string;
   onChange: (value: string) => void;
 }) {
+  const { t } = useT();
   const accent = tone === "indigo"
     ? "border-indigo-500/30 bg-indigo-500/10 text-indigo-100 placeholder-indigo-300/30 focus:border-indigo-500"
     : "border-emerald-500/30 bg-emerald-500/10 text-emerald-100 placeholder-emerald-300/30 focus:border-emerald-500";
@@ -97,6 +99,7 @@ export function FormFooter({
   label: string;
   tone: Tone;
 }) {
+  const { t } = useT();
   return (
     <div className="flex justify-end gap-3 border-t border-white/5 pt-6">
       <button type="button" onClick={onClose} className="rounded-xl px-6 py-2 text-slate-400 transition-all hover:bg-white/5 hover:text-white">
@@ -133,6 +136,7 @@ export function LineItems({
   onChange: (index: number, key: keyof Item, value: string) => void;
   onProductChange: (index: number, productId: string) => void;
 }) {
+  const { t } = useT();
   return (
     <div className="border-t border-white/5 pt-6">
       <div className="mb-4 flex items-center justify-between">
@@ -196,6 +200,7 @@ export function LineItems({
  * older operation is being edited.
  */
 function ProductOptions({ products, kind, selected }: { products: Product[]; kind: "sale" | "purchase"; selected: string }) {
+  const { t } = useT();
   const selectable = products.filter((product) => kind === "purchase" || product.stock > 0 || String(product.id) === selected);
   return (
     <>

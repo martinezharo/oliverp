@@ -5,19 +5,21 @@ import { useRouter } from "next/navigation";
 
 import { useCloudSession } from "@/hooks/useCloudSession";
 import { Spinner } from "@/components/ui/Spinner";
-import { t } from "@/i18n/t";
+import { useHref, useT } from "@/i18n/LocaleProvider";
 import { APP_ROOT } from "@/lib/navigation";
 
 export default function LoginClient() {
+  const { t } = useT();
   const session = useCloudSession();
   const router = useRouter();
+  const href = useHref();
   const [pending, setPending] = useState(false);
   const [demoPending, setDemoPending] = useState(false);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    if (session.authenticated) router.replace(APP_ROOT);
-  }, [router, session.authenticated]);
+    if (session.authenticated) router.replace(href(APP_ROOT));
+  }, [href, router, session.authenticated]);
 
   // The button never waits for the session to resolve before accepting a click:
   // the Convex client queues the call until it is connected, so gating on

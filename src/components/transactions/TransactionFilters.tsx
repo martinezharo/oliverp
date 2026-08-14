@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { filterInput } from "@/components/ui/form";
-import { t } from "@/i18n/t";
+import { useT } from "@/i18n/LocaleProvider";
 
 export type FilterState = {
   search: string;
@@ -42,6 +42,7 @@ export default function TransactionFilters({
   onChange: (key: keyof FilterState, value: string) => void;
   onClear: () => void;
 }) {
+  const { t } = useT();
   const [moreOpen, setMoreOpen] = useState(false);
   // The range filters live behind "More", so the badge is the only sign they
   // are narrowing the list.

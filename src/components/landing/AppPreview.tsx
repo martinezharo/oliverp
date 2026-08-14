@@ -1,6 +1,6 @@
-import { t } from "@/i18n/t";
+import type { Translate } from "@/i18n/t";
+import { SITE_DOMAIN } from "@/lib/site";
 
-import { APP_DOMAIN } from "./content";
 import { CARD, Label } from "./ui";
 
 /**
@@ -32,7 +32,8 @@ function curve(values: number[]): string {
   }, "");
 }
 
-const NAV = [
+/** The sidebar of the still. Labels are language, so they are resolved on render. */
+const navPreview = (t: Translate) => [
   { label: t("nav.home"), active: true, icon: <><path d="m3 10 9-7 9 7v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" /><path d="M9 21v-7h6v7" /></> },
   { label: t("nav.stock"), active: false, icon: <><path d="m21 8-9-5-9 5 9 5 9-5Z" /><path d="m3 12 9 5 9-5" /></> },
   { label: t("nav.transactions"), active: false, icon: <><path d="M12 2v20" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></> },
@@ -40,15 +41,24 @@ const NAV = [
 ];
 
 /** `compact` drops the sidebar, for the narrow columns of the split layout. */
-export function AppPreview({ compact = false, className = "" }: { compact?: boolean; className?: string }) {
+export function AppPreview({ t, compact = false, className = "" }: { t: Translate; compact?: boolean; className?: string }) {
+  const NAV = navPreview(t);
   return (
-    <div className={`overflow-hidden rounded-3xl border border-white/10 bg-[#0f1016] shadow-2xl shadow-black/60 ${className}`}>
+    // Drawn in markup, but it is a picture of the product: `role="img"` gives
+    // assistive technology the one description it would get from a screenshot
+    // instead of a window chrome, a navigation and nine sample figures read out
+    // as if they were part of the page.
+    <div
+      role="img"
+      aria-label={t("landing.preview.alt")}
+      className={`overflow-hidden rounded-3xl border border-white/10 bg-[#0f1016] shadow-2xl shadow-black/60 ${className}`}
+    >
       <div className="flex items-center gap-2 border-b border-white/5 bg-white/[0.02] px-4 py-3">
         {/* The traffic lights, in the colours macOS actually paints them. */}
         <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
         <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
         <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
-        <span className="ml-3 font-mono text-[11px] text-slate-500">{APP_DOMAIN}</span>
+        <span className="ml-3 font-mono text-[11px] text-slate-500">{SITE_DOMAIN}</span>
       </div>
 
       <div className="flex">
@@ -98,7 +108,7 @@ export function AppPreview({ compact = false, className = "" }: { compact?: bool
             />
           </div>
 
-          <RevenuePreview />
+          <RevenuePreview t={t} />
         </div>
       </div>
     </div>
@@ -106,7 +116,7 @@ export function AppPreview({ compact = false, className = "" }: { compact?: bool
 }
 
 /** The still of `RevenueChart`: same header, same emerald filled line. */
-function RevenuePreview() {
+function RevenuePreview({ t }: { t: Translate }) {
   return (
     <div className={`${CARD} p-3.5 sm:p-4`}>
       <div className="mb-4 flex items-center justify-between gap-4 sm:mb-5">
@@ -117,7 +127,9 @@ function RevenuePreview() {
             </svg>
           </span>
           <div>
-            <h3 className="text-sm font-bold text-white">{t("chart.title")}</h3>
+            {/* Not a heading: this is a still of the app, so it must not take
+                part in the outline of the page that contains it. */}
+            <p className="text-sm font-bold text-white">{t("chart.title")}</p>
             <p className="text-[11px] text-slate-400">
               {t("chart.totalPeriod")} <span className="font-bold text-emerald-400">{t("landing.preview.revenueTotal")}</span>
             </p>

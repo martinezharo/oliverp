@@ -6,7 +6,7 @@ import Modal, { useDialogOpen } from "@/components/ui/Modal";
 import { fieldLabel, input } from "@/components/ui/form";
 import { apiJson } from "@/lib/client-api";
 import { dateOnly, today } from "@/lib/format";
-import { t } from "@/i18n/t";
+import { useT } from "@/i18n/LocaleProvider";
 
 import { FormFooter, LineItems, LoadingNotice, TotalAmountField } from "./FormParts";
 import {
@@ -32,6 +32,7 @@ const icon = (
 );
 
 export default function PurchaseModal({ transactionId, projectId, demo, onClose, onSaved }: OperationModalProps) {
+  const { t } = useT();
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   useDialogOpen(true, dialogRef, onClose);
   const editing = transactionId !== null;
@@ -79,7 +80,7 @@ export default function PurchaseModal({ transactionId, projectId, demo, onClose,
       });
       onSaved();
     } catch (cause) {
-      reportSaveError(cause);
+      reportSaveError(t, cause);
     } finally {
       setBusy(false);
     }

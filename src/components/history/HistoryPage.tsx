@@ -4,19 +4,22 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 
-import { t } from "@/i18n/t";
-import { formatCurrency } from "@/lib/format";
+import { useHref, useT } from "@/i18n/LocaleProvider";
 import { groupFinanceRows, type Group, type Grouping } from "@/lib/finance";
+import { appPath } from "@/lib/navigation";
 import { useErpContext } from "@/hooks/useErpContext";
 import { useFinanceRows } from "@/hooks/useErpData";
 
 /** The daily finance rows rolled up over a period the user picks. */
 export default function HistoryPage() {
+  const translator = useT();
+  const { t } = translator;
+  const href = useHref();
   const { projectId } = useErpContext();
   const rows = useFinanceRows();
   const searchParams = useSearchParams();
   const view = parseGrouping(searchParams?.get("view") ?? null);
-  const groups = useMemo(() => groupFinanceRows(rows ?? [], view), [rows, view]);
+  const groups = useMemo(() => groupFinanceRows(rows ?? [], view, translator), [rows, translator, view]);
 
   const options: Array<{ value: Grouping; label: string }> = [
     { value: "month", label: t("history.viewMonths") },
@@ -36,7 +39,7 @@ export default function HistoryPage() {
           {options.map((option) => (
             <Link
               key={option.value}
-              href={`/historial?projectId=${projectId}&view=${option.value}`}
+              href={`${href(appPath("historial"))}?projectId=${projectId}&view=${option.value}`}
               aria-current={view === option.value ? "page" : undefined}
               className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${view === option.value ? "bg-blue-500/10 text-blue-400 shadow-sm" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}
             >
@@ -76,6 +79,7 @@ function parseGrouping(value: string | null): Grouping {
 }
 
 function HistoryRow({ group }: { group: Group }) {
+  const { t, formatCurrency } = useT();
   const positive = group.balance >= 0;
 
   return (

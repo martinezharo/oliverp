@@ -25,6 +25,32 @@ are redirected to `/login` by the middleware. The route table backing the
 sidebar, the header title and every internal link is
 [`src/lib/navigation.ts`](./src/lib/navigation.ts).
 
+## Languages
+
+OlivERP is written in English and Spanish, and the language is in the URL:
+`/app/stock` is English and `/es/app/stock` is Spanish. The default language
+carries no prefix, so every address that existed before still works and each
+page has exactly one canonical form — `/en/…` is redirected to it.
+
+- [`src/i18n/locale.ts`](./src/i18n/locale.ts) is the whole model: which
+  languages exist, how one is read off a path, and how `Accept-Language` is
+  negotiated. Every other layer imports it rather than parsing URLs itself.
+- Routes live under `src/app/[lang]/`. A rewrite in
+  [`next.config.ts`](./next.config.ts) fills the segment in for unprefixed
+  addresses; the middleware redirects a visitor whose browser asks for Spanish,
+  once, and only until they choose for themselves with the switcher.
+- Components read strings through `useT()`, which also carries the number and
+  date formatters for that language — a screen that says "febrero" should not
+  then print `€1,234.56`. Server components use `getTranslator(lang)`.
+- The strings themselves are [`src/i18n/ui.ts`](./src/i18n/ui.ts). A key
+  missing from Spanish falls back to English rather than showing the key.
+
+Not yet translated: the **Plugins** screen and the in-app **Documentation**,
+whose copy is still written in English in the markup and has no keys.
+
+`hreflang` alternates, canonicals, the sitemap and `robots.txt` all derive from
+the same table, so adding a language is one entry in `LOCALES`.
+
 ## Installable application
 
 OlivERP is a progressive web app. The manifest
