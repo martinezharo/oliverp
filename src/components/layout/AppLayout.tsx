@@ -44,7 +44,7 @@ export default function AppLayout({
       <Sidebar currentPath={currentPath} search={search} />
 
       <div className="relative ml-0 flex min-w-0 flex-1 flex-col transition-all duration-300 lg:ml-64">
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-white/5 bg-[#0f1016]/80 px-6 backdrop-blur-md">
+        <header className="safe-header sticky top-0 z-30 flex items-center justify-between border-b border-white/5 bg-[#0f1016]/80 px-6 backdrop-blur-md">
           <div className="flex items-center gap-4">
             <h2 className="hidden text-xs font-bold uppercase tracking-widest text-slate-500 md:block">
               {title.split("|")[1]?.trim() || t("layout.dashboard")}
@@ -69,7 +69,7 @@ export default function AppLayout({
           </div>
         </header>
 
-        <main ref={mainRef} className="flex-1 overflow-y-auto scroll-smooth p-6 pb-20 lg:pb-6">
+        <main ref={mainRef} className="safe-bottom-gap flex-1 overflow-y-auto scroll-smooth p-6 lg:pb-6">
           <div className="mx-auto max-w-7xl pb-10">{children}</div>
         </main>
       </div>

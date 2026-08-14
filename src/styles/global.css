@@ -70,6 +70,30 @@ pre,
 }
 
 @layer components {
+  /*
+   * Installed on a phone, OlivERP draws edge to edge: the root layout asks for
+   * `viewport-fit: cover` and iOS is told the status bar is translucent, so
+   * the page runs underneath it and underneath the home indicator too.
+   *
+   * Every piece of fixed chrome therefore keeps its own clearance. The insets
+   * resolve to 0px in a browser tab and on the desktop, where these behave
+   * exactly like the plain `h-16` they replaced.
+   */
+  .safe-header {
+    height: calc(4rem + env(safe-area-inset-top, 0px));
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  .safe-bottom-bar {
+    height: calc(4rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Room for the bottom bar, plus the indicator underneath it. */
+  .safe-bottom-gap {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  }
+
   .glass {
     background: rgba(255, 255, 255, 0.03);
     backdrop-filter: blur(12px);

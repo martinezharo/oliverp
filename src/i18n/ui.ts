@@ -382,6 +382,28 @@ const es: Dict = {
   "settings.deleteError": "No se pudo completar el borrado.",
   "common.irreversible": "Esta acción no se puede deshacer",
 
+  // Installable application (manifest + the install row in settings)
+  "pwa.name": "OlivERP — ERP para negocios pequeños",
+  "pwa.shortName": "OlivERP",
+  "pwa.description":
+    "Registra ventas y compras sin saber contabilidad. El stock, el IVA y el balance se calculan solos.",
+  "settings.app.title": "Aplicación",
+  "settings.install.title": "Instalar OlivERP",
+  "settings.install.meta":
+    "Se abre en su propia ventana, sin barra del navegador, y arranca directamente en el ERP.",
+  "settings.install.action": "Instalar",
+  "settings.install.installing": "Instalando…",
+  "settings.install.installed": "Instalada",
+  "settings.install.installedTitle": "OlivERP como aplicación",
+  "settings.install.installedMeta": "Ya estás usando OlivERP como aplicación.",
+  "settings.install.manual":
+    "Este navegador la instala desde su propio menú: busca «Añadir a la pantalla de inicio» o «Instalar aplicación».",
+  "offline.title": "OlivERP | Sin conexión",
+  "offline.heading": "Sin conexión",
+  "offline.description":
+    "OlivERP guarda tus datos en el servidor, así que necesita red para mostrarlos. Vuelve a intentarlo cuando recuperes la conexión.",
+  "offline.retry": "Reintentar",
+
   // Landing page
   "landing.meta.title": "OlivERP | El ERP que no te pide ser contable",
   "landing.meta.description":
@@ -836,6 +858,28 @@ const en: Dict = {
   "settings.deleting": "Deleting…",
   "settings.deleteError": "The deletion could not be completed.",
   "common.irreversible": "This action cannot be undone",
+
+  // Installable application (manifest + the install row in settings)
+  "pwa.name": "OlivERP — ERP for small businesses",
+  "pwa.shortName": "OlivERP",
+  "pwa.description":
+    "Record sales and purchases without knowing accounting. Stock, VAT and your balance work themselves out.",
+  "settings.app.title": "App",
+  "settings.install.title": "Install OlivERP",
+  "settings.install.meta":
+    "Opens in a window of its own, without browser chrome, and starts straight in the ERP.",
+  "settings.install.action": "Install",
+  "settings.install.installing": "Installing…",
+  "settings.install.installed": "Installed",
+  "settings.install.installedTitle": "OlivERP as an app",
+  "settings.install.installedMeta": "You are already using OlivERP as an app.",
+  "settings.install.manual":
+    "This browser installs it from its own menu: look for “Add to Home Screen” or “Install app”.",
+  "offline.title": "OlivERP | Offline",
+  "offline.heading": "You are offline",
+  "offline.description":
+    "OlivERP keeps your data on the server, so it needs a connection to show it. Try again once you are back online.",
+  "offline.retry": "Try again",
 
   // Landing page
   "landing.meta.title": "OlivERP | The ERP that doesn't ask you to be an accountant",

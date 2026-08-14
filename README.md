@@ -25,6 +25,24 @@ are redirected to `/login` by the middleware. The route table backing the
 sidebar, the header title and every internal link is
 [`src/lib/navigation.ts`](./src/lib/navigation.ts).
 
+## Installable application
+
+OlivERP is a progressive web app. The manifest
+([`src/app/manifest.ts`](./src/app/manifest.ts)) starts it at `/app` rather
+than the landing page, so an installed copy opens the ERP; its scope is the
+whole origin so the login round-trip stays inside the window. Settings offers
+the install itself when the browser has one to give, and explains where the
+browser keeps it when it does not.
+
+[`public/sw.js`](./public/sw.js) caches only what is the same for every
+visitor — build output, icons and the `/offline` page. No API response and no
+rendered page is ever stored. It is registered in production builds only; in
+development any previously registered worker is removed instead.
+
+Icons are generated from `public/icon.svg` by
+[`scripts/generate-icons.mjs`](./scripts/generate-icons.mjs) and committed. Run
+it again after changing the mark or the brand colours.
+
 ## Demo mode
 
 The demo is an explicit, read-only path, offered from both the landing page and
@@ -178,7 +196,9 @@ shell with `pnpm exec convex run`.
 | `pnpm build` | Build the Next application |
 | `pnpm preview` | Build and preview the OpenNext Worker |
 | `pnpm deploy` | Deploy Convex functions, then the Worker |
+| `pnpm test:e2e` | Run the Playwright end-to-end suite |
 | `pnpm api:key --nombre "..."` | Create an API key without a user session (the app does it from Settings) |
+| `node scripts/generate-icons.mjs` | Regenerate the PWA icons from `public/icon.svg` |
 
 ## License
 

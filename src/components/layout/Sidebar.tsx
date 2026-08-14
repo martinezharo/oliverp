@@ -129,7 +129,7 @@ export default function Sidebar({ currentPath, search }: { currentPath: string; 
         aria-hidden="true"
       />
     )}
-    <aside ref={moreRef} className="fixed bottom-0 left-0 right-0 z-40 flex h-16 flex-row border-t border-white/5 bg-[#0f1016]/95 backdrop-blur-xl transition-all duration-300 lg:bottom-auto lg:right-auto lg:top-0 lg:h-screen lg:w-64 lg:flex-col lg:border-r lg:border-t-0">
+    <aside ref={moreRef} className="safe-bottom-bar fixed bottom-0 left-0 right-0 z-40 flex flex-row border-t border-white/5 bg-[#0f1016]/95 backdrop-blur-xl transition-all duration-300 lg:bottom-auto lg:right-auto lg:top-0 lg:h-screen lg:w-64 lg:flex-col lg:border-r lg:border-t-0 lg:pb-0">
       <div className="hidden h-16 items-center justify-center border-b border-white/5 px-0 lg:flex lg:justify-start lg:px-6">
         <Link href={appPath()}>
           <Logo nameClassName="hidden lg:block" />

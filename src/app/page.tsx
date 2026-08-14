@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { AppPreview } from "@/components/landing/AppPreview";
 import { CLAIMS, DEMO, GITHUB_HREF, GITHUB_REPO, HERO, MODULES } from "@/components/landing/content";
 import { LandingNav } from "@/components/landing/LandingNav";
+import { StandaloneRedirect } from "@/components/landing/StandaloneRedirect";
 import { t } from "@/i18n/t";
 import { TONES } from "@/components/landing/tones";
 import { CARD, CTA_ITEM, CTA_ROW, DemoButton, DemoCta, EnterButton, GitHubMark, Label, LandingFooter } from "@/components/landing/ui";
@@ -30,6 +31,7 @@ export const dynamic = "force-dynamic";
 export default function Landing() {
   return (
     <div className="min-h-screen">
+      <StandaloneRedirect />
       <LandingNav />
 
       <main>

@@ -20,6 +20,12 @@ const PUBLIC_ROUTES = new Set([
     "/",
     "/login",
     "/signup",
+    /**
+     * The offline fallback. The service worker precaches it, and a precache
+     * that had been redirected to the login page would store the wrong
+     * document under this URL.
+     */
+    "/offline",
     "/api/demo/start",
     "/api/demo/exit",
 ]);

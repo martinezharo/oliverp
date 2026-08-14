@@ -35,6 +35,12 @@ describe("routePolicy", () => {
         expect(routePolicy("/")).toBe("public");
     });
 
+    it("serves the offline fallback to anyone", () => {
+        // The service worker precaches it with no session in hand; gating it
+        // would store the login page under that URL instead.
+        expect(routePolicy("/offline")).toBe("public");
+    });
+
     it("redirects unauthenticated page requests to the login page", () => {
         for (const path of ["/app", "/app/stock", "/app/transacciones", "/app/historial"]) {
             expect(routePolicy(path), path).toBe("session_redirect");
