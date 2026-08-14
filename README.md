@@ -45,8 +45,11 @@ page has exactly one canonical form — `/en/…` is redirected to it.
 - The strings themselves are [`src/i18n/ui.ts`](./src/i18n/ui.ts). A key
   missing from Spanish falls back to English rather than showing the key.
 
-Not yet translated: the **Plugins** screen and the in-app **Documentation**,
-whose copy is still written in English in the markup and has no keys.
+The interface is translated throughout. The repository's own documents are not:
+`docs/*.md`, `README.md` and `CONTRIBUTING.md` are rendered inside the app as
+they are written, because a translated second copy would drift from the code it
+describes. Their titles and descriptions are part of the interface and are
+translated, and a Spanish reader is told the document itself is in English.
 
 `hreflang` alternates, canonicals, the sitemap and `robots.txt` all derive from
 the same table, so adding a language is one entry in `LOCALES`.

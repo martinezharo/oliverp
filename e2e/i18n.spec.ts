@@ -79,6 +79,24 @@ test.describe("locale routing", () => {
     await expect(page.getByRole("link", { name: "Stock" })).toHaveAttribute("href", /^\/es\/app\/stock/);
   });
 
+  test("translates the screens that used to be English-only", async ({ page }) => {
+    await page.goto("/api/demo/start");
+
+    await page.goto("/es/app/plugins");
+    await expect(page.getByRole("heading", { name: "Añadir un plugin privado" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Revisar plugin" })).toBeVisible();
+    await expect(page.getByRole("main").getByText("No hay plugins privados añadidos")).toBeVisible();
+
+    await page.goto("/es/app/documentacion");
+    await expect(page.getByRole("heading", { name: "Documentación", level: 1 })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Desarrollo de plugins/ })).toBeVisible();
+
+    // The documents stay in the language they are written in, and say so.
+    await page.goto("/es/app/documentacion/api");
+    await expect(page.getByRole("heading", { name: "API pública", level: 1 })).toBeVisible();
+    await expect(page.getByText(/se mantiene en inglés/)).toBeVisible();
+  });
+
   test("formats money and dates the way the language writes them", async ({ page }) => {
     await page.goto("/api/demo/start");
 

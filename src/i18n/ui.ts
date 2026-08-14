@@ -408,6 +408,85 @@ const es: Dict = {
   "language.es": "Español",
   "language.en": "English",
 
+  // Plugins
+  "plugins.eyebrow": "Extensiones privadas",
+  "plugins.title": "Plugins",
+  "plugins.subtitle":
+    "Conecta tus propios repositorios privados. Su comportamiento, una vez validado, se aplica en OlivERP y queda guardado para el proyecto seleccionado. No hay catálogo público.",
+  "plugins.docs": "Documentación de plugins",
+  "plugins.noProject.title": "Selecciona un proyecto",
+  "plugins.noProject.detail":
+    "Los plugins privados se añaden y se activan por separado en cada proyecto.",
+  "plugins.add.title": "Añadir un plugin privado",
+  "plugins.add.description":
+    "Pega un repositorio privado tuyo de GitHub. OlivERP revisa cada comportamiento declarado antes de instalarlo.",
+  "plugins.add.label": "Repositorio privado de GitHub",
+  "plugins.add.placeholder": "https://github.com/tu-cuenta/plugin-privado",
+  "plugins.add.checking": "Comprobando el repositorio…",
+  "plugins.add.submit": "Revisar plugin",
+  "plugins.add.note":
+    "Los repositorios privados se leen con la GitHub App de OlivERP, con acceso de solo lectura al contenido.",
+  "plugins.add.demoDisabled": "No se pueden añadir plugins en modo demo.",
+  "plugins.list.title": "Tus plugins",
+  "plugins.list.description":
+    "Los comportamientos activos ajustan el proyecto sin sustituir la interfaz de OlivERP.",
+  "plugins.list.count.zero": "ninguno añadido",
+  "plugins.list.count.one": "1 añadido",
+  "plugins.list.count.other": "{count} añadidos",
+  "plugins.empty.title": "No hay plugins privados añadidos",
+  "plugins.empty.detail":
+    "Pega arriba uno de tus repositorios de GitHub para añadir la primera extensión.",
+  "plugins.error.resolve": "No se pudo leer el manifiesto del plugin privado.",
+  "plugins.error.install": "No se pudo añadir el plugin.",
+  "plugins.error.toggle": "No se pudo cambiar el estado del plugin.",
+  "plugins.error.remove": "No se pudo eliminar el plugin.",
+  "plugins.install.eyebrow": "Revisar extensión privada",
+  "plugins.install.title": "Añadir {name}",
+  "plugins.install.meta": "Versión {version} · fuente {sha}",
+  "plugins.install.hooks": "Comportamientos",
+  "plugins.install.assurance":
+    "OlivERP ejecuta únicamente estos comportamientos revisados dentro de su propio modelo de datos. El plugin no puede sustituir pantallas, acceder a tu sesión del navegador, inyectar código ni enviar los datos del proyecto a ningún sitio.",
+  "plugins.install.adding": "Añadiendo…",
+  "plugins.install.confirm": "Añadir y activar",
+  "plugins.card.meta": "v{version} · repositorio privado",
+  "plugins.card.activate": "Activar {name}",
+  "plugins.card.deactivate": "Desactivar {name}",
+  "plugins.card.repository": "Repositorio",
+  "plugins.card.active": "Activo en OlivERP",
+  "plugins.card.inactive": "Inactivo",
+  "plugins.card.remove": "Eliminar",
+  "plugins.remove.title": "¿Eliminar {name}?",
+  "plugins.remove.description":
+    "Sus comportamientos dejarán de aplicarse a este proyecto. Los registros que ya existen en OlivERP no se borran.",
+  "plugins.remove.removing": "Eliminando…",
+  "plugins.remove.confirm": "Eliminar",
+  "plugins.hook.vatOnly.label": "Concepto solo IVA: {concept}",
+  "plugins.hook.vatOnly.detail":
+    "Mantiene su IVA en los totales de impuestos y deja su importe bruto fuera de ingresos, gastos, balance y URP.",
+
+  // Documentation
+  "docs.eyebrow": "Base de conocimiento",
+  "docs.title": "Documentación",
+  "docs.description":
+    "Las guías del repositorio, mostradas junto al producto y versionadas con el código que describen.",
+  "docs.read": "Leer documento",
+  "docs.backToAll": "Toda la documentación",
+  "docs.sourceLanguage": "Este documento se mantiene en inglés, junto al código que describe.",
+  // The documents themselves are the repository's own Markdown and stay in
+  // English; what is translated is how they are presented.
+  "docs.entry.overview.title": "Visión general del proyecto",
+  "docs.entry.overview.description": "Instalación, arquitectura, desarrollo y despliegue.",
+  "docs.entry.plugins.title": "Desarrollo de plugins",
+  "docs.entry.plugins.description": "Repositorios privados y comportamientos revisados.",
+  "docs.entry.api.title": "API pública",
+  "docs.entry.api.description": "Autenticación, endpoints, formatos de petición y convenciones.",
+  "docs.entry.database.title": "Base de datos",
+  "docs.entry.database.description": "Modelo de datos principal y convenciones de persistencia.",
+  "docs.entry.audit.title": "Auditoría técnica",
+  "docs.entry.audit.description": "Decisiones de seguridad, rendimiento y mantenibilidad.",
+  "docs.entry.contributing.title": "Contribuir",
+  "docs.entry.contributing.description": "Cómo preparar y validar cambios en el repositorio.",
+
   "offline.title": "OlivERP | Sin conexión",
   "offline.heading": "Sin conexión",
   "offline.description":
@@ -892,6 +971,85 @@ const en: Dict = {
   "language.en.short": "EN",
   "language.es": "Spanish",
   "language.en": "English",
+
+  // Plugins
+  "plugins.eyebrow": "Private extensions",
+  "plugins.title": "Plugins",
+  "plugins.subtitle":
+    "Connect your own private repositories. Their validated behavior applies to OlivERP and persists for the selected project. There is no public catalog.",
+  "plugins.docs": "Plugin documentation",
+  "plugins.noProject.title": "Select a project",
+  "plugins.noProject.detail":
+    "Private plugins are added and activated independently for each project.",
+  "plugins.add.title": "Add a private plugin",
+  "plugins.add.description":
+    "Paste a private GitHub repository you own. OlivERP reviews every declared behavior hook before installation.",
+  "plugins.add.label": "Private GitHub repository",
+  "plugins.add.placeholder": "https://github.com/your-account/private-plugin",
+  "plugins.add.checking": "Checking repository…",
+  "plugins.add.submit": "Review plugin",
+  "plugins.add.note":
+    "Private repositories are read through the OlivERP GitHub App with read-only contents access.",
+  "plugins.add.demoDisabled": "Adding plugins is disabled in demo mode.",
+  "plugins.list.title": "Your plugins",
+  "plugins.list.description":
+    "Active hooks adjust project behavior without replacing OlivERP's interface.",
+  "plugins.list.count.zero": "none added",
+  "plugins.list.count.one": "1 added",
+  "plugins.list.count.other": "{count} added",
+  "plugins.empty.title": "No private plugins added",
+  "plugins.empty.detail":
+    "Paste one of your GitHub repositories above to add the first extension.",
+  "plugins.error.resolve": "The private plugin manifest could not be loaded.",
+  "plugins.error.install": "The plugin could not be added.",
+  "plugins.error.toggle": "The plugin state could not be changed.",
+  "plugins.error.remove": "The plugin could not be removed.",
+  "plugins.install.eyebrow": "Review private extension",
+  "plugins.install.title": "Add {name}",
+  "plugins.install.meta": "Version {version} · source {sha}",
+  "plugins.install.hooks": "Behavior hooks",
+  "plugins.install.assurance":
+    "OlivERP executes only these reviewed hooks inside its trusted data model. The plugin cannot replace screens, access your browser session, inject code, or send project data elsewhere.",
+  "plugins.install.adding": "Adding…",
+  "plugins.install.confirm": "Add and activate",
+  "plugins.card.meta": "v{version} · private repository",
+  "plugins.card.activate": "Activate {name}",
+  "plugins.card.deactivate": "Deactivate {name}",
+  "plugins.card.repository": "Repository",
+  "plugins.card.active": "Active in OlivERP",
+  "plugins.card.inactive": "Inactive",
+  "plugins.card.remove": "Remove",
+  "plugins.remove.title": "Remove {name}?",
+  "plugins.remove.description":
+    "Its behavior hooks will stop applying to this project. Existing OlivERP records will not be deleted.",
+  "plugins.remove.removing": "Removing…",
+  "plugins.remove.confirm": "Remove",
+  "plugins.hook.vatOnly.label": "VAT-only concept: {concept}",
+  "plugins.hook.vatOnly.detail":
+    "Keeps its VAT in tax totals while excluding its gross amount from income, expenses, balance, and URP.",
+
+  // Documentation
+  "docs.eyebrow": "Knowledge base",
+  "docs.title": "Documentation",
+  "docs.description":
+    "The repository guides, rendered alongside the product and kept versioned with the code they describe.",
+  "docs.read": "Read document",
+  "docs.backToAll": "All documentation",
+  "docs.sourceLanguage": "",
+  // The documents themselves are the repository's own Markdown and stay in
+  // English; what is translated is how they are presented.
+  "docs.entry.overview.title": "Project overview",
+  "docs.entry.overview.description": "Setup, architecture, development, and deployment.",
+  "docs.entry.plugins.title": "Plugin development",
+  "docs.entry.plugins.description": "Private repositories and reviewed behavior hooks.",
+  "docs.entry.api.title": "Public API",
+  "docs.entry.api.description": "Authentication, endpoints, request formats, and conventions.",
+  "docs.entry.database.title": "Database",
+  "docs.entry.database.description": "Core data model and persistence conventions.",
+  "docs.entry.audit.title": "Engineering audit",
+  "docs.entry.audit.description": "Security, performance, and maintainability decisions.",
+  "docs.entry.contributing.title": "Contributing",
+  "docs.entry.contributing.description": "How to prepare and validate repository changes.",
 
   "offline.title": "OlivERP | Offline",
   "offline.heading": "You are offline",
