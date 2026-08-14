@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 
 import { useT } from "@/i18n/LocaleProvider";
 
@@ -61,6 +61,7 @@ export default function Modal({
   scrollable?: boolean;
 }) {
   const { t } = useT();
+  const titleId = useId();
   // A `<dialog>` is itself a scroll container capped by the UA at
   // `calc(100% - 38px)`, so a frame taller than that cap made the dialog scroll
   // *around* the panel: its scrollbars were painted on the backdrop, a stride
@@ -70,6 +71,7 @@ export default function Modal({
   return (
     <dialog
       ref={dialogRef}
+      aria-labelledby={titleId}
       onCancel={(event) => { event.preventDefault(); if (dismissible) onClose(); }}
       onMouseDown={(event) => { if (dismissible && event.target === event.currentTarget) onClose(); }}
       className={`relative z-50 m-auto max-h-full w-full ${maxWidth} bg-transparent p-0 backdrop:bg-black/80 backdrop:backdrop-blur-sm`}
@@ -77,7 +79,7 @@ export default function Modal({
       <div className={`m-4 overflow-hidden rounded-3xl border border-white/10 bg-[#14151a] shadow-2xl ${scrollable ? "flex max-h-[calc(100vh-2rem)] flex-col" : ""}`}>
         <div className={`flex items-center justify-between border-b border-white/5 bg-white/5 p-6 ${scrollable ? "shrink-0" : ""}`}>
           <div>
-            <h2 className="flex items-center gap-2 text-xl font-bold text-white">{icon}{title}</h2>
+            <h2 id={titleId} className="flex items-center gap-2 text-xl font-bold text-white">{icon}{title}</h2>
             {subtitle !== undefined && <p className="mt-1 text-sm text-slate-400">{subtitle}</p>}
           </div>
           {dismissible && (
