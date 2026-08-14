@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useT } from "@/i18n/LocaleProvider";
 
 import { landingContent } from "./content";
@@ -49,10 +48,7 @@ export function LandingNav() {
             </a>
           ))}
         </nav>
-        {/* Hidden on the narrowest screens, where the wordmark and the call to
-            action already share 320px. The one in settings is always there. */}
-        <LanguageSwitcher className="ml-auto hidden shrink-0 sm:inline-flex" />
-        <EnterButton cta={cta} short className="ml-auto shrink-0 sm:ml-3" />
+        <EnterButton cta={cta} short className="ml-auto shrink-0" />
       </div>
     </header>
   );

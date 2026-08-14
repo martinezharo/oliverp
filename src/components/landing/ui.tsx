@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { Logo } from "@/components/ui/Logo";
 
 import { DEMO_HREF, type FooterLinkSpec, type LandingContent } from "./content";
@@ -188,7 +189,14 @@ export function LandingFooter({ footer, homeHref }: { footer: LandingContent["fo
             from `md`, where there is width for the tagline to hold its own. */}
         <div className="flex flex-col gap-10 md:flex-row md:justify-between md:gap-16">
           <div className="max-w-xs">
-            <Wordmark href={homeHref} className="inline-block" />
+            {/* The language pair rides alongside the wordmark rather than in
+                the header: it is the visitor's one chance to find the other
+                language, but it should not compete with the call to action on
+                the way in. */}
+            <div className="flex items-center justify-between gap-4">
+              <Wordmark href={homeHref} className="inline-block" />
+              <LanguageSwitcher className="shrink-0" />
+            </div>
             <p className="mt-4 text-sm leading-relaxed text-slate-500">{footer.tagline}</p>
           </div>
 
