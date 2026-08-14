@@ -44,13 +44,13 @@ function DayCard({ row, transactions }: { row: FinanceRow; transactions: Transac
               <span className="font-mono text-base font-bold lg:text-lg">{date.getDate()}</span>
             </div>
             <div className="min-w-0">
-              <h4 className="text-sm font-medium leading-tight text-white lg:text-base">
+              <h2 className="text-sm font-medium leading-tight text-white lg:text-base">
                 <span className="block sm:hidden">
                   {formatDate(date, { month: "long", year: "numeric" })}
                   <span className="block font-semibold">{formatDate(date, { weekday: "long" })}</span>
                 </span>
                 <span className="hidden sm:block">{formatDate(date, { weekday: "long", month: "long", year: "numeric" })}</span>
-              </h4>
+              </h2>
               <div className="mt-1 flex flex-wrap gap-2 text-xs lg:gap-3">
                 <span className="text-emerald-400">{t("finance.income")}: +{formatCurrency(row.ingresos)}</span>
                 <span className="text-red-400">{t("finance.expenses")}: -{formatCurrency(row.gastos)}</span>

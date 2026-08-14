@@ -110,12 +110,12 @@ export default function ProductHistoryModal({ product, onClose }: { product: Sto
     >
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mb-8 rounded-xl border border-white/5 bg-white/5 p-4">
-          <h4 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-300">
+          <h3 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-slate-300">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 5v14M5 12h14" />
             </svg>
             {t("modal.history.addManualAdjust")}
-          </h4>
+          </h3>
 
           <form className="grid grid-cols-1 items-end gap-4 md:grid-cols-4" onSubmit={submitAdjustment}>
             <div>

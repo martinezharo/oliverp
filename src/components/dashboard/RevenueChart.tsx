@@ -106,7 +106,7 @@ export default function RevenueChart({ projectId }: { projectId: number }) {
         <div className="flex items-center gap-3">
           <div className="rounded-lg bg-blue-500/10 p-2 text-blue-400"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg></div>
           <div>
-            <h3 className="text-lg font-bold text-white">{t("chart.title")}</h3>
+            <h2 className="text-lg font-bold text-white">{t("chart.title")}</h2>
             <div className="flex items-center gap-2">
               <p className="text-xs text-slate-400">{t("chart.totalPeriod")}</p>
               <span className="text-xs font-bold text-emerald-400">{formatCurrency(total)}</span>

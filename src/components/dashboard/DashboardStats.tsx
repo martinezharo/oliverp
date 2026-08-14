@@ -122,10 +122,10 @@ function StatCard({
         </svg>
       </div>
       <div className="relative z-10">
-        <h3 className="mb-4 flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-slate-400">
+        <h2 className="mb-4 flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-slate-400">
           <span className={`h-2 w-2 rounded-full ${dotTone[tone]}`} />
           {title}
-        </h3>
+        </h2>
         {children}
       </div>
     </div>

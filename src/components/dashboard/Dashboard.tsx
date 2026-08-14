@@ -17,6 +17,11 @@ export default function Dashboard() {
 
   return (
     <>
+      {/* The screen shows its name in the shell header and in the sidebar, so
+          a visible title would repeat it twice. It still needs one heading to
+          hang the rest of the outline from. */}
+      <h1 className="sr-only">{t("layout.dashboard")}</h1>
+
       <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
         <ActionCard
           tone="sale"
@@ -146,7 +151,7 @@ function ActionCard({
             {icon}
           </svg>
         </div>
-        <h3 className="mb-2 text-2xl font-bold text-white">{title}</h3>
+        <h2 className="mb-2 text-2xl font-bold text-white">{title}</h2>
         <p className={`max-w-[180px] text-sm leading-relaxed ${colors.description}`}>{description}</p>
         <div className={`mt-6 inline-flex items-center gap-2 text-sm font-medium transition-all group-hover:gap-3 ${colors.accent}`}>
           <span>{t("common.start")}</span>

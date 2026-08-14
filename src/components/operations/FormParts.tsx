@@ -140,7 +140,7 @@ export function LineItems({
   return (
     <div className="border-t border-white/5 pt-6">
       <div className="mb-4 flex items-center justify-between">
-        <h4 className="text-sm font-bold uppercase tracking-wider text-white">{title}</h4>
+        <h3 className="text-sm font-bold uppercase tracking-wider text-white">{title}</h3>
         <button type="button" onClick={onAdd} className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-white transition-colors hover:bg-white/10">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />

@@ -77,7 +77,7 @@ export default function Modal({
       <div className={`m-4 overflow-hidden rounded-3xl border border-white/10 bg-[#14151a] shadow-2xl ${scrollable ? "flex max-h-[calc(100vh-2rem)] flex-col" : ""}`}>
         <div className={`flex items-center justify-between border-b border-white/5 bg-white/5 p-6 ${scrollable ? "shrink-0" : ""}`}>
           <div>
-            <h3 className="flex items-center gap-2 text-xl font-bold text-white">{icon}{title}</h3>
+            <h2 className="flex items-center gap-2 text-xl font-bold text-white">{icon}{title}</h2>
             {subtitle !== undefined && <p className="mt-1 text-sm text-slate-400">{subtitle}</p>}
           </div>
           {dismissible && (

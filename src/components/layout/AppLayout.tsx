@@ -47,9 +47,12 @@ export default function AppLayout({
       <div className="relative ml-0 flex min-w-0 flex-1 flex-col transition-all duration-300 lg:ml-64">
         <header className="safe-header sticky top-0 z-30 flex items-center justify-between border-b border-white/5 bg-[#0f1016]/80 px-6 backdrop-blur-md">
           <div className="flex items-center gap-4">
-            <h2 className="hidden text-xs font-bold uppercase tracking-widest text-slate-500 md:block">
+            {/* A location label, not a heading: the page below carries its own
+                `h1`, and a shell-level heading rendered before it put the
+                outline of every screen out of order. */}
+            <p className="hidden text-xs font-bold uppercase tracking-widest text-slate-500 md:block">
               {title.split("|")[1]?.trim() || t("layout.dashboard")}
-            </h2>
+            </p>
           </div>
 
           <div className="flex items-center gap-6">
