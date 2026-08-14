@@ -6,7 +6,7 @@ import { useMemo } from "react";
 
 import type { FinanceRow, StockRow } from "@/types/erp";
 import { useErpContext } from "@/hooks/useErpContext";
-import { mockFinanzas, mockStock } from "@/lib/mock-data";
+import { mockFinanceRows, mockStock } from "@/lib/mock-data";
 import { normalizeTransactions, type NormalizedTransaction } from "@/lib/transactions";
 
 /**
@@ -29,7 +29,7 @@ export function useFinanceRows(): FinanceRow[] | undefined {
   return useMemo(() => {
     const rows = demo
       ? projectId
-        ? mockFinanzas.filter((row) => row.proyecto_id === projectId)
+        ? mockFinanceRows().filter((row) => row.proyecto_id === projectId)
         : []
       : remote;
     if (!rows) return undefined;

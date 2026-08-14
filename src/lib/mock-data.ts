@@ -135,17 +135,41 @@ export const mockStock: MockStockRow[] = [
 ];
 
 // ── Daily Finance (last 90 days) ──────────────────────────
-function generateMockFinanzas(): MockFinanceRow[] {
-    const data: MockFinanceRow[] = [];
-    const now = new Date();
 
-    for (let i = 90; i >= 0; i--) {
-        const date = new Date(now);
-        date.setDate(date.getDate() - i);
-        const dateStr = date.toISOString().split("T")[0];
+/**
+ * The day the sample data ends on, as a UTC midnight.
+ *
+ * The generators below used to start from `new Date()` and then call
+ * `toISOString()` on it, which made the series depend on two things it should
+ * not: the time of day, and the machine's timezone. The Worker rendering the
+ * page is on UTC and the browser hydrating it is on whatever the reader's
+ * clock says, so the two could produce different dates for the same row —
+ * React would find a mismatch, throw away the server-rendered page and rebuild
+ * it in the browser. Anchoring on a UTC day makes both sides agree.
+ */
+function utcDayStart(): Date {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+}
+
+/** `YYYY-MM-DD` for a date already anchored to UTC. */
+function utcDay(date: Date): string {
+    return date.toISOString().slice(0, 10);
+}
+
+/** How many days of sample history the demo carries. */
+const MOCK_DAYS = 90;
+
+function generateMockFinanzas(endOfSeries: Date): MockFinanceRow[] {
+    const data: MockFinanceRow[] = [];
+
+    for (let i = MOCK_DAYS; i >= 0; i--) {
+        const date = new Date(endOfSeries);
+        date.setUTCDate(date.getUTCDate() - i);
+        const dateStr = utcDay(date);
 
         // Simulate some variance – weekends have less activity
-        const dayOfWeek = date.getDay();
+        const dayOfWeek = date.getUTCDay();
         const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
         const activityFactor = isWeekend ? 0.3 : 1;
 
@@ -175,28 +199,42 @@ function generateMockFinanzas(): MockFinanceRow[] {
     return data;
 }
 
-export const mockFinanzas = generateMockFinanzas();
+/**
+ * The sample rows for today, built once per UTC day.
+ *
+ * A module-level constant was evaluated when the bundle first loaded, which on
+ * a Worker that stays warm for days meant the demo quietly showed a series
+ * that ended last week. Rebuilding it when the day changes costs one string
+ * comparison per call and keeps "the last 90 days" true.
+ */
+let cached: { day: string; rows: MockFinanceRow[] } | null = null;
+
+export function mockFinanceRows(): MockFinanceRow[] {
+    const end = utcDayStart();
+    const day = utcDay(end);
+    if (cached?.day !== day) cached = { day, rows: generateMockFinanzas(end) };
+    return cached.rows;
+}
 
 // ── Evolution chart data helper ───────────────────────────
 export function getMockEvolution(days: number) {
-    const now = new Date();
-    const startDate = new Date();
-    startDate.setDate(startDate.getDate() - days);
-
+    const rows = mockFinanceRows();
+    const end = utcDayStart();
     const result = [];
-    const currentDate = new Date(startDate);
 
-    while (currentDate <= now) {
-        const dateStr = currentDate.toISOString().split("T")[0];
-        const match = mockFinanzas.find((f) => f.dia === dateStr);
+    // Counted rather than compared against a moving `now`: the loop used to
+    // run one more or one fewer time depending on the millisecond it started.
+    for (let i = days; i >= 0; i--) {
+        const date = new Date(end);
+        date.setUTCDate(date.getUTCDate() - i);
+        const dateStr = utcDay(date);
+        const match = rows.find((row) => row.dia === dateStr);
 
         result.push({
             date: dateStr,
             ingresos: match ? match.ingresos : 0,
             urp: match ? match.urp : 0,
         });
-
-        currentDate.setDate(currentDate.getDate() + 1);
     }
 
     return result;
