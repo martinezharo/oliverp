@@ -80,7 +80,7 @@ export default async function Landing(props: LangParams) {
                 <DemoButton label={cta.demo} size="lg" className={CTA_ITEM} />
               </div>
 
-              <p className="mt-5 font-mono text-[11px] leading-relaxed text-slate-600 sm:text-xs">{hero.note}</p>
+              <p className="mt-5 font-mono text-[11px] leading-relaxed text-slate-400 sm:text-xs">{hero.note}</p>
             </div>
 
             <div className="relative">

@@ -55,7 +55,7 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
               choose(lang);
             }}
             className={`rounded-md px-2 py-1 text-xs font-semibold uppercase tracking-wide transition-colors ${
-              active ? "bg-white/10 text-white" : "text-slate-500 hover:text-white"
+              active ? "bg-white/10 text-white" : "text-slate-400 hover:text-white"
             }`}
           >
             {t(`language.${lang}.short`)}

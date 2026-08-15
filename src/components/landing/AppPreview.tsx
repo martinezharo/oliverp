@@ -58,7 +58,7 @@ export function AppPreview({ t, compact = false, className = "" }: { t: Translat
         <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
         <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
         <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
-        <span className="ml-3 font-mono text-[11px] text-slate-500">{SITE_DOMAIN}</span>
+        <span className="ml-3 font-mono text-[11px] text-slate-400">{SITE_DOMAIN}</span>
       </div>
 
       <div className="flex">
@@ -67,7 +67,7 @@ export function AppPreview({ t, compact = false, className = "" }: { t: Translat
             {NAV.map((item) => (
               <span
                 key={item.label}
-                className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${item.active ? "bg-primary-500/10 text-blue-300" : "text-slate-500"}`}
+                className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${item.active ? "bg-primary-500/10 text-blue-300" : "text-slate-400"}`}
               >
                 <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                   {item.icon}
@@ -191,7 +191,7 @@ function StatTile({
           <div className="h-full rounded-full bg-amber-500/50" style={{ width: `${progress}%` }} />
         </div>
       )}
-      <p className="mt-2 text-[11px] text-slate-500">{foot}</p>
+      <p className="mt-2 text-[11px] text-slate-400">{foot}</p>
     </div>
   );
 }
