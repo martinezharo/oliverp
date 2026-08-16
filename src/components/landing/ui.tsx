@@ -160,7 +160,7 @@ export function DemoCta({ label, className = "" }: { label: string; className?: 
 /** The uppercase micro-label the app uses above panels and in its header. */
 export function Label({ tone, children, className = "" }: { tone?: Tone; children: React.ReactNode; className?: string }) {
   return (
-    <p className={`flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-500 ${className}`}>
+    <p className={`flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-slate-400 ${className}`}>
       {tone && <span className={`h-2 w-2 rounded-full ${TONES[tone].dot}`} />}
       {children}
     </p>
@@ -197,7 +197,7 @@ export function LandingFooter({ footer, homeHref }: { footer: LandingContent["fo
               <Wordmark href={homeHref} className="inline-block" />
               <LanguageSwitcher className="shrink-0" />
             </div>
-            <p className="mt-4 text-sm leading-relaxed text-slate-500">{footer.tagline}</p>
+            <p className="mt-4 text-sm leading-relaxed text-slate-400">{footer.tagline}</p>
           </div>
 
           <div className="grid grid-cols-2 gap-8 sm:gap-16 md:shrink-0">
@@ -216,7 +216,7 @@ export function LandingFooter({ footer, homeHref }: { footer: LandingContent["fo
           </div>
         </div>
 
-        <p className="mt-10 border-t border-white/5 pt-6 font-mono text-xs text-slate-600 sm:mt-12">{footer.legal}</p>
+        <p className="mt-10 border-t border-white/5 pt-6 font-mono text-xs text-slate-400 sm:mt-12">{footer.legal}</p>
       </div>
     </footer>
   );
