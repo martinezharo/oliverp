@@ -45,7 +45,7 @@ describe("localeHref", () => {
     });
 
     it("round-trips with splitLocale", () => {
-        for (const path of ["/", "/login", "/app", "/app/documentacion/api"]) {
+        for (const path of ["/", "/login", "/app", "/documentation/api"]) {
             expect(splitLocale(localeHref("es", path)).path).toBe(path);
         }
     });

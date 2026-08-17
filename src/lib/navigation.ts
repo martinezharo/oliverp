@@ -9,9 +9,16 @@
 
 export const APP_ROOT = "/app";
 
+export const DOCUMENTATION_ROOT = "/documentation";
+
 /** `appPath()` → `/app`; `appPath("stock")` → `/app/stock`. */
 export function appPath(segment = ""): string {
     return segment ? `${APP_ROOT}/${segment}` : APP_ROOT;
+}
+
+/** `documentationPath()` → `/documentation`; `documentationPath("api")` → `/documentation/api`. */
+export function documentationPath(segment = ""): string {
+    return segment ? `${DOCUMENTATION_ROOT}/${segment}` : DOCUMENTATION_ROOT;
 }
 
 /** True for the given page and for anything nested under it. */
@@ -27,6 +34,8 @@ export type AppSection = {
     mobileLabel?: string;
     /** Document title, shown in the header after `split("|")`. */
     titleKey: string;
+    /** Public destination for sections whose content no longer lives in `/app`. */
+    destination?: string;
     /**
      * `primary` stays on the mobile bottom bar; `overflow` moves behind its
      * "More" button. The sidebar renders both inline.
@@ -84,6 +93,7 @@ export const APP_SECTIONS: AppSection[] = [
         navKey: "nav.documentation",
         mobileLabel: "Docs",
         titleKey: "title.documentation",
+        destination: DOCUMENTATION_ROOT,
         group: "overflow",
         icon: "M4 19.5A2.5 2.5 0 016.5 17H20 M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z M8 7h8M8 11h6",
     },
@@ -100,8 +110,9 @@ const SECTIONS_BY_SPECIFICITY = APP_SECTIONS
 
 /**
  * Path of the section a page belongs to, including nested pages:
- * `/app/documentacion/api` resolves to the documentation section. Compare a
- * section's path against this to know whether it is the current one.
+ * The legacy `/app/documentacion` path resolves to the documentation section
+ * before its permanent redirect. Compare a section's path against this to know
+ * whether it is the current one.
  */
 export function activeSectionPath(pathname: string): string {
     return SECTIONS_BY_SPECIFICITY.find((section) => isUnder(pathname, section.path))?.path ?? appPath();

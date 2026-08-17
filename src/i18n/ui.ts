@@ -469,11 +469,13 @@ const es: Dict = {
   "docs.title": "Documentación",
   "docs.description":
     "Guías para usar OlivERP, conectar integraciones y entender sus extensiones.",
+  "docs.navigation": "Navegación de documentación",
+  "docs.openApp": "Abrir OlivERP",
   "docs.read": "Leer documento",
   "docs.backToAll": "Toda la documentación",
-  "docs.sourceLanguage": "Este documento se mantiene en inglés.",
-  // The document cards are translated as interface chrome; the Markdown pages
-  // stay in English so there is one source of truth for their content.
+  "docs.sourceLanguage": "",
+  // The document cards and their Markdown content are translated independently
+  // so the public route stays readable in the language selected by the reader.
   "docs.entry.guide.title": "Guía de uso",
   "docs.entry.guide.description": "Cómo empezar y sacar partido a cada sección de OlivERP.",
   "docs.entry.plugins.title": "Desarrollo de plugins",
@@ -1027,11 +1029,13 @@ const en: Dict = {
   "docs.title": "Documentation",
   "docs.description":
     "Guides for using OlivERP, connecting integrations, and understanding its extensions.",
+  "docs.navigation": "Documentation navigation",
+  "docs.openApp": "Open OlivERP",
   "docs.read": "Read document",
   "docs.backToAll": "All documentation",
   "docs.sourceLanguage": "",
-  // The document cards are translated as interface chrome; the Markdown pages
-  // stay in English so there is one source of truth for their content.
+  // The document cards and their Markdown content are translated independently
+  // so the public route stays readable in the language selected by the reader.
   "docs.entry.guide.title": "User guide",
   "docs.entry.guide.description": "How to get started and use each OlivERP section.",
   "docs.entry.plugins.title": "Plugin development",

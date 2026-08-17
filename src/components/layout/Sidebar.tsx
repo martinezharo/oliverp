@@ -12,16 +12,23 @@ type MenuItem = {
   label: string;
   mobileLabel?: string;
   path: string;
+  href: string;
   icon: string;
 };
 
 function toMenuItem(section: AppSection, t: Translate): MenuItem {
+  const path = appPath(section.segment);
   return {
     label: t(section.navKey),
     ...(section.mobileLabel === undefined ? {} : { mobileLabel: section.mobileLabel }),
-    path: appPath(section.segment),
+    path,
+    href: section.destination ?? path,
     icon: section.icon,
   };
+}
+
+function menuHref(item: MenuItem, href: (path: string) => string, search: string): string {
+  return item.href === item.path ? `${href(item.href)}${search}` : href(item.href);
 }
 
 // The bottom bar only has room for a handful of destinations before the labels
@@ -76,9 +83,10 @@ function NavLink({
   className?: string;
 }) {
   const href = useHref();
+  const destination = menuHref(item, href, search);
   return (
     <Link
-      href={`${href(item.path)}${search}`}
+      href={destination}
       aria-current={active ? "page" : undefined}
       className={`group relative flex min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-xl px-0.5 py-2 transition-all duration-200 active:scale-95 lg:flex-none lg:flex-row lg:justify-start lg:px-3 lg:py-3 lg:active:scale-100 ${active ? "bg-primary-500/10 text-primary-400" : "text-slate-400 hover:bg-white/5 hover:text-white"} ${className}`}
     >
@@ -138,7 +146,7 @@ export default function Sidebar({ currentPath, search }: { currentPath: string; 
         aria-hidden="true"
       />
     )}
-    <aside ref={moreRef} className="safe-bottom-bar fixed bottom-0 left-0 right-0 z-40 flex flex-row border-t border-white/5 bg-[#0f1016]/95 backdrop-blur-xl transition-all duration-300 lg:bottom-auto lg:right-auto lg:top-0 lg:h-screen lg:w-64 lg:flex-col lg:border-r lg:border-t-0 lg:pb-0">
+    <aside data-app-sidebar ref={moreRef} className="safe-bottom-bar fixed bottom-0 left-0 right-0 z-40 flex flex-row border-t border-white/5 bg-[#0f1016]/95 backdrop-blur-xl transition-all duration-300 lg:bottom-auto lg:right-auto lg:top-0 lg:h-screen lg:w-64 lg:flex-col lg:border-r lg:border-t-0 lg:pb-0">
       <div className="hidden h-16 items-center justify-center border-b border-white/5 px-0 lg:flex lg:justify-start lg:px-6">
         <Link href={href(appPath())}>
           <Logo nameClassName="hidden lg:block" />
@@ -190,7 +198,7 @@ export default function Sidebar({ currentPath, search }: { currentPath: string; 
               return (
                 <Link
                   key={item.path}
-                  href={`${href(item.path)}${search}`}
+                  href={menuHref(item, href, search)}
                   aria-current={active ? "page" : undefined}
                   // The shell survives route changes, so the sheet has to be
                   // dismissed explicitly when a destination is picked.

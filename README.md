@@ -85,7 +85,7 @@ match and refuse to run against a `prod:*` deployment.
 | `pnpm run test:e2e` | Run the Playwright browser suite |
 | `pnpm run build` | Build the Next.js application |
 | `pnpm run preview` | Build and preview the Cloudflare Worker locally |
-| `pnpm run docs:generate` | Regenerate the in-app Markdown documentation |
+| `pnpm run docs:generate` | Regenerate the public Markdown documentation |
 
 Before submitting a change, run at least:
 
@@ -127,7 +127,9 @@ documented in [`docs/API.md`](https://github.com/martinezharo/oliverp/blob/main/
 ## Documentation
 
 The app exposes a focused set of user-facing documents at
-`/app/documentacion`: the usage guide, API reference, and plugin documentation.
+`/documentation` (and `/es/documentation`): the usage guide, API reference, and
+plugin documentation. They are available without an account and keep the same
+language-specific URL structure as the rest of the site.
 Repository-only engineering material remains available here:
 
 - [App usage guide](https://github.com/martinezharo/oliverp/blob/main/docs/APP_GUIDE.md)

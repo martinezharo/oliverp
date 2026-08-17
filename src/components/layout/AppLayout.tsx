@@ -41,11 +41,11 @@ export default function AppLayout({
   }, [currentPath]);
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div data-app-shell className="flex h-screen overflow-hidden">
       <Sidebar currentPath={currentPath} search={search} />
 
       <div className="relative ml-0 flex min-w-0 flex-1 flex-col transition-all duration-300 lg:ml-64">
-        <header className="safe-header sticky top-0 z-30 flex items-center justify-between border-b border-white/5 bg-[#0f1016]/80 px-6 backdrop-blur-md">
+        <header data-app-header className="safe-header sticky top-0 z-30 flex items-center justify-between border-b border-white/5 bg-[#0f1016]/80 px-6 backdrop-blur-md">
           <div className="flex items-center gap-4">
             {/* A location label, not a heading: the page below carries its own
                 `h1`, and a shell-level heading rendered before it put the
@@ -73,7 +73,7 @@ export default function AppLayout({
           </div>
         </header>
 
-        <main ref={mainRef} className="safe-bottom-gap flex-1 overflow-y-auto scroll-smooth p-6 lg:pb-6">
+        <main data-app-main ref={mainRef} className="safe-bottom-gap flex-1 overflow-y-auto scroll-smooth p-6 lg:pb-6">
           <div className="mx-auto max-w-7xl pb-10">{children}</div>
         </main>
       </div>

@@ -60,6 +60,14 @@ const nextConfig: NextConfig = {
     return [
       { source: `/${DEFAULT_LOCALE}`, destination: "/", permanent: true },
       { source: `/${DEFAULT_LOCALE}/:path*`, destination: "/:path*", permanent: true },
+      { source: "/documentacion/:slug", destination: "/documentation/:slug", permanent: true },
+      { source: "/documentacion", destination: "/documentation", permanent: true },
+      { source: "/es/documentacion/:slug", destination: "/es/documentation/:slug", permanent: true },
+      { source: "/es/documentacion", destination: "/es/documentation", permanent: true },
+      { source: "/app/documentacion/:slug", destination: "/documentation/:slug", permanent: true },
+      { source: "/app/documentacion", destination: "/documentation", permanent: true },
+      { source: "/es/app/documentacion/:slug", destination: "/es/documentation/:slug", permanent: true },
+      { source: "/es/app/documentacion", destination: "/es/documentation", permanent: true },
     ];
   },
 
@@ -78,6 +86,11 @@ const nextConfig: NextConfig = {
         { source: "/", destination: `/${DEFAULT_LOCALE}` },
         { source: "/login", destination: `/${DEFAULT_LOCALE}/login` },
         { source: "/offline", destination: `/${DEFAULT_LOCALE}/offline` },
+        { source: "/documentation", destination: `/${DEFAULT_LOCALE}/documentation` },
+        {
+          source: "/documentation/:path*",
+          destination: `/${DEFAULT_LOCALE}/documentation/:path*`,
+        },
         { source: "/app", destination: `/${DEFAULT_LOCALE}/app` },
         {
           // Keep the application remainder as a catch-all: a normal `:path`

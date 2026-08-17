@@ -30,6 +30,14 @@ const PUBLIC_ROUTES = new Set([
     "/api/demo/exit",
 ]);
 
+const PUBLIC_PAGE_PREFIXES = ["/documentation"];
+
+function isPublicPage(pathname: string): boolean {
+    return PUBLIC_ROUTES.has(pathname) || PUBLIC_PAGE_PREFIXES.some(
+        (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    );
+}
+
 /**
  * The machine-facing API carries an API key in a header, not in cookies.
  * Redirecting a programmatic caller to an HTML login page would turn a clear
@@ -40,7 +48,7 @@ const SELF_AUTHENTICATED_PREFIX = "/api/v1/";
 const API_PREFIX = "/api/";
 
 export function routePolicy(pathname: string): RoutePolicy {
-    if (PUBLIC_ROUTES.has(pathname)) return "public";
+    if (isPublicPage(pathname)) return "public";
     if (pathname.startsWith("/api/auth/")) return "public";
     if (pathname.startsWith(SELF_AUTHENTICATED_PREFIX)) return "self_authenticated";
     // Everything else under /api/ is the browser UI's own JSON API. It is

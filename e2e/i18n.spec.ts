@@ -87,19 +87,27 @@ test.describe("locale routing", () => {
     await expect(page.getByRole("button", { name: "Revisar plugin" })).toBeVisible();
     await expect(page.getByRole("main").getByText("No hay plugins privados añadidos")).toBeVisible();
 
-    await page.goto("/es/app/documentacion");
+    await page.goto("/es/documentation");
     await expect(page.getByRole("heading", { name: "Documentación", level: 1 })).toBeVisible();
     await expect(page.getByRole("link", { name: /Guía de uso/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /Desarrollo de plugins/ })).toBeVisible();
 
-    // The documents stay in the language they are written in, and say so.
-    await page.goto("/es/app/documentacion/api");
+    await page.goto("/es/documentation/api");
     await expect(page.getByRole("heading", { name: "API pública", level: 1 })).toBeVisible();
-    await expect(page.getByText(/se mantiene en inglés/)).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Primeros pasos" })).toBeVisible();
 
-    await page.goto("/es/app/documentacion/guide");
+    await page.goto("/es/documentation/guide");
     await expect(page.getByRole("heading", { name: "Guía de uso", level: 1 })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Start here" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Primeros pasos" })).toBeVisible();
+    await expect(page.getByText(/Inicia sesión con la cuenta de GitHub/)).toBeVisible();
+  });
+
+  test("points the Spanish landing documentation link to the public route", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.getByRole("link", { name: "Documentation", exact: true })).toHaveAttribute("href", "/documentation");
+
+    await page.goto("/es");
+    await expect(page.getByRole("link", { name: "Documentación", exact: true })).toHaveAttribute("href", "/es/documentation");
   });
 
   test("formats money and dates the way the language writes them", async ({ page }) => {

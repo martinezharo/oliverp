@@ -9,7 +9,7 @@ import { useErpContext } from "@/hooks/useErpContext";
 import { useHref, useT } from "@/i18n/LocaleProvider";
 import type { Translate } from "@/i18n/t";
 import { apiErrorMessage, apiJson } from "@/lib/client-api";
-import { appPath } from "@/lib/navigation";
+import { documentationPath } from "@/lib/navigation";
 import {
   installArgs,
   type PluginInstallation,
@@ -118,7 +118,7 @@ export default function PluginsPage() {
           <h1 className="bg-gradient-to-r from-white to-slate-400 bg-clip-text text-3xl font-bold tracking-tight text-transparent">{t("plugins.title")}</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">{t("plugins.subtitle")}</p>
         </div>
-        <Link href={href(appPath("documentacion/plugins"))} className="inline-flex items-center gap-2 self-start rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:border-primary-500/30 hover:text-white">{t("plugins.docs")} <ArrowIcon /></Link>
+        <Link href={href(documentationPath("plugins"))} className="inline-flex items-center gap-2 self-start rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:border-primary-500/30 hover:text-white">{t("plugins.docs")} <ArrowIcon /></Link>
       </header>
 
       {!projectId ? <EmptyState title={t("plugins.noProject.title")} detail={t("plugins.noProject.detail")} /> : (

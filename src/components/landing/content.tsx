@@ -1,6 +1,6 @@
 import { localeHref } from "@/i18n/locale";
 import type { Translator } from "@/i18n/t";
-import { APP_ROOT, appPath } from "@/lib/navigation";
+import { APP_ROOT, documentationPath } from "@/lib/navigation";
 import { SITE_DOMAIN } from "@/lib/site";
 
 import type { Tone } from "./tones";
@@ -46,7 +46,7 @@ export type FooterLinkSpec = {
 export type LandingContent = ReturnType<typeof landingContent>;
 
 export function landingContent({ t, lang }: Translator) {
-  /** Internal destinations keep the language; `DEMO_HREF` and GitHub do not. */
+  /** Local destinations keep the language; `DEMO_HREF` and GitHub do not. */
   const inApp = (path: string) => localeHref(lang, path);
 
   const hero = {
@@ -196,7 +196,7 @@ export function landingContent({ t, lang }: Translator) {
       {
         title: t("landing.footer.project"),
         links: [
-          { href: inApp(appPath("documentacion")), label: t("landing.footer.docs") },
+          { href: inApp(documentationPath()), label: t("landing.footer.docs") },
           // A wrapping label rather than the `owner/repo` slug: the slug is one
           // unbreakable 157px run and these columns are ~124px wide at 320px.
           { href: GITHUB_HREF, label: t("landing.footer.github"), native: true, newTab: true },

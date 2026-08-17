@@ -35,6 +35,12 @@ describe("routePolicy", () => {
         expect(routePolicy("/")).toBe("public");
     });
 
+    it("serves every public documentation page to anyone", () => {
+        for (const path of ["/documentation", "/documentation/guide", "/documentation/api"]) {
+            expect(routePolicy(path), path).toBe("public");
+        }
+    });
+
     it("serves the offline fallback to anyone", () => {
         // The service worker precaches it with no session in hand; gating it
         // would store the login page under that URL instead.
@@ -48,9 +54,10 @@ describe("routePolicy", () => {
     });
 
     it("does not treat a lookalike path as the application", () => {
-        // The landing is the only public page; anything else stays gated.
+        // Public prefixes must not accidentally open similarly named pages.
         expect(routePolicy("/application")).toBe("session_redirect");
         expect(routePolicy("/appointments")).toBe("session_redirect");
+        expect(routePolicy("/documentationx")).toBe("session_redirect");
     });
 
     it("keeps the complete Convex Auth compatibility namespace public", () => {
