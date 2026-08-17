@@ -468,24 +468,18 @@ const es: Dict = {
   "docs.eyebrow": "Base de conocimiento",
   "docs.title": "Documentación",
   "docs.description":
-    "Las guías del repositorio, mostradas junto al producto y versionadas con el código que describen.",
+    "Guías para usar OlivERP, conectar integraciones y entender sus extensiones.",
   "docs.read": "Leer documento",
   "docs.backToAll": "Toda la documentación",
-  "docs.sourceLanguage": "Este documento se mantiene en inglés, junto al código que describe.",
-  // The documents themselves are the repository's own Markdown and stay in
-  // English; what is translated is how they are presented.
-  "docs.entry.overview.title": "Visión general del proyecto",
-  "docs.entry.overview.description": "Instalación, arquitectura, desarrollo y despliegue.",
+  "docs.sourceLanguage": "Este documento se mantiene en inglés.",
+  // The document cards are translated as interface chrome; the Markdown pages
+  // stay in English so there is one source of truth for their content.
+  "docs.entry.guide.title": "Guía de uso",
+  "docs.entry.guide.description": "Cómo empezar y sacar partido a cada sección de OlivERP.",
   "docs.entry.plugins.title": "Desarrollo de plugins",
   "docs.entry.plugins.description": "Repositorios privados y comportamientos revisados.",
   "docs.entry.api.title": "API pública",
   "docs.entry.api.description": "Autenticación, endpoints, formatos de petición y convenciones.",
-  "docs.entry.database.title": "Base de datos",
-  "docs.entry.database.description": "Modelo de datos principal y convenciones de persistencia.",
-  "docs.entry.audit.title": "Auditoría técnica",
-  "docs.entry.audit.description": "Decisiones de seguridad, rendimiento y mantenibilidad.",
-  "docs.entry.contributing.title": "Contribuir",
-  "docs.entry.contributing.description": "Cómo preparar y validar cambios en el repositorio.",
 
   "offline.title": "OlivERP | Sin conexión",
   "offline.heading": "Sin conexión",
@@ -1032,24 +1026,18 @@ const en: Dict = {
   "docs.eyebrow": "Knowledge base",
   "docs.title": "Documentation",
   "docs.description":
-    "The repository guides, rendered alongside the product and kept versioned with the code they describe.",
+    "Guides for using OlivERP, connecting integrations, and understanding its extensions.",
   "docs.read": "Read document",
   "docs.backToAll": "All documentation",
   "docs.sourceLanguage": "",
-  // The documents themselves are the repository's own Markdown and stay in
-  // English; what is translated is how they are presented.
-  "docs.entry.overview.title": "Project overview",
-  "docs.entry.overview.description": "Setup, architecture, development, and deployment.",
+  // The document cards are translated as interface chrome; the Markdown pages
+  // stay in English so there is one source of truth for their content.
+  "docs.entry.guide.title": "User guide",
+  "docs.entry.guide.description": "How to get started and use each OlivERP section.",
   "docs.entry.plugins.title": "Plugin development",
   "docs.entry.plugins.description": "Private repositories and reviewed behavior hooks.",
   "docs.entry.api.title": "Public API",
   "docs.entry.api.description": "Authentication, endpoints, request formats, and conventions.",
-  "docs.entry.database.title": "Database",
-  "docs.entry.database.description": "Core data model and persistence conventions.",
-  "docs.entry.audit.title": "Engineering audit",
-  "docs.entry.audit.description": "Security, performance, and maintainability decisions.",
-  "docs.entry.contributing.title": "Contributing",
-  "docs.entry.contributing.description": "How to prepare and validate repository changes.",
 
   "offline.title": "OlivERP | Offline",
   "offline.heading": "You are offline",

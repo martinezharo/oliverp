@@ -74,7 +74,7 @@ endpoints support both browser sessions and API keys.
 A browser session slides forward on every visit and ends after 30 days without
 use, with a hard cap of 90 days before GitHub sign-in is required again. All
 three clocks — inactivity, cap, and cookie lifetime — are set in
-[`convex/lib/session.ts`](../convex/lib/session.ts).
+[`convex/lib/session.ts`](https://github.com/martinezharo/oliverp/blob/main/convex/lib/session.ts).
 
 ### Permissions
 

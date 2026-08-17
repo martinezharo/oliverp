@@ -1,234 +1,142 @@
-# OlivERP 🚀
+# OlivERP
 
-OlivERP is a small ERP for personal projects, freelancers, and small
-businesses. It supports multiple projects, inventory, sales, purchases,
-financial dashboards, and a machine-facing API backed by Convex.
+OlivERP is an open-source ERP for small businesses and independent sellers.
+Record sales, purchases, and other income or expenses; keep inventory, VAT,
+and financial summaries together; and connect automations through the API.
 
-Production URL: configure after the first Worker deployment · [API documentation](./docs/API.md)
+[Open the hosted app](https://oliverp.4oli.com) · [API contract](https://oliverp.4oli.com/api/v1/openapi.json) · [Source code](https://github.com/martinezharo/oliverp)
+
+> OlivERP is under active development. Interfaces, the data model, and the API
+> may change.
+
+## What it includes
+
+- Sales and purchases with multiple product lines, VAT, and automatic stock movements.
+- Product catalog, inventory valuation, stock history, and manual adjustments.
+- Other income and expenses, daily views, and financial summaries.
+- Project-scoped data and API keys, with GitHub OAuth authentication.
+- English and Spanish interfaces, plus an installable progressive web app.
+- Read-only demo mode with sample business data.
+- A documented API for scripts, n8n, Make, AI agents, and other integrations.
+- Private, declarative GitHub plugins that apply reviewed rules to one project.
+
+The application is available at `/`, while the authenticated ERP lives under
+`/app`. Spanish routes use the `/es` prefix. The API is available under
+`/api/v1`.
 
 ## Stack
 
-- [Next.js](https://nextjs.org/) with the App Router
-- [Convex](https://convex.dev/) for data and [Convex Auth](https://auth.convex.dev/)
-- GitHub OAuth as the only sign-in provider
-- [OpenNext](https://opennext.js.org/) on one Cloudflare Worker
-- Tailwind CSS 4
-
-The old Astro, Pages, Better Auth, and OAuth-proxy layers are no longer part of
-the application.
-
-## Routes
-
-`/` is the public landing page. The ERP itself lives under `/app`
-(`/app/stock`, `/app/transacciones`, …) and needs a session; anonymous visitors
-are redirected to `/login` by the middleware. The route table backing the
-sidebar, the header title and every internal link is
-[`src/lib/navigation.ts`](./src/lib/navigation.ts).
-
-## Languages
-
-OlivERP is written in English and Spanish, and the language is in the URL:
-`/app/stock` is English and `/es/app/stock` is Spanish. The default language
-carries no prefix, so every address that existed before still works and each
-page has exactly one canonical form — `/en/…` is redirected to it.
-
-- [`src/i18n/locale.ts`](./src/i18n/locale.ts) is the whole model: which
-  languages exist, how one is read off a path, and how `Accept-Language` is
-  negotiated. Every other layer imports it rather than parsing URLs itself.
-- Routes live under `src/app/[lang]/`. A rewrite in
-  [`next.config.ts`](./next.config.ts) fills the segment in for unprefixed
-  addresses; the middleware redirects a visitor whose browser asks for Spanish,
-  once, and only until they choose for themselves with the switcher.
-- Components read strings through `useT()`, which also carries the number and
-  date formatters for that language — a screen that says "febrero" should not
-  then print `€1,234.56`. Server components use `getTranslator(lang)`.
-- The strings themselves are [`src/i18n/ui.ts`](./src/i18n/ui.ts). A key
-  missing from Spanish falls back to English rather than showing the key.
-
-The interface is translated throughout. The repository's own documents are not:
-`docs/*.md`, `README.md` and `CONTRIBUTING.md` are rendered inside the app as
-they are written, because a translated second copy would drift from the code it
-describes. Their titles and descriptions are part of the interface and are
-translated, and a Spanish reader is told the document itself is in English.
-
-`hreflang` alternates, canonicals, the sitemap and `robots.txt` all derive from
-the same table, so adding a language is one entry in `LOCALES`.
-
-## Installable application
-
-OlivERP is a progressive web app. The manifest
-([`src/app/manifest.ts`](./src/app/manifest.ts)) starts it at `/app` rather
-than the landing page, so an installed copy opens the ERP; its scope is the
-whole origin so the login round-trip stays inside the window. Settings offers
-the install itself when the browser has one to give, and explains where the
-browser keeps it when it does not.
-
-[`public/sw.js`](./public/sw.js) caches only what is the same for every
-visitor — build output, icons and the `/offline` page. No API response and no
-rendered page is ever stored. It is registered in production builds only; in
-development any previously registered worker is removed instead.
-
-Icons are generated from `public/icon.svg` by
-[`scripts/generate-icons.mjs`](./scripts/generate-icons.mjs) and committed. Run
-it again after changing the mark or the brand colours.
-
-## Demo mode
-
-The demo is an explicit, read-only path, offered from both the landing page and
-the login screen. It has mock projects, stock, and financial data, does not
-require an account, and leaving it returns to the landing page.
+| Area | Technology |
+| --- | --- |
+| Web app | Next.js App Router, React, and Tailwind CSS |
+| Data and auth | Convex and Convex Auth |
+| Sign-in | GitHub OAuth |
+| Runtime and hosting | OpenNext on a Cloudflare Worker |
+| Verification | TypeScript, ESLint, Vitest, Convex tests, and Playwright |
 
 ## Local development
 
-Prerequisites: Node.js LTS, pnpm, and access to the OlivERP Convex project.
+### Requirements
+
+- Node.js 22+
+- pnpm 11+
+- Access to an isolated Convex development deployment
+- A GitHub OAuth App configured for that Convex deployment
+
+### Setup
 
 ```bash
 pnpm install
+cp .env.example .env.local
 pnpm exec convex deployment select dev
 pnpm run check:dev-env
-pnpm dev:backend
 ```
 
-In a second terminal:
+Configure the selected development deployment before signing in:
+
+- Set `CONVEX_BRIDGE_SECRET` to the same random value in `.env.local` and in
+  Convex. Use a different value in production.
+- Set `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`, and `SITE_URL` in Convex. GitHub
+  credentials belong in Convex, not in `.env.local` or a `NEXT_PUBLIC_` variable.
+- Add `GITHUB_PLUGINS_APP_ID` and `GITHUB_PLUGINS_PRIVATE_KEY` only when local
+  plugin installation is needed.
+
+Run the backend and the web app in separate terminals:
+
+```bash
+pnpm dev:backend
+```
 
 ```bash
 pnpm dev
 ```
 
-The selected `CONVEX_DEPLOYMENT` and `NEXT_PUBLIC_CONVEX_URL` must describe the
-same personal dev deployment. Both `pnpm dev` and `pnpm dev:backend` run a
-safety check that rejects `prod:` deployments and mismatched browser URLs.
-The check also prints the configured `DEV_PUBLIC_URL` so the HTTPS address is
-visible whenever either command starts. Production remains pinned independently
-in `wrangler.jsonc`.
+Both development commands verify that the browser URL and Convex deployment
+match and refuse to run against a `prod:*` deployment.
 
-`pnpm dev:backend` watches `convex/` and pushes functions to the dev deployment.
-`CONVEX_BRIDGE_SECRET` is server-only and must use the same value in
-`.env.local` and the dev Convex environment. Use a different value in
-production.
+## Useful commands
 
-### Separate GitHub OAuth Apps for development and production
-
-Convex Auth owns the OAuth flow and keeps each GitHub client secret in its
-Convex deployment. Development and production use separate databases and
-separate GitHub OAuth Apps because their callback hosts differ:
-
-| Environment | Convex deployment | GitHub callback URL |
-| --- | --- | --- |
-| Development | `dev:<deployment-name>` | `https://<deployment-name>.convex.site/api/auth/callback/github` |
-| Production | `prod:reminiscent-cricket-450` | `https://reminiscent-cricket-450.convex.site/api/auth/callback/github` |
-
-Create an OAuth App named `OlivERP Development` with the development callback,
-then store its credentials in the dev deployment (the commands prompt for the
-values so they do not enter shell history):
-
-```bash
-pnpm exec convex env set AUTH_GITHUB_ID --deployment dev
-pnpm exec convex env set AUTH_GITHUB_SECRET --deployment dev
-```
-
-Set the dev deployment's `SITE_URL` to the frontend origin you actually use and
-enable only the additional localhost or tailnet origins required for
-development. Production allows only `https://oliverp.4oli.com`; never enable
-local auth origins there.
-
-The one-time `pnpm exec auth` setup generates the internal `JWT_PRIVATE_KEY`
-and `JWKS` values required to sign Convex Auth sessions. Each deployment keeps
-its own pair in Convex; they are not application or GitHub keys. The current dev
-and production deployments already have these values.
-
-Production credentials remain in the production Convex environment. To
-reconfigure them deliberately, target production explicitly:
-
-```bash
-pnpm exec convex env set AUTH_GITHUB_ID --prod
-pnpm exec convex env set AUTH_GITHUB_SECRET --prod
-pnpm exec convex env set SITE_URL https://oliverp.4oli.com --prod
-```
-
-Never put either GitHub secret in `.env.local`, Cloudflare variables, or a
-`NEXT_PUBLIC_` variable. The callback is on Convex, not on the Next app.
-
-## Cloudflare Worker deployment
-
-The repository is configured for the `oliverp` OpenNext Worker at
-`https://oliverp.4oli.com`, not Pages:
-
-```bash
-pnpm preview
-pnpm deploy
-```
-
-`pnpm run build:worker` produces the `.open-next` output expected by
-`wrangler deploy`. Cloudflare Git builds inject `WORKERS_CI=1`, so their
-existing `pnpm build` command automatically adds that OpenNext output after
-the underlying Next.js build. Local `pnpm build` remains a plain Next.js build.
-
-Configure these Worker bindings:
-
-| Name | Type | Purpose |
-| --- | --- | --- |
-| `NEXT_PUBLIC_CONVEX_URL` | variable | Public Convex cloud URL used by the browser; set in `wrangler.jsonc` |
-| `CONVEX_BRIDGE_SECRET` | secret | Server-only bridge credential, matching Convex |
-
-Convex environment variables:
-
-| Name | Purpose |
+| Command | Purpose |
 | --- | --- |
-| `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET` | GitHub OAuth App credentials |
-| `SITE_URL` | Canonical post-login origin |
-| `CONVEX_BRIDGE_SECRET` | Must match the Worker secret |
-| `ALLOW_LOCAL_AUTH_ORIGINS` | Development deployments only; allows localhost redirects |
+| `pnpm run check` | Type-check the application, Convex functions, and tests |
+| `pnpm run lint` | Run ESLint |
+| `pnpm run test` | Run unit and integration-style tests |
+| `pnpm run test:convex` | Run Convex function tests |
+| `pnpm run test:e2e` | Run the Playwright browser suite |
+| `pnpm run build` | Build the Next.js application |
+| `pnpm run preview` | Build and preview the Cloudflare Worker locally |
+| `pnpm run docs:generate` | Regenerate the in-app Markdown documentation |
 
-`AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET` belong only to Convex. Convex
-automatically provides `CONVEX_SITE_URL` to its functions for the auth issuer.
+Before submitting a change, run at least:
 
-The generated Worker entrypoint is `.open-next/worker.js`; `wrangler.jsonc`
-defines the Worker, assets, self-reference service, and `nodejs_compat`.
+```bash
+pnpm run check
+pnpm run lint
+pnpm run test
+pnpm run test:convex
+pnpm run build
+```
 
-## Existing data
+## Deployment
 
-The Convex backend keeps the legacy numeric ids used by the UI and API, but
-they are unique **per project**, not globally: `/api/v1/ventas/{id}` and its
-siblings resolve the id inside the project of the calling API key. Sequences
-are stored in the `counters` table and initialise themselves from the highest
-existing id the first time a project writes, so an existing deployment needs no
-migration step.
+The production configuration targets the `oliverp` Cloudflare Worker at
+`https://oliverp.4oli.com`. After configuring Cloudflare and the production
+Convex environment, use:
 
-The data import is finished and its driver script has been removed together
-with the legacy database tooling. The import functions themselves remain in
-`convex/migration.ts` as `internal*` functions, runnable only from a trusted
-shell with `pnpm exec convex run`.
+```bash
+pnpm run deploy
+```
 
-### Before opening sign-up
+This deploys the Convex functions and then the OpenNext Worker. The Worker
+configuration, public Convex URL, assets, and custom domain are defined in
+[`wrangler.jsonc`](https://github.com/martinezharo/oliverp/blob/main/wrangler.jsonc).
 
-- Every API key must be pinned to a project. `pnpm api:key` now requires
-  `--proyecto`, and the schema rejects a key without one. Delete or re-issue any
-  key created before this rule, otherwise the schema push will fail.
-- Rotate `CONVEX_BRIDGE_SECRET`: it authorises the whole domain surface for
-  every tenant.
-- Do **not** set `ALLOW_LOCAL_AUTH_ORIGINS` on the production deployment. It
-  permits localhost as an OAuth redirect target, which is a development-only
-  convenience.
+## API
 
-## Commands
+The machine-facing contract is always available at:
 
-| Command | Action |
-| --- | --- |
-| `pnpm check:dev-env` | Verify local development cannot target production |
-| `pnpm dev` | Verify the environment, then start Next development server |
-| `pnpm dev:backend` | Verify the environment, then sync Convex dev functions |
-| `pnpm check` | Type-check Next, Convex, and tests |
-| `pnpm lint` | Run ESLint |
-| `pnpm test` | Run unit and integration-style tests |
-| `pnpm test:convex` | Run Convex tests |
-| `pnpm build` | Build the Next application |
-| `pnpm preview` | Build and preview the OpenNext Worker |
-| `pnpm deploy` | Deploy Convex functions, then the Worker |
-| `pnpm test:e2e` | Run the Playwright end-to-end suite |
-| `pnpm api:key --nombre "..."` | Create an API key without a user session (the app does it from Settings) |
-| `node scripts/generate-icons.mjs` | Regenerate the PWA icons from `public/icon.svg` |
+```text
+https://oliverp.4oli.com/api/v1/openapi.json
+```
+
+API keys are created and revoked from **Settings → project → Manage API keys**.
+Each key is bound to one project and can be read-only or read/write. The full
+authentication model, endpoints, idempotent writes, and request examples are
+documented in [`docs/API.md`](https://github.com/martinezharo/oliverp/blob/main/docs/API.md).
+
+## Documentation
+
+The app exposes a focused set of user-facing documents at
+`/app/documentacion`: the usage guide, API reference, and plugin documentation.
+Repository-only engineering material remains available here:
+
+- [App usage guide](https://github.com/martinezharo/oliverp/blob/main/docs/APP_GUIDE.md)
+- [API reference](https://github.com/martinezharo/oliverp/blob/main/docs/API.md)
+- [Private plugins](https://github.com/martinezharo/oliverp/blob/main/docs/PLUGINS.md)
+- [Database and authorization model](https://github.com/martinezharo/oliverp/blob/main/docs/DATABASE.md) — repository only
+- [Engineering audit and open decisions](https://github.com/martinezharo/oliverp/blob/main/docs/AUDIT.md) — repository only
+- [Contributing](https://github.com/martinezharo/oliverp/blob/main/CONTRIBUTING.md) — repository only
 
 ## License
 
-Distributed under the MIT License. See [LICENSE](./LICENSE).
+OlivERP is distributed under the [MIT License](https://github.com/martinezharo/oliverp/blob/main/LICENSE).

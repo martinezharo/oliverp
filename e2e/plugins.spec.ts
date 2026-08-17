@@ -23,13 +23,18 @@ test.describe("plugin and documentation workspace", () => {
     await page.screenshot({ path: "test-results/plugins-desktop.png", fullPage: true });
   });
 
-  test("renders repository documentation and keeps it reachable below settings", async ({ page }) => {
+  test("renders app documentation and leaves repository-only docs out", async ({ page }) => {
     await page.goto("/app/documentacion");
     await expect(page.getByRole("heading", { name: "Documentation", level: 1 })).toBeVisible();
+    await expect(page.getByRole("link", { name: /User guide/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /Plugin development/ })).toBeVisible();
-    await page.getByRole("link", { name: /Plugin development/ }).click();
-    await expect(page.getByRole("heading", { name: "Plugin development", level: 1 })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Security model" })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Public API/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Engineering audit/ })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /Contributing/ })).toHaveCount(0);
+    await expect(page.getByRole("link", { name: /^Database$/ })).toHaveCount(0);
+    await page.getByRole("link", { name: /User guide/ }).click();
+    await expect(page.getByRole("heading", { name: "User guide", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Start here" })).toBeVisible();
     await page.screenshot({ path: "test-results/documentation-desktop.png", fullPage: true });
   });
 

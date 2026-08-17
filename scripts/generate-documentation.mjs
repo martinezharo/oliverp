@@ -3,12 +3,9 @@ import { join } from "node:path";
 
 const root = process.cwd();
 const files = {
-  overview: "README.md",
+  guide: "docs/APP_GUIDE.md",
   plugins: "docs/PLUGINS.md",
   api: "docs/API.md",
-  database: "docs/DATABASE.md",
-  audit: "docs/AUDIT.md",
-  contributing: "CONTRIBUTING.md",
 };
 
 const sources = Object.fromEntries(

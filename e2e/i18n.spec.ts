@@ -89,12 +89,17 @@ test.describe("locale routing", () => {
 
     await page.goto("/es/app/documentacion");
     await expect(page.getByRole("heading", { name: "Documentación", level: 1 })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Guía de uso/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /Desarrollo de plugins/ })).toBeVisible();
 
     // The documents stay in the language they are written in, and say so.
     await page.goto("/es/app/documentacion/api");
     await expect(page.getByRole("heading", { name: "API pública", level: 1 })).toBeVisible();
     await expect(page.getByText(/se mantiene en inglés/)).toBeVisible();
+
+    await page.goto("/es/app/documentacion/guide");
+    await expect(page.getByRole("heading", { name: "Guía de uso", level: 1 })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Start here" })).toBeVisible();
   });
 
   test("formats money and dates the way the language writes them", async ({ page }) => {
