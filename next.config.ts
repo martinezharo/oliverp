@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-import { DEFAULT_LOCALE, LOCALES } from "./src/i18n/locale";
+import { DEFAULT_LOCALE } from "./src/i18n/locale";
 
 /**
  * The app talks to exactly two origins: itself and the Convex deployment
@@ -76,13 +76,16 @@ const nextConfig: NextConfig = {
       beforeFiles: [],
       afterFiles: [
         { source: "/", destination: `/${DEFAULT_LOCALE}` },
+        { source: "/login", destination: `/${DEFAULT_LOCALE}/login` },
+        { source: "/offline", destination: `/${DEFAULT_LOCALE}/offline` },
+        { source: "/app", destination: `/${DEFAULT_LOCALE}/app` },
         {
-          // Every path that does not already name a language, and is not the
-          // API — that one speaks JSON to programs, which have no language.
-          // The lookahead ends at a slash or at the end of the path, so
-          // `/english` and `/apiary` are pages like any other.
-          source: `/:path((?!(?:${[...LOCALES, "api"].join("|")})(?:/|$)).*)`,
-          destination: `/${DEFAULT_LOCALE}/:path`,
+          // Keep the application remainder as a catch-all: a normal `:path`
+          // parameter cannot safely carry the slash in `/app/stock` through
+          // OpenNext's router. Listing the unprefixed page families explicitly
+          // also keeps `/api`, public assets and `/es` out of this rewrite.
+          source: "/app/:path*",
+          destination: `/${DEFAULT_LOCALE}/app/:path*`,
         },
       ],
       fallback: [],
