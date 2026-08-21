@@ -84,6 +84,9 @@ export default async function RootLayout({ children, ...props }: LangParams & { 
     // first render already knows whether there is a session.
     <ConvexAuthNextjsServerProvider storageNamespace={convexUrl}>
       <html lang={LOCALE_TAGS[lang]} className="dark">
+        <head>
+          <link rel="describedby" href={`${SITE_ORIGIN}/llms.txt`} />
+        </head>
         <body className="min-h-screen overflow-x-hidden bg-[#0f1016] text-slate-300">
           <LocaleProvider lang={lang}>
             <PwaSetup />

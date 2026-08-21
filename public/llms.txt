@@ -1,0 +1,30 @@
+# OlivERP
+
+> OlivERP is an open-source online ERP for small businesses and independent sellers to manage sales, purchases, stock, VAT, expenses, and financial summaries without accounting-heavy workflows.
+
+OlivERP offers English and Spanish interfaces, a read-only demo, and a documented project-scoped API for scripts, n8n, Make, AI agents, and other integrations. The product is under active development, so interfaces, the data model, and the API may change.
+
+## Product guide
+
+- [OlivERP overview](https://oliverp.4oli.com/index.md): Concise, LLM-friendly product facts, modules, API capabilities, audiences, and limits.
+- [OlivERP](https://oliverp.4oli.com/): English product page and app entry point.
+- [OlivERP in Spanish](https://oliverp.4oli.com/es): Spanish product page.
+- [Public documentation](https://oliverp.4oli.com/documentation): User guide, API reference, and private GitHub plugin documentation.
+- [Spanish documentation](https://oliverp.4oli.com/es/documentation): Spanish versions of the public guides.
+
+## Integration references
+
+- [OpenAPI contract](https://oliverp.4oli.com/api/v1/openapi.json): Machine-readable API schema and endpoint contract.
+- [API reference in Markdown](https://raw.githubusercontent.com/martinezharo/oliverp/main/docs/API.md): Authentication, project scope, idempotency, endpoints, and examples.
+- [App guide in Markdown](https://raw.githubusercontent.com/martinezharo/oliverp/main/docs/APP_GUIDE.md): Current workflows and product behavior.
+- [Plugin guide in Markdown](https://raw.githubusercontent.com/martinezharo/oliverp/main/docs/PLUGINS.md): Reviewed, private GitHub plugin model.
+
+## Technical references
+
+- [Project README](https://raw.githubusercontent.com/martinezharo/oliverp/main/README.md): Current features, stack, setup, deployment, and documentation map.
+- [Source code](https://github.com/martinezharo/oliverp): Canonical source repository.
+- [Sitemap](https://oliverp.4oli.com/sitemap.xml): Public landing and documentation pages in both languages.
+
+## Optional
+
+- [License](https://raw.githubusercontent.com/martinezharo/oliverp/main/LICENSE): MIT License terms for the source code.
