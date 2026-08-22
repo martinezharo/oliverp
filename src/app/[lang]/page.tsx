@@ -8,6 +8,7 @@ import { StructuredData } from "@/components/landing/StructuredData";
 import { localeAlternates } from "@/i18n/metadata";
 import { resolveLang, type LangParams } from "@/i18n/params";
 import { getTranslator } from "@/i18n/t";
+import { SITE_ORIGIN } from "@/lib/site";
 import { TONES } from "@/components/landing/tones";
 import { CARD, CTA_ITEM, CTA_ROW, DemoButton, DemoCta, EnterButton, GitHubMark, Label, LandingFooter } from "@/components/landing/ui";
 
@@ -20,7 +21,10 @@ export async function generateMetadata(props: LangParams): Promise<Metadata> {
   return {
     title,
     description,
-    alternates: localeAlternates(lang, "/"),
+    alternates: {
+      ...localeAlternates(lang, "/"),
+      ...(lang === "en" ? { types: { "text/markdown": `${SITE_ORIGIN}/index.md` } } : {}),
+    },
     // The still of the dashboard the page itself opens with, so a shared link
     // previews the product rather than a logo on a dark square.
     openGraph: { title, description, url: localeAlternates(lang, "/").canonical as string, images: ["/dashboard_preview.png"] },
