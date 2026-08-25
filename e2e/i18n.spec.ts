@@ -70,7 +70,7 @@ test.describe("locale routing", () => {
 
   test("runs the whole application in Spanish", async ({ page }) => {
     await page.goto("/api/demo/start");
-    await page.goto("/es/app/historial");
+    await page.goto("/es/app/history");
 
     await expect(page.locator("html")).toHaveAttribute("lang", "es");
     await expect(page.getByRole("heading", { name: "Historial Financiero", level: 1 })).toBeVisible();
@@ -116,11 +116,11 @@ test.describe("locale routing", () => {
     // The rollup arrives over the Convex subscription, so the amounts are not
     // in the document at first paint; reading before they land compares two
     // empty screens and passes for the wrong reason.
-    await page.goto("/app/historial");
+    await page.goto("/app/history");
     await expect(page.getByRole("main")).toContainText("€", { timeout: 15_000 });
     const english = await page.getByRole("main").innerText();
 
-    await page.goto("/es/app/historial");
+    await page.goto("/es/app/history");
     await expect(page.getByRole("main")).toContainText("€", { timeout: 15_000 });
     const spanish = await page.getByRole("main").innerText();
 

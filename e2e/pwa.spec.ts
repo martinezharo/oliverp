@@ -61,7 +61,7 @@ test("links the manifest and the apple touch icon from every page", async ({ pag
 
 test("offers the install control in settings", async ({ page }) => {
   await page.goto("/api/demo/start");
-  await page.goto("/app/ajustes");
+  await page.goto("/app/settings");
 
   const main = page.getByRole("main");
   await expect(main.getByRole("heading", { name: "App" })).toBeVisible();

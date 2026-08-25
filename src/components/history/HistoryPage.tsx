@@ -39,7 +39,7 @@ export default function HistoryPage() {
           {options.map((option) => (
             <Link
               key={option.value}
-              href={`${href(appPath("historial"))}?projectId=${projectId}&view=${option.value}`}
+              href={`${href(appPath("history"))}?projectId=${projectId}&view=${option.value}`}
               aria-current={view === option.value ? "page" : undefined}
               className={`rounded-lg px-4 py-2 text-sm font-medium transition-all ${view === option.value ? "bg-blue-500/10 text-blue-400 shadow-sm" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}
             >

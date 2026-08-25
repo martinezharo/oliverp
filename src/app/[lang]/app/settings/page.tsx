@@ -4,6 +4,6 @@ import { privatePageMetadata } from "@/i18n/page-metadata";
 
 export const generateMetadata = privatePageMetadata("title.settings");
 
-export default function Page() {
+export default function SettingsRoute() {
   return <SettingsPage />;
 }

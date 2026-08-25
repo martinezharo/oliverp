@@ -4,6 +4,6 @@ import { privatePageMetadata } from "@/i18n/page-metadata";
 
 export const generateMetadata = privatePageMetadata("title.history");
 
-export default function History() {
+export default function HistoryRoute() {
   return <HistoryPage />;
 }

@@ -4,6 +4,6 @@ import { privatePageMetadata } from "@/i18n/page-metadata";
 
 export const generateMetadata = privatePageMetadata("title.transactions");
 
-export default function Transactions() {
+export default function TransactionsRoute() {
   return <TransactionsPage />;
 }

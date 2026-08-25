@@ -83,7 +83,7 @@ export default function SettingsPage() {
         // The project selector and every list read from Convex, which pushes
         // the removal to them; the route is replaced so a deleted project id
         // does not stay in the URL.
-        router.replace(href(appPath("ajustes")));
+        router.replace(href(appPath("settings")));
       } else {
         await apiJson("/api/account/delete", { method: "POST" });
         // The account is gone: end the session before anything can re-query.

@@ -123,7 +123,7 @@ export default function TransactionsPage() {
             <Pagination
               currentPage={page}
               totalPages={Math.ceil((financeRows?.length ?? 0) / PAGE_SIZE_DAILY)}
-              baseUrl={`${href(appPath("transacciones"))}?projectId=${projectId}`}
+              baseUrl={`${href(appPath("transactions"))}?projectId=${projectId}`}
             />
           </div>
         </>

@@ -34,8 +34,8 @@ test.describe("Next/Convex Auth shell", () => {
 
     for (const [path, heading] of [
       ["/app/stock", "Inventory & Stock"],
-      ["/app/transacciones", "Transactions"],
-      ["/app/historial", "History"],
+      ["/app/transactions", "Transactions"],
+      ["/app/history", "History"],
     ] as const) {
       await page.goto(path);
       await expect(page.getByRole("heading", { name: heading, level: 1 })).toBeVisible();

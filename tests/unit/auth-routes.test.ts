@@ -48,7 +48,7 @@ describe("routePolicy", () => {
     });
 
     it("redirects unauthenticated page requests to the login page", () => {
-        for (const path of ["/app", "/app/stock", "/app/transacciones", "/app/historial"]) {
+        for (const path of ["/app", "/app/stock", "/app/transactions", "/app/history", "/app/settings"]) {
             expect(routePolicy(path), path).toBe("session_redirect");
         }
     });

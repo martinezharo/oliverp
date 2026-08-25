@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("renders the settings page with destructive actions disabled", async ({ page }) => {
-  await page.goto("/app/ajustes");
+  await page.goto("/app/settings");
   const main = page.getByRole("main");
 
   await expect(main.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
@@ -28,12 +28,12 @@ test("renders the settings page with destructive actions disabled", async ({ pag
 test("is reachable from the sidebar", async ({ page }) => {
   await page.goto("/app");
   await page.getByRole("link", { name: "Settings" }).click();
-  await expect(page).toHaveURL(/\/app\/ajustes/);
+  await expect(page).toHaveURL(/\/app\/settings/);
   await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
 });
 
 test("manages API keys from the project row with every control inert", async ({ page }) => {
-  await page.goto("/app/ajustes");
+  await page.goto("/app/settings");
   await page.getByRole("button", { name: "Manage API keys" }).click();
 
   const dialog = page.locator("dialog[open]");
@@ -56,6 +56,12 @@ test("manages API keys from the project row with every control inert", async ({ 
   // the capture is of the settled frame.
   await page.waitForTimeout(400);
   await page.screenshot({ path: "test-results/settings-api-keys.png" });
+});
+
+test("redirects the old Spanish settings route to the English canonical URL", async ({ page }) => {
+  await page.goto("/app/ajustes");
+  await expect(page).toHaveURL(/\/app\/settings$/);
+  await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
 });
 
 // `page.request` inherits the browser context, and therefore the demo cookie;

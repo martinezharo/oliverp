@@ -61,14 +61,14 @@ export const APP_SECTIONS: AppSection[] = [
         icon: "M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4",
     },
     {
-        segment: "transacciones",
+        segment: "transactions",
         navKey: "nav.transactions",
         titleKey: "title.transactions",
         group: "primary",
         icon: "M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
     },
     {
-        segment: "historial",
+        segment: "history",
         navKey: "nav.history",
         titleKey: "title.history",
         group: "primary",
@@ -82,14 +82,14 @@ export const APP_SECTIONS: AppSection[] = [
         icon: "M8.5 3v4.5H4M15.5 3v4.5H20M8.5 21v-4.5H4M15.5 21v-4.5H20 M9.5 7.5h5a2 2 0 012 2v5a2 2 0 01-2 2h-5a2 2 0 01-2-2v-5a2 2 0 012-2z",
     },
     {
-        segment: "ajustes",
+        segment: "settings",
         navKey: "nav.settings",
         titleKey: "title.settings",
         group: "overflow",
         icon: "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z",
     },
     {
-        segment: "documentacion",
+        segment: "documentation",
         navKey: "nav.documentation",
         mobileLabel: "Docs",
         titleKey: "title.documentation",
@@ -110,9 +110,9 @@ const SECTIONS_BY_SPECIFICITY = APP_SECTIONS
 
 /**
  * Path of the section a page belongs to, including nested pages:
- * The legacy `/app/documentacion` path resolves to the documentation section
- * before its permanent redirect. Compare a section's path against this to know
- * whether it is the current one.
+ * The legacy `/app/documentacion` path redirects to the public documentation
+ * section. Compare a section's path against this to know whether the current
+ * app section is active.
  */
 export function activeSectionPath(pathname: string): string {
     return SECTIONS_BY_SPECIFICITY.find((section) => isUnder(pathname, section.path))?.path ?? appPath();
