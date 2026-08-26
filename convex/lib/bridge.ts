@@ -23,6 +23,9 @@ export const bridgeArgs = {
   actor: actorValidator,
 };
 
+// TODO(security): Remove the shared bridge secret. Authenticate browser calls
+// with Convex Auth, validate ERP API keys in a Convex HTTP action, derive the
+// actor server-side, and dispatch sensitive domain work to internal functions.
 export function assertBridgeSecret(secret: string): void {
   const expected = env.CONVEX_BRIDGE_SECRET;
   if (!expected || secret !== expected) {
