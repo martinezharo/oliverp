@@ -41,18 +41,70 @@ function CopyButton({ value }: { value: string }) {
   const [copied, setCopied] = useState(false);
 
   return (
-    <button
-      type="button"
-      onClick={() => {
-        void navigator.clipboard.writeText(value).then(() => {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 2000);
-        });
-      }}
-      className="shrink-0 rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-3 py-2 text-xs font-medium text-emerald-200 transition-all hover:border-emerald-400/60 hover:bg-emerald-500/20"
-    >
-      {copied ? t("settings.keys.copied") : t("settings.keys.copy")}
-    </button>
+    <>
+      <button
+        type="button"
+        aria-label={t(copied ? "settings.keys.copied" : "settings.keys.copy")}
+        title={t(copied ? "settings.keys.copied" : "settings.keys.copy")}
+        onClick={() => {
+          void navigator.clipboard.writeText(value).then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          });
+        }}
+        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-emerald-400/80 transition-colors hover:bg-emerald-400/10 hover:text-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70"
+      >
+        {copied ? (
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m5 12 4 4L19 6" />
+          </svg>
+        ) : (
+          <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect width="14" height="14" x="8" y="8" rx="2" />
+            <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2" />
+          </svg>
+        )}
+      </button>
+      <span className="sr-only" aria-live="polite">{copied ? t("settings.keys.copied") : ""}</span>
+    </>
+  );
+}
+
+function MintedKeyValue({ value }: { value: string }) {
+  const { t } = useT();
+  const [revealed, setRevealed] = useState(false);
+
+  return (
+    <div className="mt-3 flex min-w-0 items-center gap-2">
+      <div className="flex min-w-0 flex-1 items-center rounded-lg bg-black/40 p-1 pl-3 ring-1 ring-inset ring-white/[0.04] focus-within:ring-emerald-400/30">
+        <code className="min-w-0 flex-1 select-all overflow-x-auto whitespace-nowrap font-mono text-xs text-emerald-100">
+          {revealed ? value : "erp_sk_••••••••••••••••"}
+        </code>
+        <button
+          type="button"
+          aria-label={t(revealed ? "settings.keys.hide" : "settings.keys.show")}
+          aria-pressed={revealed}
+          title={t(revealed ? "settings.keys.hide" : "settings.keys.show")}
+          onClick={() => setRevealed((current) => !current)}
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md text-emerald-300 transition-colors hover:bg-emerald-400/10 hover:text-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300/70"
+        >
+          {revealed ? (
+            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" className="h-[1.125rem] w-[1.125rem]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="m2 2 20 20" />
+              <path d="M6.71 6.71C4.7 8.1 3.24 9.9 2 12c2.1 3.56 5.63 6 10 6 1.4 0 2.69-.25 3.86-.7" />
+              <path d="M10.73 5.08A10.7 10.7 0 0 1 12 5c4.37 0 7.9 2.44 10 7a13.5 13.5 0 0 1-2.04 2.88" />
+              <path d="M14.12 14.12A3 3 0 0 1 9.88 9.88" />
+            </svg>
+          ) : (
+            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" className="h-[1.125rem] w-[1.125rem]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M2.06 12.35a1 1 0 0 1 0-.7C3.6 7.9 7.26 5 12 5c4.74 0 8.4 2.9 9.94 6.65a1 1 0 0 1 0 .7C20.4 16.1 16.74 19 12 19c-4.74 0-8.4-2.9-9.94-6.65" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          )}
+        </button>
+      </div>
+      <CopyButton value={value} />
+    </div>
   );
 }
 
@@ -191,12 +243,7 @@ export default function ApiKeysModal({
               </svg>
               {t("settings.keys.newTitle")}
             </p>
-            <div className="mt-3 flex items-center gap-2">
-              <code className="min-w-0 flex-1 select-all overflow-x-auto rounded-lg bg-black/40 px-3 py-2 font-mono text-xs text-emerald-100">
-                {minted.key}
-              </code>
-              <CopyButton value={minted.key} />
-            </div>
+            <MintedKeyValue key={minted.key} value={minted.key} />
             <p className="mt-2 text-xs text-emerald-300/70">{t("settings.keys.newHint")}</p>
           </div>
         )}
