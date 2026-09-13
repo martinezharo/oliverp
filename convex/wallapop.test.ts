@@ -38,7 +38,7 @@ function importArgs(overrides: Record<string, unknown> = {}) {
     projectLegacyId: 7,
     originId: "gmail-message-1",
     date: "2026-08-03T00:00:00",
-    customerName: "Antonio R.",
+    customerName: "Alice B.",
     wallapopTitle: "Mando Xiaomi XMRM-006 a Estrenar",
     totalAmount: 3.49,
     units: 1,
@@ -93,7 +93,7 @@ describe("importWallapopSale", () => {
     expect(sale).toMatchObject({
       id: 1,
       canal: "Wallapop",
-      cliente: { id: 1, nombre: "Antonio R." },
+      cliente: { id: 1, nombre: "Alice B." },
       origen: "Wallapop",
       origen_id: "gmail-message-1",
     });
@@ -105,11 +105,11 @@ describe("importWallapopSale", () => {
       projectLegacyId: 7,
       page: 1,
       pageSize: 20,
-      search: "antonio",
+      search: "alice",
     });
     expect(customers).toMatchObject({
       count: 1,
-      data: [{ id: 1, nombre: "Antonio R." }],
+      data: [{ id: 1, nombre: "Alice B." }],
     });
 
     const counts = await t.run(async (ctx) => ({
@@ -164,7 +164,7 @@ describe("importMarketplaceSale", () => {
       projectLegacyId: 7,
       originId: "vinted-message-1",
       date: "2026-08-08T00:00:00",
-      customerName: "ahmedh831",
+      customerName: "sample_buyer_01",
       marketplaceTitle: "Mando Xiaomi XMRM-006 en Vinted",
       channel: "Vinted",
       totalAmount: 3.5,
@@ -184,7 +184,7 @@ describe("importMarketplaceSale", () => {
       projectLegacyId: 7,
       originId: "vinted-message-1",
       date: "2026-08-08T00:00:00",
-      customerName: "ahmedh831",
+      customerName: "sample_buyer_01",
       marketplaceTitle: "Mando Xiaomi XMRM-006 en Vinted",
       channel: "Vinted",
       totalAmount: 3.5,

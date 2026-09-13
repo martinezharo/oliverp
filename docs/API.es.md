@@ -296,7 +296,7 @@ curl -X POST https://your-erp/api/v1/importaciones/wallapop \
   -d '{
     "origen_id": "gmail-message-id",
     "fecha": "2026-08-03",
-    "comprador_nombre": "Antonio R.",
+    "comprador_nombre": "Alice B.",
     "titulo_wallapop": "Mando Xiaomi XMRM-006 a Estrenar",
     "importe_total": 3.49,
     "unidades": 1
@@ -318,7 +318,7 @@ El flujo de n8n también admite correos de confirmación de Vinted mediante
   "origen_id": "gmail-message-id",
   "canal": "Vinted",
   "fecha": "2026-08-08",
-  "comprador_nombre": "ahmedh831",
+  "comprador_nombre": "sample_buyer_01",
   "titulo_producto": "Mando Samsung BN59-01358D a Estrenar",
   "importe_total": 3.50,
   "unidades": 1
