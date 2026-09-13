@@ -16,9 +16,11 @@ from those operations.
    leave it.
 5. Use **Dashboard**, **Transactions**, and **History** to review the result.
 
-The public demo can be opened without an account. It uses sample data and is
-read-only, so it is useful for exploring the interface but does not represent
-your business data.
+The public demo can be opened without an account. It runs on an invented
+business, and everything in it can be created, edited and deleted: the changes
+are kept in the browser tab and are lost when it is reloaded or the demo is
+left. Nothing there is stored on a server, and nothing represents your own
+business data.
 
 ## The main sections
 
@@ -101,4 +103,5 @@ details.
 - Use a manual stock adjustment only to correct inventory, not to represent a
   sale or purchase.
 - Keep API keys private. Revoke a key immediately if it may have been exposed.
-- The demo is intentionally read-only; changes made there are not real records.
+- The demo can be edited freely, but nothing in it is a real record: its data
+  lives in the browser tab and disappears on reload.

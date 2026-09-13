@@ -16,9 +16,10 @@ financieros se actualizan a partir de esas operaciones.
    ventas cuando salgan de él.
 5. Usa **Dashboard**, **Transacciones** e **Historial** para revisar el resultado.
 
-La demo pública se puede abrir sin una cuenta. Usa datos de ejemplo y es de
-solo lectura, así que sirve para explorar la interfaz, pero no representa los
-datos de tu negocio.
+La demo pública se puede abrir sin una cuenta. Funciona sobre un negocio
+inventado y en ella se puede crear, editar y borrar todo: los cambios se
+guardan en la pestaña del navegador y se pierden al recargarla o al salir de la
+demo. Nada se almacena en un servidor ni representa los datos de tu negocio.
 
 ## Secciones principales
 
@@ -107,5 +108,5 @@ seguros y los detalles de los endpoints.
   representar una venta o una compra.
 - Mantén las claves de API en privado. Revoca una clave inmediatamente si puede
   haberse expuesto.
-- La demo es deliberadamente de solo lectura; los cambios que hagas en ella no
-  son registros reales.
+- La demo se puede editar libremente, pero nada de lo que hay en ella es un
+  registro real: sus datos viven en la pestaña y desaparecen al recargar.
