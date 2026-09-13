@@ -29,7 +29,7 @@ function optionalAmount(value: string): number | undefined {
 export default function TransactionsPage() {
   const { t } = useT();
   const href = useHref();
-  const { projectId, demo, openModal } = useErpContext();
+  const { projectId, openModal } = useErpContext();
   const searchParams = useSearchParams();
   const page = Math.max(1, Number.parseInt(searchParams?.get("page") || "1", 10));
   const [mode, setMode] = useState<Mode>("daily");
@@ -129,7 +129,7 @@ export default function TransactionsPage() {
         </>
       ) : (
         <>
-          <FlatView rows={flat} demo={demo} onOpenModal={openModal} />
+          <FlatView rows={flat} onOpenModal={openModal} />
           <FlatPager page={flatPage} total={filtered.length} onPageChange={setFlatPage} />
         </>
       )}

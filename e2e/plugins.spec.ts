@@ -14,10 +14,12 @@ test.describe("plugin workspace", () => {
     await expect(page.getByRole("heading", { name: "Plugins", level: 1 })).toBeVisible();
     await expect(page.getByRole("link", { name: /Plugin documentation/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Add a private plugin" })).toBeVisible();
-    await expect(page.getByPlaceholder("https://github.com/your-account/private-plugin")).toBeDisabled();
+    await expect(page.getByPlaceholder("https://github.com/your-account/private-plugin")).toBeEnabled();
     await expect(page.getByText("There is no public catalog.")).toBeVisible();
+    // The demo ships with one plugin installed, so the screen shows what a
+    // managed installation looks like rather than an empty state.
     // Scoped to `main`, like the assertions around it.
-    await expect(page.getByRole("main").getByText("No private plugins added")).toBeVisible();
+    await expect(page.getByRole("main").getByText("Marketplace Fee VAT")).toBeVisible();
     await expect(page.locator("iframe")).toHaveCount(0);
 
     await page.screenshot({ path: "test-results/plugins-desktop.png", fullPage: true });
@@ -39,7 +41,7 @@ test.describe("plugin workspace", () => {
     await expect(page.getByRole("heading", { name: "Plugins", level: 1 })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Add a private plugin" })).toBeVisible();
     // Scoped to `main`, like the assertions around it.
-    await expect(page.getByRole("main").getByText("No private plugins added")).toBeVisible();
+    await expect(page.getByRole("main").getByText("Marketplace Fee VAT")).toBeVisible();
 
     // The bottom bar only carries the operational routes; documentation and
     // the other secondary destinations live behind "More".

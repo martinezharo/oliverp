@@ -31,7 +31,7 @@ const icon = (
   </svg>
 );
 
-export default function PurchaseModal({ transactionId, projectId, demo, onClose, onSaved }: OperationModalProps) {
+export default function PurchaseModal({ transactionId, projectId, onClose, onSaved }: OperationModalProps) {
   const { t } = useT();
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   useDialogOpen(true, dialogRef, onClose);
@@ -46,7 +46,6 @@ export default function PurchaseModal({ transactionId, projectId, demo, onClose,
   const { loading: loadingExisting, error: loadError } = useExistingRecord<PurchaseRecord>("/api/purchases/get", {
     transactionId,
     projectId,
-    demo,
     errorKey: "modal.purchase.loadError",
     onLoad: (purchase) => {
       const nextItems = purchaseItemsFromRecord(purchase.compra_detalle);
@@ -62,7 +61,7 @@ export default function PurchaseModal({ transactionId, projectId, demo, onClose,
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!projectId || demo || loadingExisting || loadError) return;
+    if (!projectId || loadingExisting || loadError) return;
     const lines = orderLines(items);
     if (!lines.length) { window.alert(t("modal.sale.noLines")); return; }
     setBusy(true);

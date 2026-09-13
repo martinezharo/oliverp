@@ -30,6 +30,14 @@ export interface TransactionSources {
 const PURCHASE_CHANNEL = "Proveedor";
 const OTHER_CHANNEL = "Manual";
 
+/**
+ * Channels are learned from past sales, so a project that has never sold
+ * anything would offer none and its first sale could not be recorded. These
+ * are the starting points the sale form always offers; it also accepts a new
+ * name. Shared so the demo offers the same list the live application does.
+ */
+export const DEFAULT_SALE_CHANNELS = ["Amazon", "Fewya", "Web", "Instagram"];
+
 export function transactionDeleteUrl(projectId: number, transaction: Pick<NormalizedTransaction, "id" | "type">): string {
   const params = new URLSearchParams({
     id: String(transaction.id),

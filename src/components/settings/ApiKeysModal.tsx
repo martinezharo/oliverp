@@ -2,15 +2,15 @@
 
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
 import Badge from "@/components/ui/Badge";
 import Modal, { useDialogOpen } from "@/components/ui/Modal";
 import { Spinner } from "@/components/ui/Spinner";
 import { primaryButton } from "@/components/ui/button";
 import { fieldLabel, input } from "@/components/ui/form";
+import { useDemoDataset } from "@/hooks/useDemoDataset";
 import { apiErrorMessage, apiJson } from "@/lib/client-api";
-import { mockApiKeys } from "@/lib/mock-data";
 import { useT } from "@/i18n/LocaleProvider";
 import type { ApiKeyRow } from "@/types/erp";
 
@@ -160,10 +160,15 @@ export default function ApiKeysModal({
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   useDialogOpen(true, dialogRef, onClose);
 
-  // Demo mode renders the same screen against a sample key, with every control
-  // inert — the chrome is the point, and there is no backend behind it.
+  // Demo mode runs the same screen against the sample keys: minting and
+  // revoking work, they simply happen in the tab rather than on an account.
   const remote = useQuery(api.apiKeys.list, demo ? "skip" : { projectLegacyId: projectId });
-  const keys = demo ? mockApiKeys : (remote as ApiKeyRow[] | null | undefined);
+  const dataset = useDemoDataset();
+  const demoKeys = useMemo(
+    () => dataset.apiKeys.filter((key) => key.projectId === projectId),
+    [dataset, projectId],
+  );
+  const keys = demo ? (demoKeys as ApiKeyRow[]) : (remote as ApiKeyRow[] | null | undefined);
 
   // Expiry is judged against the moment the modal opened, so a re-render never
   // reclassifies a row mid-session and rendering stays pure.
@@ -314,7 +319,7 @@ export default function ApiKeysModal({
                   ) : (
                     <button
                       type="button"
-                      disabled={demo || revoking !== null}
+                      disabled={revoking !== null}
                       onClick={() => setConfirming(row.id)}
                       className="shrink-0 self-start rounded-lg border border-red-500/20 bg-red-500/5 px-3 py-1.5 text-xs font-medium text-red-300 transition-all hover:border-red-400/40 hover:bg-red-500/10 hover:text-red-200 disabled:cursor-not-allowed disabled:opacity-40 sm:self-auto"
                     >
@@ -354,7 +359,7 @@ export default function ApiKeysModal({
                   autoComplete="off"
                   placeholder={t("settings.keys.namePlaceholder")}
                   onChange={(event) => setName(event.target.value)}
-                  disabled={demo || busy}
+                  disabled={busy}
                   className={`${input} mt-2 placeholder:text-slate-600 focus:border-primary-500`}
                 />
               </div>
@@ -367,7 +372,7 @@ export default function ApiKeysModal({
                   id="api-key-scope"
                   value={scope}
                   onChange={(event) => setScope(event.target.value as "read" | "write")}
-                  disabled={demo || busy}
+                  disabled={busy}
                   className={`${input} mt-2 focus:border-primary-500`}
                 >
                   <option value="read">{t("settings.keys.scopes.read")}</option>
@@ -384,19 +389,17 @@ export default function ApiKeysModal({
                   type="date"
                   value={expiresAt}
                   onChange={(event) => setExpiresAt(event.target.value)}
-                  disabled={demo || busy}
+                  disabled={busy}
                   className={`${input} mt-2 focus:border-primary-500`}
                 />
               </div>
             </div>
 
             <div className="flex flex-wrap items-center justify-end gap-3">
-              {demo && (
-                <p className="mr-auto text-xs text-amber-400/80">{t("settings.keys.demoNotice")}</p>
-              )}
+              {demo && <p className="mr-auto text-xs text-amber-400/80">{t("demo.notSaved")}</p>}
               <button
                 type="submit"
-                disabled={demo || !name.trim() || busy}
+                disabled={!name.trim() || busy}
                 className={`${primaryButton} flex items-center gap-2`}
               >
                 {busy ? (

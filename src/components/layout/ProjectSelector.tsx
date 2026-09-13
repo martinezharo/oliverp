@@ -3,7 +3,6 @@
 import Link from "next/link";
 
 import { useHref, useT } from "@/i18n/LocaleProvider";
-import { getProjectNameKey } from "@/lib/mock-data";
 
 import type { Project } from "@/hooks/useErpContext";
 
@@ -34,7 +33,7 @@ export default function ProjectSelector({
             {activeProject?.nombre.substring(0, 1).toUpperCase() || "P"}
           </span>
           <span className="max-w-[120px] truncate">
-            {t(getProjectNameKey(activeProject?.nombre || "")) || t("project.select")}
+            {activeProject?.nombre || t("project.select")}
           </span>
         </span>
         <svg
@@ -60,7 +59,7 @@ export default function ProjectSelector({
                 className={`group/item relative flex items-center gap-3 overflow-hidden rounded-lg px-3 py-2 text-sm transition-all ${active ? "border border-primary-500/20 bg-primary-500/10 text-primary-400" : "text-slate-400 hover:bg-white/5 hover:text-white"}`}
               >
                 {active && <span className="absolute left-0 top-1/2 h-4 w-0.5 -translate-y-1/2 rounded-r-full bg-primary-500 shadow-[0_0_8px_rgba(var(--primary-500),0.5)]" />}
-                <span className="relative z-10 w-full truncate">{t(getProjectNameKey(project.nombre))}</span>
+                <span className="relative z-10 w-full truncate">{project.nombre}</span>
                 {active && (
                   <svg xmlns="http://www.w3.org/2000/svg" className="ml-auto h-4 w-4 text-primary-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />

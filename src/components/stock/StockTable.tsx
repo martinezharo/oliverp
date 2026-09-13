@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 
 import { useT } from "@/i18n/LocaleProvider";
-import { getProductNameKey } from "@/lib/mock-data";
 import { nextSort, sortStock, type Sort, type SortColumn } from "@/lib/stock";
 
 import type { StockRow } from "@/types/erp";
@@ -70,7 +69,7 @@ export default function StockTable({ data, onOpenHistory }: { data: StockRow[]; 
                 <tr key={item.producto_id} className="group transition-colors hover:bg-white/5">
                   <td className="px-6 py-4 font-medium text-white">
                     <button type="button" onClick={() => onOpenHistory(item)} className="text-left transition-colors hover:text-primary-400 hover:underline">
-                      {t(getProductNameKey(item.nombre_producto))}
+                      {item.nombre_producto}
                     </button>
                   </td>
                   <td className="px-6 py-4 text-right font-mono text-slate-200">{formatNumber(item.stock_actual)}</td>

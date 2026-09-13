@@ -16,12 +16,10 @@ import type { Project } from "@/hooks/useErpContext";
  */
 export default function ProjectModal({
   mandatory,
-  demo,
   onClose,
   onCreated,
 }: {
   mandatory: boolean;
-  demo: boolean;
   onClose: () => void;
   onCreated: (project: Project) => void;
 }) {
@@ -34,7 +32,7 @@ export default function ProjectModal({
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (demo || !name.trim()) return;
+    if (!name.trim()) return;
     setBusy(true);
     setError(null);
     try {

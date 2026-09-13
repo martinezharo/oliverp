@@ -11,11 +11,9 @@ export const PAGE_SIZE_FLAT = 20;
 /** Every transaction in one list: a table on wide screens, cards on phones. */
 export default function FlatView({
   rows,
-  demo,
   onOpenModal,
 }: {
   rows: Transaction[];
-  demo: boolean;
   onOpenModal: OpenModal;
 }) {
   const { t } = useT();
@@ -44,7 +42,7 @@ export default function FlatView({
           </thead>
           <tbody className="divide-y divide-white/5">
             {rows.map((item) => (
-              <TransactionRow key={`${item.type}-${item.id}`} item={item} demo={demo} onOpenModal={onOpenModal} />
+              <TransactionRow key={`${item.type}-${item.id}`} item={item} onOpenModal={onOpenModal} />
             ))}
           </tbody>
         </table>
@@ -52,14 +50,14 @@ export default function FlatView({
 
       <div className="space-y-2 sm:hidden">
         {rows.map((item) => (
-          <MobileTransaction key={`${item.type}-${item.id}`} item={item} demo={demo} onOpenModal={onOpenModal} />
+          <MobileTransaction key={`${item.type}-${item.id}`} item={item} onOpenModal={onOpenModal} />
         ))}
       </div>
     </div>
   );
 }
 
-function MobileTransaction({ item, demo, onOpenModal }: { item: Transaction; demo: boolean; onOpenModal: OpenModal }) {
+function MobileTransaction({ item, onOpenModal }: { item: Transaction; onOpenModal: OpenModal }) {
   const { formatCurrency } = useT();
   const income = isIncome(item);
 
@@ -80,7 +78,7 @@ function MobileTransaction({ item, demo, onOpenModal }: { item: Transaction; dem
         <span className={`font-mono text-sm font-bold ${income ? "text-emerald-400" : "text-red-400"}`}>
           {formatCurrency(Math.abs(item.amount))}
         </span>
-        {!demo && <ActionButtons item={item} onOpenModal={onOpenModal} />}
+        <ActionButtons item={item} onOpenModal={onOpenModal} />
       </div>
     </div>
   );

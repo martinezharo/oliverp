@@ -34,11 +34,9 @@ export function DirectionIcon({ income }: { income: boolean }) {
 /** One transaction as a table row. The day detail panels omit the actions. */
 export default function TransactionRow({
   item,
-  demo,
   onOpenModal,
 }: {
   item: Transaction;
-  demo?: boolean;
   onOpenModal?: OpenModal;
 }) {
   const { formatCurrency, formatDate } = useT();
@@ -64,13 +62,16 @@ export default function TransactionRow({
         <span className="rounded border border-white/10 bg-white/5 px-2 py-1 text-xs">{item.channel}</span>
       </td>
       <td className="px-4 py-3 text-right">
-        {!demo && onOpenModal && <ActionButtons item={item} onOpenModal={onOpenModal} />}
+        {onOpenModal && <ActionButtons item={item} onOpenModal={onOpenModal} />}
       </td>
     </tr>
   );
 }
 
-/** Edit and delete. Deleting is confirmed, and Convex pushes the removal. */
+/**
+ * Edit and delete. Deleting is confirmed, and the removal is pushed back by
+ * Convex — or, in the demo, by the in-memory store.
+ */
 export function ActionButtons({ item, onOpenModal }: { item: Transaction; onOpenModal: OpenModal }) {
   const { t } = useT();
   const { projectId } = useErpContext();

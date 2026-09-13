@@ -60,9 +60,11 @@ const es: Dict = {
   // Demo banner
   "demo.title": "Modo Demo",
   "demo.full":
-    "Estás viendo datos de ejemplo. Regístrate para poder usar la aplicación con tus propios datos.",
-  "demo.short": "Datos de ejemplo.",
+    "Estás en un negocio de ejemplo y puedes crear, editar y borrar lo que quieras: los cambios se quedan en esta pestaña y se pierden al recargar. Regístrate para trabajar con tus propios datos.",
+  "demo.short": "Datos de ejemplo. Tus cambios no se guardan.",
   "demo.exit": "Salir del modo demo",
+  "demo.notSaved": "En modo demo los cambios solo viven en esta pestaña y se pierden al recargar.",
+  "demo.reset": "Restaurar datos",
 
   // Finance labels (shared)
   "finance.income": "Ingresos",
@@ -89,7 +91,7 @@ const es: Dict = {
   "login.redirecting": "Redirigiendo a GitHub…",
   "login.demoDivider": "o prueba sin registrarte",
   "login.demoCta": "Ver el modo demo",
-  "login.demoDescription": "Explora la aplicación con datos de ejemplo",
+  "login.demoDescription": "Prueba a crear y editar todo en un negocio de ejemplo",
   "login.demoLoading": "Cargando la demo…",
   "login.githubError": "No se pudo iniciar sesión. Comprueba que estás usando la cuenta de GitHub autorizada.",
 
@@ -289,17 +291,6 @@ const es: Dict = {
   "movementType.devolucion_vta": "Devolución Venta",
   "movementType.devolucion_com": "Devolución Compra",
 
-  // Mock product names
-  "product.mando_samsung_bn59": "Mando Samsung BN59",
-  "product.mando_lg_akb75095308": "Mando LG AKB75095308",
-  "product.mando_sony_rmt_tx300e": "Mando Sony RMT-TX300E",
-  "product.mando_fire_tv_stick": "Mando Fire TV Stick",
-  "product.mando_xiaomi_mi_box": "Mando Xiaomi Mi Box",
-
-  // Mock project names
-  "project.octopus_control": "Octopus Control",
-  "project.demo_store": "Demo Store",
-
   // API
   "api.demoUnavailable": "No disponible en modo demo",
   "api.unauthorized": "Sesion no valida o caducada. Vuelve a iniciar sesion.",
@@ -367,12 +358,10 @@ const es: Dict = {
   "settings.keys.copied": "Copiada",
   "settings.keys.show": "Mostrar",
   "settings.keys.hide": "Ocultar",
-  "settings.keys.demoNotice": "En modo demo no se pueden crear API keys.",
   "settings.session.signingOut": "Cerrando sesión…",
   "settings.session.title": "Sesión",
   "settings.account.title": "Cuenta",
   "settings.account.delete": "Eliminar mi cuenta",
-  "settings.demoNotice": "En modo demo las acciones destructivas están desactivadas.",
   "settings.deleteProject.title": "Eliminar proyecto",
   "settings.deleteProject.warning": "Se borrarán permanentemente todas las ventas, compras, productos, clientes, movimientos de stock y API keys de <strong>{name}</strong>.",
   "settings.deleteProject.confirmLabel": "Para confirmar, escribe:",
@@ -428,7 +417,6 @@ const es: Dict = {
   "plugins.add.submit": "Revisar plugin",
   "plugins.add.note":
     "Los repositorios privados se leen con la GitHub App de OlivERP, con acceso de solo lectura al contenido.",
-  "plugins.add.demoDisabled": "No se pueden añadir plugins en modo demo.",
   "plugins.list.title": "Tus plugins",
   "plugins.list.description":
     "Los comportamientos activos ajustan el proyecto sin sustituir la interfaz de OlivERP.",
@@ -542,7 +530,7 @@ const es: Dict = {
 
   "landing.demo.eyebrow": "Sin registro",
   "landing.demo.title": "Entra y toca todo. Los datos son de mentira.",
-  "landing.demo.description": "Un negocio de ejemplo con ventas, stock y un trimestre de historial ya cargados.",
+  "landing.demo.description": "Un negocio de ejemplo con ventas, stock e historial ya cargados. Crea y edita lo que quieras: no se guarda nada.",
   "landing.demo.cta": "Abrir la demo",
 
   "landing.nav.modules": "Módulos",
@@ -625,9 +613,11 @@ const en: Dict = {
   // Demo banner
   "demo.title": "Demo Mode",
   "demo.full":
-  "You're viewing sample data. Register to use the app with your own data.",
-  "demo.short": "Sample data.",
+  "You're inside a sample business and can create, edit and delete anything: changes stay in this tab and are lost on reload. Register to work with your own data.",
+  "demo.short": "Sample data. Your changes are not saved.",
   "demo.exit": "Exit demo mode",
+  "demo.notSaved": "In demo mode changes live in this tab only and are lost on reload.",
+  "demo.reset": "Reset sample data",
 
   // Finance labels
   "finance.income": "Income",
@@ -654,7 +644,7 @@ const en: Dict = {
   "login.redirecting": "Redirecting to GitHub…",
   "login.demoDivider": "or try it without signing up",
   "login.demoCta": "View demo mode",
-  "login.demoDescription": "Explore the app with sample data",
+  "login.demoDescription": "Create and edit anything on a sample business",
   "login.demoLoading": "Loading the demo…",
   "login.githubError": "Unable to sign in. Check that you are using the authorized GitHub account.",
 
@@ -854,17 +844,6 @@ const en: Dict = {
   "movementType.devolucion_vta": "Sale Return",
   "movementType.devolucion_com": "Purchase Return",
 
-  // Mock product names
-  "product.mando_samsung_bn59": "Samsung BN59 Remote",
-  "product.mando_lg_akb75095308": "LG AKB75095308 Remote",
-  "product.mando_sony_rmt_tx300e": "Sony RMT-TX300E Remote",
-  "product.mando_fire_tv_stick": "Fire TV Stick Remote",
-  "product.mando_xiaomi_mi_box": "Xiaomi Mi Box Remote",
-
-  // Mock project names
-  "project.octopus_control": "Octopus Control",
-  "project.demo_store": "Demo Store",
-
   // API
   "api.demoUnavailable": "Not available in demo mode",
   "api.unauthorized": "Invalid or expired session. Please sign in again.",
@@ -929,12 +908,10 @@ const en: Dict = {
   "settings.keys.copied": "Copied",
   "settings.keys.show": "Show",
   "settings.keys.hide": "Hide",
-  "settings.keys.demoNotice": "API keys cannot be created in demo mode.",
   "settings.session.signingOut": "Signing out…",
   "settings.session.title": "Session",
   "settings.account.title": "Account",
   "settings.account.delete": "Delete my account",
-  "settings.demoNotice": "Destructive actions are disabled in demo mode.",
   "settings.deleteProject.title": "Delete project",
   "settings.deleteProject.warning": "This permanently erases every sale, purchase, product, customer, stock movement and API key in <strong>{name}</strong>.",
   "settings.deleteProject.confirmLabel": "To confirm, type:",
@@ -990,7 +967,6 @@ const en: Dict = {
   "plugins.add.submit": "Review plugin",
   "plugins.add.note":
     "Private repositories are read through the OlivERP GitHub App with read-only contents access.",
-  "plugins.add.demoDisabled": "Adding plugins is disabled in demo mode.",
   "plugins.list.title": "Your plugins",
   "plugins.list.description":
     "Active hooks adjust project behavior without replacing OlivERP's interface.",
@@ -1104,7 +1080,7 @@ const en: Dict = {
 
   "landing.demo.eyebrow": "No sign-up",
   "landing.demo.title": "Come in and touch everything. The data is made up.",
-  "landing.demo.description": "A sample business with sales, stock and a quarter of history already loaded.",
+  "landing.demo.description": "A sample business with sales, stock and history already loaded. Create and edit anything you like: nothing is saved.",
   "landing.demo.cta": "Open the demo",
 
   "landing.nav.modules": "Modules",

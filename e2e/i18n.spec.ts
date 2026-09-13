@@ -85,7 +85,8 @@ test.describe("locale routing", () => {
     await page.goto("/es/app/plugins");
     await expect(page.getByRole("heading", { name: "Añadir un plugin privado" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Revisar plugin" })).toBeVisible();
-    await expect(page.getByRole("main").getByText("No hay plugins privados añadidos")).toBeVisible();
+    // A plugin's own name is its author's, not a string the app translates.
+    await expect(page.getByRole("main").getByText("Marketplace Fee VAT")).toBeVisible();
 
     await page.goto("/es/documentation");
     await expect(page.getByRole("heading", { name: "Documentación", level: 1 })).toBeVisible();
