@@ -2,24 +2,11 @@
 
 import type { Translate } from "@/i18n/t";
 
+import { ApiRequestError } from "./api-error";
 import { getAuthToken } from "./authToken";
+import { isDemoActive } from "./demo/mode";
 
-/**
- * A failed API call, carrying the machine-readable `code` from the error
- * envelope. The `message` stays as the API sent it: the v1 vocabulary is a
- * documented Spanish contract for API clients, so the UI translates by code
- * instead (see `apiErrorMessage`) and never shows that message verbatim.
- */
-export class ApiRequestError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-    readonly code?: string,
-  ) {
-    super(message);
-    this.name = "ApiRequestError";
-  }
-}
+export { ApiRequestError };
 
 /**
  * Renders an API failure in the page's language, falling back to `fallback`.
@@ -52,6 +39,14 @@ async function apiFetch(input: RequestInfo | URL, init: RequestInit = {}): Promi
 }
 
 export async function apiJson<T>(input: RequestInfo | URL, init?: RequestInit): Promise<T> {
+  // Demo mode has no backend to call: the same request is answered from the
+  // sample business held in the tab. The module is loaded on demand so the
+  // login and landing pages, which also use this helper, never download it.
+  if (isDemoActive()) {
+    const { demoRequest } = await import("./demo/api");
+    return demoRequest(input, init) as T;
+  }
+
   const response = await apiFetch(input, init);
   const body = (await response.json().catch(() => null)) as T | { error?: unknown } | null;
   if (!response.ok) {

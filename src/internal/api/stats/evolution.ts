@@ -1,5 +1,6 @@
 import type { APIRoute } from "@/lib/server-context";
-import { getMockEvolution } from "../../../lib/mock-data";
+import { evolutionSeries } from "../../../lib/demo/domain";
+import { demoDataset } from "../../../lib/demo/store";
 import { backendError, jsonResponse, sessionBackend, unauthorizedResponse } from "../../../lib/legacy-api";
 import { isDemoMode } from "../../../lib/runtime";
 
@@ -12,7 +13,9 @@ export const GET: APIRoute = async (context) => {
         return jsonResponse({ error: "Project ID is required" }, 400);
     }
 
-    if (isDemoMode(context.locals)) return jsonResponse(getMockEvolution(days));
+    if (isDemoMode(context.locals)) {
+        return jsonResponse(evolutionSeries(demoDataset(), projectId, days));
+    }
 
     const session = await sessionBackend(context);
     if (!session) return unauthorizedResponse();

@@ -1,4 +1,6 @@
 import type { APIRoute } from "@/lib/server-context";
+import { otherConcepts } from "../../../lib/demo/domain";
+import { demoDataset } from "../../../lib/demo/store";
 import { backendError, jsonResponse, sessionBackend, unauthorizedResponse } from "../../../lib/legacy-api";
 import { isDemoMode } from "../../../lib/runtime";
 
@@ -9,7 +11,7 @@ export const GET: APIRoute = async (context) => {
     }
 
     if (isDemoMode(context.locals)) {
-        return jsonResponse({ concepts: [] });
+        return jsonResponse({ concepts: otherConcepts(demoDataset(), projectId) });
     }
 
     const session = await sessionBackend(context);

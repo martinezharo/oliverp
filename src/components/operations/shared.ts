@@ -11,7 +11,6 @@ export type OperationModalProps = {
   /** The operation being edited, or null when creating a new one. */
   transactionId: number | null;
   projectId: number | null;
-  demo: boolean;
   onClose: () => void;
   onSaved: () => void;
 };
@@ -68,19 +67,17 @@ export function useExistingRecord<T>(
   {
     transactionId,
     projectId,
-    demo,
     errorKey,
     onLoad,
   }: {
     transactionId: number | null;
     projectId: number | null;
-    demo: boolean;
     errorKey: string;
     onLoad: (record: T) => void;
   },
 ) {
   const { t } = useT();
-  const [loading, setLoading] = useState(transactionId !== null && !demo);
+  const [loading, setLoading] = useState(transactionId !== null);
   const [error, setError] = useState<string | null>(null);
   // Held in a ref so callers can pass an inline closure over their setters
   // without the request restarting on every render.
@@ -88,7 +85,7 @@ export function useExistingRecord<T>(
   useEffect(() => { apply.current = onLoad; });
 
   useEffect(() => {
-    if (!transactionId || demo || !projectId) return;
+    if (!transactionId || !projectId) return;
     let active = true;
     void apiJson<T>(`${endpoint}?id=${transactionId}&projectId=${projectId}`)
       .then((record) => { if (active) apply.current(record); })
@@ -101,7 +98,7 @@ export function useExistingRecord<T>(
       .finally(() => { if (active) setLoading(false); });
     return () => { active = false; };
     // `t` is a cached, per-language constant, so it never restarts this.
-  }, [demo, endpoint, errorKey, projectId, t, transactionId]);
+  }, [endpoint, errorKey, projectId, t, transactionId]);
 
   return { loading, error };
 }

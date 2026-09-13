@@ -3,26 +3,45 @@ import { expect, test } from "@playwright/test";
 /**
  * The settings screen in demo mode.
  *
- * Demo mode is the only state reachable without a GitHub account, so this
- * covers what it is there to prove: the page renders inside the normal shell
- * and every destructive control is inert. The deletion logic itself is covered
+ * Demo mode is the only state reachable without a GitHub account. What it has
+ * to prove here is that the screen is the real one and its controls work —
+ * projects and keys can be managed — while the two actions that would need an
+ * account behind them stay out of reach. The deletion logic itself is covered
  * against the real backend in `convex/authorization.test.ts`.
  */
 test.beforeEach(async ({ page }) => {
   await page.goto("/api/demo/start");
 });
 
-test("renders the settings page with destructive actions disabled", async ({ page }) => {
+test("lists the demo projects and keeps account actions out of reach", async ({ page }) => {
   await page.goto("/app/settings");
   const main = page.getByRole("main");
 
   await expect(main.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
   await expect(main.getByRole("heading", { name: "Your projects" })).toBeVisible();
   await expect(main.getByRole("heading", { name: "Account" })).toBeVisible();
+  await expect(main.getByText("Northwind Gadgets")).toBeVisible();
+  await expect(main.getByText("Blue Harbor Coffee")).toBeVisible();
 
-  await expect(main.getByRole("button", { name: "Delete project" })).toBeDisabled();
+  // A demo project is the visitor's to delete; the account behind the demo
+  // does not exist, so signing out of it or deleting it cannot mean anything.
+  await expect(main.getByRole("button", { name: "Delete project" }).first()).toBeEnabled();
   await expect(main.getByRole("button", { name: "Delete account" })).toBeDisabled();
-  await expect(main.getByText("Destructive actions are disabled in demo mode.")).toBeVisible();
+  await expect(main.getByText("In demo mode changes live in this tab only and are lost on reload.")).toBeVisible();
+});
+
+test("deletes a demo project from the browser alone", async ({ page }) => {
+  await page.goto("/app/settings");
+  const main = page.getByRole("main");
+  const row = main.getByRole("listitem").filter({ hasText: "Blue Harbor Coffee" });
+
+  await row.getByRole("button", { name: "Delete project" }).click();
+  const dialog = page.locator("dialog[open]");
+  await dialog.getByRole("textbox").fill("Blue Harbor Coffee");
+  await dialog.getByRole("button", { name: "Delete project" }).click();
+
+  await expect(main.getByText("Blue Harbor Coffee")).toHaveCount(0);
+  await expect(main.getByText("Northwind Gadgets")).toBeVisible();
 });
 
 test("is reachable from the sidebar", async ({ page }) => {
@@ -32,24 +51,30 @@ test("is reachable from the sidebar", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
 });
 
-test("manages API keys from the project row with every control inert", async ({ page }) => {
+test("mints and revokes an API key from the project row", async ({ page }) => {
   await page.goto("/app/settings");
-  await page.getByRole("button", { name: "Manage API keys" }).click();
+  await page.getByRole("button", { name: "Manage API keys" }).first().click();
 
   const dialog = page.locator("dialog[open]");
   await expect(dialog.getByRole("heading", { name: "API keys" })).toBeVisible();
-  await expect(dialog).toContainText("Demo project");
+  await expect(dialog).toContainText("Northwind Gadgets");
 
-  // The sample key renders the real row, and the secret itself is never in it.
-  await expect(dialog.getByText("n8n")).toBeVisible();
+  // The sample keys render the real rows, and no secret is ever in one.
+  await expect(dialog.getByText("n8n automation")).toBeVisible();
   await expect(dialog.getByText("erp_sk_4f2a9c…")).toBeVisible();
   // Scoped to the row: "Read and write" is also an option in the create form.
-  await expect(dialog.getByRole("listitem").getByText("Read and write")).toBeVisible();
+  await expect(dialog.getByRole("listitem").getByText("Read and write").first()).toBeVisible();
 
-  await expect(dialog.getByText("API keys cannot be created in demo mode.")).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Create API key" })).toBeDisabled();
-  await expect(dialog.getByRole("button", { name: "Revoke" })).toBeDisabled();
-  await expect(dialog.getByLabel("Name")).toBeDisabled();
+  // Minting works, and the secret is shown exactly once, hidden until asked for.
+  await dialog.getByLabel("Name").fill("Warehouse scanner");
+  await dialog.getByRole("button", { name: "Create API key" }).click();
+  await expect(dialog.getByText("erp_sk_••••••••••••••••")).toBeVisible();
+  await expect(dialog.getByText("Warehouse scanner")).toBeVisible();
+
+  const row = dialog.getByRole("listitem").filter({ hasText: "Warehouse scanner" });
+  await row.getByRole("button", { name: "Revoke" }).click();
+  await row.getByRole("button", { name: "Revoke" }).click();
+  await expect(dialog.getByRole("listitem").filter({ hasText: "Warehouse scanner" })).toHaveCount(0);
 
   // Not `fullPage`: a native <dialog> lives in the top layer and only composites
   // correctly in a viewport capture. The wait lets the open animation finish so
@@ -64,9 +89,13 @@ test("redirects the old Spanish settings route to the English canonical URL", as
   await expect(page.getByRole("heading", { name: "Settings", level: 1 })).toBeVisible();
 });
 
+// The application answers its own demo requests in the browser, so these
+// endpoints are only ever reached by something outside it — and there is no
+// demo account for them to change.
+//
 // `page.request` inherits the browser context, and therefore the demo cookie;
 // the bare `request` fixture does not, which makes it the unauthenticated case.
-test("refuses deletion in demo mode at the API level", async ({ page }) => {
+test("refuses account changes in demo mode at the API level", async ({ page }) => {
   const project = await page.request.post("/api/projects/delete", {
     data: { projectId: 1 },
   });

@@ -8,7 +8,7 @@ OlivERP is an open-source online ERP for small businesses and independent seller
 - Maintain a product catalog, current inventory, stock valuation, movement history, and manual adjustments.
 - Record other income and expenses and review daily activity and financial summaries.
 - Separate data by project and control access through project-scoped API keys.
-- Use English or Spanish, install the progressive web app, or explore sample data in a read-only demo.
+- Use English or Spanish, install the progressive web app, or try everything on an invented business in the demo, which saves nothing.
 
 ## API and automation
 

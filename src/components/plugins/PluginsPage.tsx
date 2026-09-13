@@ -3,12 +3,14 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
+import { useDemoDataset } from "@/hooks/useDemoDataset";
 import { useErpContext } from "@/hooks/useErpContext";
 import { useHref, useT } from "@/i18n/LocaleProvider";
 import type { Translate } from "@/i18n/t";
 import { apiErrorMessage, apiJson } from "@/lib/client-api";
+import * as demoStore from "@/lib/demo/store";
 import { documentationPath } from "@/lib/navigation";
 import {
   installArgs,
@@ -35,6 +37,13 @@ export default function PluginsPage() {
   const href = useHref();
   const { projectId, demo } = useErpContext();
   const installations = useQuery(api.plugins.list, !demo && projectId ? { projectLegacyId: projectId } : "skip");
+  // The demo installs into memory instead of into the account; everything the
+  // screen does with an installation is otherwise identical.
+  const dataset = useDemoDataset();
+  const demoInstallations: PluginInstallation[] = useMemo(
+    () => dataset.plugins.filter((plugin) => plugin.projectId === projectId),
+    [dataset, projectId],
+  );
   const installPlugin = useMutation(api.plugins.install);
   const uninstallPlugin = useMutation(api.plugins.uninstall);
   const setPluginEnabled = useMutation(api.plugins.setEnabled);
@@ -45,11 +54,11 @@ export default function PluginsPage() {
   const [changing, setChanging] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const rows = demo ? [] : installations;
+  const rows = demo ? demoInstallations : installations;
   const loading = !demo && projectId !== null && installations === undefined;
 
   async function resolve(value: string) {
-    if (!projectId || demo) return;
+    if (!projectId) return;
     setBusy(true);
     setError(null);
     try {
@@ -67,11 +76,13 @@ export default function PluginsPage() {
   }
 
   async function confirmInstall() {
-    if (!pending || !projectId || demo) return;
+    if (!pending || !projectId) return;
     setBusy(true);
     setError(null);
     try {
-      await installPlugin(installArgs(projectId, pending));
+      const args = installArgs(projectId, pending);
+      if (demo) demoStore.installPlugin(args);
+      else await installPlugin(args);
       setPending(null);
       setRepository("");
     } catch (cause) {
@@ -82,11 +93,12 @@ export default function PluginsPage() {
   }
 
   async function toggle(plugin: PluginInstallation) {
-    if (!projectId || demo || changing) return;
+    if (!projectId || changing) return;
     setChanging(plugin.pluginId);
     setError(null);
     try {
-      await setPluginEnabled({ projectLegacyId: projectId, pluginId: plugin.pluginId, enabled: !plugin.enabled });
+      if (demo) demoStore.setPluginEnabled(projectId, plugin.pluginId, !plugin.enabled);
+      else await setPluginEnabled({ projectLegacyId: projectId, pluginId: plugin.pluginId, enabled: !plugin.enabled });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t("plugins.error.toggle"));
     } finally {
@@ -95,11 +107,12 @@ export default function PluginsPage() {
   }
 
   async function confirmUninstall() {
-    if (!removing || !projectId || demo) return;
+    if (!removing || !projectId) return;
     setBusy(true);
     setError(null);
     try {
-      await uninstallPlugin({ projectLegacyId: projectId, pluginId: removing.pluginId });
+      if (demo) demoStore.uninstallPlugin(projectId, removing.pluginId);
+      else await uninstallPlugin({ projectLegacyId: projectId, pluginId: removing.pluginId });
       setRemoving(null);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : t("plugins.error.remove"));
@@ -126,9 +139,9 @@ export default function PluginsPage() {
           <section className="overflow-hidden rounded-3xl border border-white/[0.07] bg-[#14151a]/55">
             <div className="border-b border-white/5 px-6 py-5"><h2 className="text-lg font-semibold text-white">{t("plugins.add.title")}</h2><p className="mt-1 text-sm text-slate-500">{t("plugins.add.description")}</p></div>
             <form onSubmit={(event) => { event.preventDefault(); void resolve(repository); }} className="p-6">
-              <div className="flex flex-col gap-3 sm:flex-row"><label className="sr-only" htmlFor="plugin-repository">{t("plugins.add.label")}</label><input id="plugin-repository" type="url" required placeholder={t("plugins.add.placeholder")} value={repository} onChange={(event) => setRepository(event.target.value)} disabled={demo} className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-slate-700 focus:border-primary-500/50 disabled:cursor-not-allowed disabled:opacity-50" /><button type="submit" disabled={busy || demo} className="rounded-xl bg-primary-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-500/15 transition-colors hover:bg-primary-400 disabled:cursor-not-allowed disabled:opacity-40">{t(busy ? "plugins.add.checking" : "plugins.add.submit")}</button></div>
+              <div className="flex flex-col gap-3 sm:flex-row"><label className="sr-only" htmlFor="plugin-repository">{t("plugins.add.label")}</label><input id="plugin-repository" type="url" required placeholder={t("plugins.add.placeholder")} value={repository} onChange={(event) => setRepository(event.target.value)} className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black/20 px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-slate-700 focus:border-primary-500/50 disabled:cursor-not-allowed disabled:opacity-50" /><button type="submit" disabled={busy} className="rounded-xl bg-primary-500 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-primary-500/15 transition-colors hover:bg-primary-400 disabled:cursor-not-allowed disabled:opacity-40">{t(busy ? "plugins.add.checking" : "plugins.add.submit")}</button></div>
               <p className="mt-3 flex items-center gap-2 text-xs text-slate-600"><LockIcon className="h-3.5 w-3.5" /> {t("plugins.add.note")}</p>
-              {demo && <p className="mt-3 text-xs text-amber-400/80">{t("plugins.add.demoDisabled")}</p>}
+              {demo && <p className="mt-3 text-xs text-amber-400/80">{t("demo.notSaved")}</p>}
             </form>
           </section>
 

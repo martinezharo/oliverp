@@ -5,8 +5,9 @@ import { useQuery } from "convex/react";
 import { useMemo } from "react";
 
 import type { FinanceRow, StockRow } from "@/types/erp";
+import { useDemoDataset } from "@/hooks/useDemoDataset";
 import { useErpContext } from "@/hooks/useErpContext";
-import { mockFinanceRows, mockStock } from "@/lib/mock-data";
+import { financeRows, stockRows, transactionSources } from "@/lib/demo/domain";
 import { normalizeTransactions, type NormalizedTransaction } from "@/lib/transactions";
 
 /**
@@ -16,11 +17,16 @@ import { normalizeTransactions, type NormalizedTransaction } from "@/lib/transac
  * array afterwards. Convex keeps the value cached per argument set, so moving
  * between pages and coming back paints immediately, and a mutation made
  * anywhere pushes the new rows here without a refetch.
+ *
+ * Demo mode reads the same shapes out of the in-memory sample business
+ * instead. Both branches are computed by the same code from the same records,
+ * so a demo screen is never a different screen — only a different source.
  */
 
 /** The daily finance read model, newest day first. */
 export function useFinanceRows(): FinanceRow[] | undefined {
   const { projectId, demo } = useErpContext();
+  const dataset = useDemoDataset();
   const remote = useQuery(
     api.session.dailyFinances,
     !demo && projectId ? { projectLegacyId: projectId } : "skip",
@@ -29,25 +35,26 @@ export function useFinanceRows(): FinanceRow[] | undefined {
   return useMemo(() => {
     const rows = demo
       ? projectId
-        ? mockFinanceRows().filter((row) => row.proyecto_id === projectId)
+        ? financeRows(dataset, projectId)
         : []
       : remote;
     if (!rows) return undefined;
     return [...rows].sort((a, b) => b.dia.localeCompare(a.dia));
-  }, [demo, projectId, remote]);
+  }, [dataset, demo, projectId, remote]);
 }
 
 export function useStockRows(): StockRow[] | undefined {
   const { projectId, demo } = useErpContext();
+  const dataset = useDemoDataset();
   const remote = useQuery(
     api.session.stock,
     !demo && projectId ? { projectLegacyId: projectId } : "skip",
   );
 
   return useMemo(() => {
-    if (demo) return projectId ? mockStock.filter((row) => row.proyecto_id === projectId) : [];
+    if (demo) return projectId ? stockRows(dataset, projectId) : [];
     return remote;
-  }, [demo, projectId, remote]);
+  }, [dataset, demo, projectId, remote]);
 }
 
 /**
@@ -56,16 +63,23 @@ export function useStockRows(): StockRow[] | undefined {
  */
 export function useTransactions(range?: { fromDate?: string; toDate?: string }): NormalizedTransaction[] | undefined {
   const { projectId, demo } = useErpContext();
+  const dataset = useDemoDataset();
+  const fromDate = range?.fromDate;
+  const toDate = range?.toDate;
   const remote = useQuery(
     api.session.transactionSources,
     !demo && projectId
-      ? { projectLegacyId: projectId, ...(range?.fromDate ? { fromDate: range.fromDate } : {}), ...(range?.toDate ? { toDate: range.toDate } : {}) }
+      ? { projectLegacyId: projectId, ...(fromDate ? { fromDate } : {}), ...(toDate ? { toDate } : {}) }
       : "skip",
   );
 
   return useMemo(() => {
-    if (demo) return [];
-    if (!remote) return undefined;
-    return normalizeTransactions(remote);
-  }, [demo, remote]);
+    const sources = demo ? (projectId ? transactionSources(dataset, projectId) : { sales: [], purchases: [], others: [] }) : remote;
+    if (!sources) return undefined;
+    const rows = normalizeTransactions(sources);
+    // The remote query narrows the range itself; the demo list is filtered
+    // here so both branches answer the same question.
+    if (!demo || (!fromDate && !toDate)) return rows;
+    return rows.filter((row) => (!fromDate || row.date >= fromDate) && (!toDate || row.date <= toDate));
+  }, [dataset, demo, fromDate, projectId, remote, toDate]);
 }

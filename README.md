@@ -16,7 +16,7 @@ and financial summaries together; and connect automations through the API.
 - Other income and expenses, daily views, and financial summaries.
 - Project-scoped data and API keys, with GitHub OAuth authentication.
 - English and Spanish interfaces, plus an installable progressive web app.
-- Read-only demo mode with sample business data.
+- A fully editable demo mode, on an invented business, that saves nothing.
 - A documented API for scripts, n8n, Make, AI agents, and other integrations.
 - Private, declarative GitHub plugins that apply reviewed rules to one project.
 

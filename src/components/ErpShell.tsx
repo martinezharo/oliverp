@@ -10,8 +10,10 @@ import OperationModals from "@/components/operations/OperationModals";
 import ProjectModal from "@/components/projects/ProjectModal";
 import { ErpContext, type ModalKind, type ModalRequest, type Project } from "@/hooks/useErpContext";
 import { useCloudSession } from "@/hooks/useCloudSession";
+import { useDemoDataset } from "@/hooks/useDemoDataset";
 import { useAppPathname, useHref, useT } from "@/i18n/LocaleProvider";
-import { mockProjects } from "@/lib/mock-data";
+import { setDemoActive } from "@/lib/demo/mode";
+import { resetDemo } from "@/lib/demo/store";
 import { APP_ROOT, titleKeyFor } from "@/lib/navigation";
 
 /**
@@ -24,6 +26,17 @@ import { APP_ROOT, titleKeyFor } from "@/lib/navigation";
  */
 export default function ErpShell({ demo, children }: { demo: boolean; children: React.ReactNode }) {
   const { t } = useT();
+  // Every screen reaches the backend through `apiJson`, which needs to know
+  // that it should answer from the sample business instead. The cookie that
+  // decides it is httpOnly, so the shell — which the Worker told — is where
+  // the browser learns it.
+  //
+  // Set while rendering rather than from an effect: child effects run before
+  // the parent's, and a dialog's first read would then go to the network
+  // before the shell had said not to. Only ever set from the browser, because
+  // module state on the server is shared by every request it handles.
+  if (typeof window !== "undefined") setDemoActive(demo);
+
   const session = useCloudSession();
   const router = useRouter();
   // The language sits in front of the URL; the route table is written without
@@ -38,9 +51,12 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
   // Convex answers over the socket that is already open and caches the result,
   // so returning to a page repaints from memory rather than refetching.
   const remoteProjects = useQuery(api.session.projects, !demo && authenticated ? {} : "skip");
+  const demoData = useDemoDataset();
   const projects: Project[] = useMemo(
-    () => (demo ? mockProjects : remoteProjects ?? []),
-    [demo, remoteProjects],
+    () => (demo
+      ? demoData.projects.map((project) => ({ id: project.id, nombre: project.name, activo: project.active }))
+      : remoteProjects ?? []),
+    [demo, demoData, remoteProjects],
   );
   const ready = demo || (session.ready && (!authenticated || remoteProjects !== undefined));
 
@@ -58,8 +74,9 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
   }, [href, router, signedOut]);
 
   // Without a project the app has nothing to show, so the creation dialog is
-  // opened on every visit until one exists.
-  const mustCreateProject = !demo && ready && authenticated && projects.length === 0;
+  // opened on every visit until one exists — including in the demo, where a
+  // visitor is free to delete the sample projects.
+  const mustCreateProject = ready && (demo || authenticated) && projects.length === 0;
 
   function projectCreated(project: Project) {
     setProjectModal(false);
@@ -85,7 +102,7 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
         projects={projects}
         projectId={projectId}
         demo={demo}
-        onNewProject={() => { if (!demo) setProjectModal(true); }}
+        onNewProject={() => setProjectModal(true)}
       >
         {demo && <DemoBanner full={pathname === APP_ROOT} />}
         {/* The chrome is never blanked: only the content area waits. */}
@@ -97,16 +114,15 @@ export default function ErpShell({ demo, children }: { demo: boolean; children: 
         kind={modal?.kind ?? null}
         transactionId={modal?.id ?? null}
         projectId={projectId}
-        demo={demo}
         onClose={() => setModal(null)}
-        // Convex pushes the new rows to every open subscription, so a saved
-        // operation no longer needs the views to be told to refetch.
+        // Convex — and, in the demo, the in-memory store — pushes the new rows
+        // to every open subscription, so a saved operation no longer needs the
+        // views to be told to refetch.
         onSaved={() => setModal(null)}
       />
       {(projectModal || mustCreateProject) && (
         <ProjectModal
           mandatory={mustCreateProject}
-          demo={demo}
           onClose={() => setProjectModal(false)}
           onCreated={projectCreated}
         />
@@ -130,14 +146,25 @@ function ShellSkeleton() {
   );
 }
 
+/**
+ * The demo's one piece of chrome: what this is, and the way back to a clean
+ * sample business once a visitor has taken it apart.
+ */
 function DemoBanner({ full }: { full: boolean }) {
   const { t } = useT();
   return (
-    <div className="mb-6 flex items-center gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-400">
-      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div className="mb-6 flex flex-col gap-3 rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-400 sm:flex-row sm:items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" className="hidden h-5 w-5 shrink-0 sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
-      <span><strong>{t("demo.title")}</strong> — {full ? t("demo.full") : t("demo.short")}</span>
+      <span className="min-w-0 flex-1"><strong>{t("demo.title")}</strong> — {full ? t("demo.full") : t("demo.short")}</span>
+      <button
+        type="button"
+        onClick={() => resetDemo()}
+        className="shrink-0 self-start rounded-lg border border-amber-400/25 bg-amber-400/10 px-3 py-1.5 text-xs font-medium text-amber-200 transition-colors hover:border-amber-300/50 hover:bg-amber-400/15 sm:self-auto"
+      >
+        {t("demo.reset")}
+      </button>
     </div>
   );
 }

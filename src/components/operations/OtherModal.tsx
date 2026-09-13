@@ -19,7 +19,7 @@ const icon = (
 );
 
 /** Income and expenses that are not tied to a product: fees, rent, refunds. */
-export default function OtherModal({ transactionId, projectId, demo, onClose, onSaved }: OperationModalProps) {
+export default function OtherModal({ transactionId, projectId, onClose, onSaved }: OperationModalProps) {
   const { t } = useT();
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   useDialogOpen(true, dialogRef, onClose);
@@ -43,7 +43,6 @@ export default function OtherModal({ transactionId, projectId, demo, onClose, on
   const { loading: loadingExisting, error: loadError } = useExistingRecord<OtherRecord>("/api/transactions/get-other", {
     transactionId,
     projectId,
-    demo,
     errorKey: "modal.other.loadError",
     onLoad: (transaction) => {
       setType(transaction.tipo === "gasto" ? "gasto" : "ingreso");
@@ -57,7 +56,7 @@ export default function OtherModal({ transactionId, projectId, demo, onClose, on
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!projectId || demo || loadingExisting || loadError) return;
+    if (!projectId || loadingExisting || loadError) return;
     setBusy(true);
     try {
       await apiJson("/api/transactions/save", {

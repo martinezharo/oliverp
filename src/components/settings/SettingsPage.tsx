@@ -3,7 +3,7 @@
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import ApiKeysModal from "@/components/settings/ApiKeysModal";
 import { InstallApp } from "@/components/settings/InstallApp";
@@ -12,7 +12,9 @@ import Badge from "@/components/ui/Badge";
 import ConfirmDeleteModal from "@/components/ui/ConfirmDeleteModal";
 import { dangerButton, dangerSolidButton, secondaryButton } from "@/components/ui/button";
 import { apiErrorMessage, apiJson } from "@/lib/client-api";
+import { DEMO_ACCOUNT_EMAIL } from "@/lib/demo/seed";
 import { useCloudSession } from "@/hooks/useCloudSession";
+import { useDemoDataset } from "@/hooks/useDemoDataset";
 import { useErpContext } from "@/hooks/useErpContext";
 import { useHref, useT } from "@/i18n/LocaleProvider";
 import { appPath } from "@/lib/navigation";
@@ -24,11 +26,6 @@ type ProjectRow = {
   miembros: number;
   api_keys: number;
 };
-
-/** Demo mode shows the real chrome with the destructive paths disabled. */
-const demoProjects: ProjectRow[] = [
-  { id: 1, nombre: "Demo project", rol: "admin", miembros: 1, api_keys: 0 },
-];
 
 type Pending = { kind: "project"; project: ProjectRow } | { kind: "account" };
 
@@ -43,6 +40,19 @@ export default function SettingsPage() {
   const href = useHref();
 
   const remote = useQuery(api.account.summary, demo || !session.user ? "skip" : {});
+  const dataset = useDemoDataset();
+  // The demo owns its projects the way a real account does, keys included, so
+  // the row counts stay true as they are created and deleted.
+  const demoProjects: ProjectRow[] = useMemo(
+    () => dataset.projects.map((project) => ({
+      id: project.id,
+      nombre: project.name,
+      rol: "admin",
+      miembros: 1,
+      api_keys: dataset.apiKeys.filter((key) => key.projectId === project.id).length,
+    })),
+    [dataset],
+  );
   const projects = demo ? demoProjects : (remote?.proyectos as ProjectRow[] | undefined);
 
   const [pending, setPending] = useState<Pending | null>(null);
@@ -69,7 +79,7 @@ export default function SettingsPage() {
   }
 
   async function confirm() {
-    if (!pending || demo) return;
+    if (!pending) return;
     setBusy(true);
     setError(null);
     try {
@@ -80,9 +90,9 @@ export default function SettingsPage() {
           body: JSON.stringify({ projectId: pending.project.id }),
         });
         setPending(null);
-        // The project selector and every list read from Convex, which pushes
-        // the removal to them; the route is replaced so a deleted project id
-        // does not stay in the URL.
+        // The project selector and every list read from Convex — or from the
+        // demo store — which pushes the removal to them; the route is replaced
+        // so a deleted project id does not stay in the URL.
         router.replace(href(appPath("settings")));
       } else {
         await apiJson("/api/account/delete", { method: "POST" });
@@ -146,7 +156,7 @@ export default function SettingsPage() {
               </button>
               <button
                 type="button"
-                disabled={demo || project.rol !== "admin"}
+                disabled={project.rol !== "admin"}
                 onClick={() => open({ kind: "project", project })}
                 className={dangerButton}
               >
@@ -166,7 +176,7 @@ export default function SettingsPage() {
         {/* The email is the row: labelling it "Session" and then repeating
             "Sign out" as the title next to a button that already says it was
             three ways of saying the same thing. */}
-        <Row title={session.user?.email ?? t("settings.session.title")}>
+        <Row title={session.user?.email ?? (demo ? DEMO_ACCOUNT_EMAIL : t("settings.session.title"))}>
           <button
             type="button"
             disabled={demo || signingOut}
@@ -189,7 +199,7 @@ export default function SettingsPage() {
         </Row>
       </Section>
 
-      {demo && <p className="text-xs text-amber-400/80">{t("settings.demoNotice")}</p>}
+      {demo && <p className="text-xs text-amber-400/80">{t("demo.notSaved")}</p>}
 
       {managing && (
         <ApiKeysModal

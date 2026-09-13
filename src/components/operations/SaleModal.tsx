@@ -31,7 +31,7 @@ const icon = (
   </svg>
 );
 
-export default function SaleModal({ transactionId, projectId, demo, onClose, onSaved }: OperationModalProps) {
+export default function SaleModal({ transactionId, projectId, onClose, onSaved }: OperationModalProps) {
   const { t } = useT();
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   useDialogOpen(true, dialogRef, onClose);
@@ -47,7 +47,6 @@ export default function SaleModal({ transactionId, projectId, demo, onClose, onS
   const { loading: loadingExisting, error: loadError } = useExistingRecord<SaleRecord>("/api/sales/get", {
     transactionId,
     projectId,
-    demo,
     errorKey: "modal.sale.loadError",
     onLoad: (sale) => {
       const nextItems = saleItemsFromRecord(sale.venta_detalle);
@@ -85,7 +84,7 @@ export default function SaleModal({ transactionId, projectId, demo, onClose, onS
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!projectId || demo || loadingExisting || loadError) return;
+    if (!projectId || loadingExisting || loadError) return;
     const lines = orderLines(items);
     if (!lines.length) { window.alert(t("modal.sale.noLines")); return; }
     setBusy(true);

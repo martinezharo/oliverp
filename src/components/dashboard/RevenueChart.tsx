@@ -4,8 +4,9 @@ import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { useDemoDataset } from "@/hooks/useDemoDataset";
 import { useErpContext } from "@/hooks/useErpContext";
-import { getMockEvolution } from "@/lib/mock-data";
+import { evolutionSeries } from "@/lib/demo/domain";
 import { useT } from "@/i18n/LocaleProvider";
 
 type EvolutionRow = { date: string; ingresos: number; urp: number };
@@ -41,6 +42,7 @@ function fillGaps(rows: Array<{ dia: string; ingresos: number; urp: number }>, d
 export default function RevenueChart({ projectId }: { projectId: number }) {
   const { t, formatCurrency, formatCompact, formatDate } = useT();
   const { demo } = useErpContext();
+  const dataset = useDemoDataset();
   const [days, setDays] = useState(30);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chartRef = useRef<{ destroy: () => void } | null>(null);
@@ -51,9 +53,9 @@ export default function RevenueChart({ projectId }: { projectId: number }) {
     !demo && projectId ? { projectLegacyId: projectId, fromDate } : "skip",
   );
   const data = useMemo(() => {
-    if (demo) return getMockEvolution(days);
+    if (demo) return evolutionSeries(dataset, projectId, days);
     return remote === undefined ? undefined : fillGaps(remote, days);
-  }, [days, demo, remote]);
+  }, [dataset, days, demo, projectId, remote]);
 
   const total = useMemo(
     () => (data ?? []).reduce((sum, row) => sum + row.ingresos, 0),

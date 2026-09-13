@@ -17,22 +17,20 @@ export default function OperationModals({
   kind,
   transactionId = null,
   projectId,
-  demo,
   onClose,
   onSaved,
 }: {
   kind: ModalKind;
   transactionId?: number | null;
   projectId: number | null;
-  demo: boolean;
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const props = { transactionId, projectId, demo, onClose, onSaved };
+  const props = { transactionId, projectId, onClose, onSaved };
 
   if (kind === "sale") return <SaleModal {...props} />;
   if (kind === "purchase") return <PurchaseModal {...props} />;
   if (kind === "other") return <OtherModal {...props} />;
-  if (kind === "product") return <ProductModal projectId={projectId} demo={demo} onClose={onClose} onSaved={onSaved} />;
+  if (kind === "product") return <ProductModal projectId={projectId} onClose={onClose} onSaved={onSaved} />;
   return null;
 }

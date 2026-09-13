@@ -19,7 +19,7 @@ const icon = (
 );
 
 /** Registers a new product in the catalogue; prices come from operations. */
-export default function ProductModal({ projectId, demo, onClose, onSaved }: Omit<OperationModalProps, "transactionId">) {
+export default function ProductModal({ projectId, onClose, onSaved }: Omit<OperationModalProps, "transactionId">) {
   const { t } = useT();
   const dialogRef = useRef<HTMLDialogElement | null>(null);
   useDialogOpen(true, dialogRef, onClose);
@@ -28,7 +28,7 @@ export default function ProductModal({ projectId, demo, onClose, onSaved }: Omit
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!projectId || demo) return;
+    if (!projectId) return;
     setBusy(true);
     try {
       await apiJson("/api/products/create", {

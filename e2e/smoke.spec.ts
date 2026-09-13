@@ -23,7 +23,7 @@ test.describe("Next/Convex Auth shell", () => {
     await expect(page).toHaveURL(/\/app$/);
     await expect(page.getByText("Demo Mode", { exact: true })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
-    await expect(page.getByRole("button", { name: /Octopus Control/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Northwind Gadgets/ })).toBeVisible();
     await expect(page.getByRole("heading", { name: "New Sale" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "New Purchase" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Income / Expense" })).toBeVisible();

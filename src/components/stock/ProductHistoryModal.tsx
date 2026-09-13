@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import Modal, { useDialogOpen } from "@/components/ui/Modal";
 import { apiErrorMessage, apiJson } from "@/lib/client-api";
 import { today } from "@/lib/format";
-import { getProductNameKey } from "@/lib/mock-data";
 import { useT } from "@/i18n/LocaleProvider";
 import { ui } from "@/i18n/ui";
 
@@ -103,7 +102,7 @@ export default function ProductHistoryModal({ product, onClose }: { product: Sto
       dialogRef={dialogRef}
       maxWidth="max-w-5xl"
       title={t("modal.history.title")}
-      subtitle={product ? t(getProductNameKey(product.nombre_producto)) : ""}
+      subtitle={product?.nombre_producto ?? ""}
       icon={icon}
       onClose={onClose}
       scrollable
