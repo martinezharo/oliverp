@@ -6,6 +6,7 @@ import { useMemo, useRef, useState } from "react";
 
 import Badge from "@/components/ui/Badge";
 import Modal, { useDialogOpen } from "@/components/ui/Modal";
+import Select from "@/components/ui/Select";
 import { Spinner } from "@/components/ui/Spinner";
 import { primaryButton } from "@/components/ui/button";
 import { fieldLabel, input } from "@/components/ui/form";
@@ -368,16 +369,17 @@ export default function ApiKeysModal({
                 <label htmlFor="api-key-scope" className={fieldLabel}>
                   {t("settings.keys.scopesLabel")}
                 </label>
-                <select
+                <Select
                   id="api-key-scope"
                   value={scope}
-                  onChange={(event) => setScope(event.target.value as "read" | "write")}
+                  onChange={(value) => setScope(value as "read" | "write")}
                   disabled={busy}
-                  className={`${input} mt-2 focus:border-primary-500`}
-                >
-                  <option value="read">{t("settings.keys.scopes.read")}</option>
-                  <option value="write">{t("settings.keys.scopes.write")}</option>
-                </select>
+                  options={[
+                    { value: "read", label: t("settings.keys.scopes.read") },
+                    { value: "write", label: t("settings.keys.scopes.write") },
+                  ]}
+                  className="mt-2"
+                />
               </div>
 
               <div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { filterInput } from "@/components/ui/form";
+import Select from "@/components/ui/Select";
 import { useT } from "@/i18n/LocaleProvider";
 
 export type FilterState = {
@@ -46,6 +47,10 @@ export default function TransactionFilters({
   const [moreOpen, setMoreOpen] = useState(false);
   // The range filters live behind "More", so the badge is the only sign they
   // are narrowing the list.
+  const typeOptions = [
+    { value: "", label: t("filters.allTypes") },
+    ...types.map((type) => ({ value: type, label: t(`filters.type${type.charAt(0).toUpperCase()}${type.slice(1)}`) })),
+  ];
   const badgeCount = [filters.dateFrom, filters.dateTo, filters.amountMin, filters.amountMax].filter(Boolean).length;
 
   return (
@@ -74,17 +79,23 @@ export default function TransactionFilters({
           />
         </div>
 
-        <select value={filters.type} onChange={(event) => onChange("type", event.target.value)} className={`${filterInput} shrink-0 sm:w-40`}>
-          <option value="">{t("filters.allTypes")}</option>
-          {types.map((type) => (
-            <option key={type} value={type}>{t(`filters.type${type.charAt(0).toUpperCase()}${type.slice(1)}`)}</option>
-          ))}
-        </select>
+        <Select
+          size="sm"
+          aria-label={t("filters.type")}
+          value={filters.type}
+          onChange={(value) => onChange("type", value)}
+          options={typeOptions}
+          className="shrink-0 sm:w-40"
+        />
 
-        <select value={filters.channel} onChange={(event) => onChange("channel", event.target.value)} className={`${filterInput} shrink-0 sm:w-40`}>
-          <option value="">{t("filters.allChannels")}</option>
-          {channels.map((channel) => <option key={channel} value={channel}>{channel}</option>)}
-        </select>
+        <Select
+          size="sm"
+          aria-label={t("filters.channel")}
+          value={filters.channel}
+          onChange={(value) => onChange("channel", value)}
+          options={[{ value: "", label: t("filters.allChannels") }, ...channels.map((channel) => ({ value: channel, label: channel }))]}
+          className="shrink-0 sm:w-40"
+        />
 
         <div className="relative shrink-0">
           <button
