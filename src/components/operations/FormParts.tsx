@@ -2,6 +2,7 @@
 
 import { useT } from "@/i18n/LocaleProvider";
 import { compactInput, fieldLabel, input } from "@/components/ui/form";
+import Select from "@/components/ui/Select";
 
 import type { Item, Product } from "./shared";
 
@@ -155,13 +156,7 @@ export function LineItems({
             <div className="grid grid-cols-1 gap-2 md:col-span-11 md:grid-cols-11">
               <label className="block md:col-span-5">
                 <span className="mb-1 block text-xs text-slate-500">{t("item.product")}</span>
-                <select
-                  value={item.productId}
-                  onChange={(event) => onProductChange(index, event.target.value)}
-                  className={`${compactInput} focus:border-primary-500`}
-                >
-                  <ProductOptions products={products} kind={kind} selected={item.productId} />
-                </select>
+                <ProductSelect products={products} kind={kind} value={item.productId} onChange={(productId) => onProductChange(index, productId)} />
               </label>
 
               <div className="grid grid-cols-3 gap-2 md:contents">
@@ -199,15 +194,28 @@ export function LineItems({
  * except the one a line already holds, which must stay selectable while an
  * older operation is being edited.
  */
-function ProductOptions({ products, kind, selected }: { products: Product[]; kind: "sale" | "purchase"; selected: string }) {
+function ProductSelect({
+  products,
+  kind,
+  value,
+  onChange,
+}: {
+  products: Product[];
+  kind: "sale" | "purchase";
+  value: string;
+  onChange: (productId: string) => void;
+}) {
   const { t } = useT();
-  const selectable = products.filter((product) => kind === "purchase" || product.stock > 0 || String(product.id) === selected);
+  const options = products
+    .filter((product) => kind === "purchase" || product.stock > 0 || String(product.id) === value)
+    .map((product) => ({ value: String(product.id), label: product.name }));
   return (
-    <>
-      <option value="">{selectable.length ? t("common.select") : t("modal.sale.noProducts")}</option>
-      {selectable.map((product) => (
-        <option key={product.id} value={product.id}>{product.name}</option>
-      ))}
-    </>
+    <Select
+      size="sm"
+      value={value}
+      onChange={onChange}
+      options={options}
+      placeholder={options.length ? t("common.select") : t("modal.sale.noProducts")}
+    />
   );
 }

@@ -40,7 +40,8 @@ test("records a sale that lands in the transaction list, then deletes it", async
   const dialog = page.locator("dialog[open]");
   await dialog.getByPlaceholder("Wallapop, Amazon, Web...").fill("Farmers market");
   await dialog.getByRole("button", { name: "Add Product" }).click();
-  await dialog.locator("select").first().selectOption({ index: 1 });
+  await dialog.getByRole("combobox", { name: "Product" }).first().click();
+  await dialog.getByRole("option").first().click();
   await dialog.getByRole("spinbutton").nth(1).fill("2");
   await dialog.getByRole("spinbutton").nth(2).fill("12.50");
   await dialog.getByRole("button", { name: "Save Sale" }).click();
@@ -79,4 +80,32 @@ test("adjusts stock and shows the movement", async ({ page }) => {
 
   await page.keyboard.press("Escape");
   await expect(page.locator("#stock-table")).toContainText(name);
+});
+
+test("drives the custom selects from the keyboard", async ({ page }) => {
+  await page.goto("/app/transactions");
+  await page.getByRole("button", { name: "Transactions", exact: true }).click();
+
+  const type = page.getByRole("combobox", { name: "Type" });
+  await type.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(type).toHaveAttribute("aria-expanded", "true");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(type).toHaveAttribute("aria-expanded", "false");
+  await expect(type).toHaveText("Sales");
+  await expect(page.locator("tbody tr").filter({ hasText: "Purchase" })).toHaveCount(0);
+});
+
+test("closes a select's list on Escape without closing its modal", async ({ page }) => {
+  await page.goto("/app");
+  await page.getByRole("main").getByRole("button", { name: /New Sale/ }).click();
+  const dialog = page.locator("dialog[open]");
+  await dialog.getByRole("button", { name: "Add Product" }).click();
+  const product = dialog.getByRole("combobox", { name: "Product" }).first();
+  await product.click();
+  await expect(dialog.getByRole("listbox")).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(dialog.getByRole("listbox")).toBeHidden();
+  await expect(dialog).toBeVisible();
 });
