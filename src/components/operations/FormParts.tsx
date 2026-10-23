@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import { useT } from "@/i18n/LocaleProvider";
 import { compactInput, fieldLabel, input } from "@/components/ui/form";
 import Select from "@/components/ui/Select";
@@ -138,6 +139,7 @@ export function LineItems({
   onProductChange: (index: number, productId: string) => void;
 }) {
   const { t } = useT();
+  const id = useId();
   return (
     <div className="border-t border-white/5 pt-6">
       <div className="mb-4 flex items-center justify-between">
@@ -162,7 +164,22 @@ export function LineItems({
               <div className="grid grid-cols-3 gap-2 md:contents">
                 <label className="md:col-span-2">
                   <span className="mb-1 block text-xs text-slate-500">{t("item.units")}</span>
-                  <input type="number" min="0.01" step="0.01" value={item.units} onChange={(event) => onChange(index, "units", event.target.value)} placeholder="1" className={`${compactInput} focus:border-primary-500`} />
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={item.units}
+                    onChange={(event) => onChange(index, "units", event.target.value)}
+                    aria-invalid={item.units !== "" && !Number.isInteger(Number(item.units)) || undefined}
+                    aria-describedby={item.units !== "" && !Number.isInteger(Number(item.units)) ? `${id}-units-${index}` : undefined}
+                    placeholder="1"
+                    className={`${compactInput} focus:border-primary-500`}
+                  />
+                  {item.units !== "" && !Number.isInteger(Number(item.units)) && (
+                    <span id={`${id}-units-${index}`} role="alert" className="mt-1 block text-xs text-red-400">
+                      {t("item.unitsInteger")}
+                    </span>
+                  )}
                 </label>
                 <label className="md:col-span-2">
                   <span className="mb-1 block text-xs text-slate-500">{t("item.price")}</span>

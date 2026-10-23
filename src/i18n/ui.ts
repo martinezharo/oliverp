@@ -34,6 +34,7 @@ const es: Dict = {
   // Item rows (sales / purchases)
   "item.product": "Producto",
   "item.units": "Uds",
+  "item.unitsInteger": "Introduce un número entero de unidades, sin decimales.",
   "item.price": "Precio",
   "item.vat": "IVA %",
   "item.totalEur": "Total (€)",
@@ -587,6 +588,7 @@ const en: Dict = {
   // Item rows
   "item.product": "Product",
   "item.units": "Qty",
+  "item.unitsInteger": "Enter a whole number of units, without decimals.",
   "item.price": "Price",
   "item.vat": "VAT %",
   "item.totalEur": "Total (€)",

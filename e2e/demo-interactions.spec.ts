@@ -65,6 +65,35 @@ test("records a sale that lands in the transaction list, then deletes it", async
   await expect(page.getByRole("main")).toContainText("Transactions");
 });
 
+for (const kind of ["Sale", "Purchase"] as const) {
+  test(`shows a decimal quantity error before saving a ${kind.toLowerCase()}`, async ({ page }) => {
+    await page.goto("/app");
+    await page.getByRole("main").getByRole("button", { name: new RegExp(`New ${kind}`) }).click();
+    const dialog = page.locator("dialog[open]");
+    if (kind === "Sale") {
+      await dialog.getByPlaceholder("Wallapop, Amazon, Web...").fill("Wallapop");
+    }
+    await dialog.getByRole("button", { name: "Add Product" }).click();
+    await dialog.getByRole("combobox", { name: "Product" }).click();
+    await dialog.getByRole("option").first().click();
+    const quantity = dialog.getByRole("spinbutton", { name: "Qty" });
+    await quantity.fill("0.01");
+    await expect(quantity).toHaveAccessibleDescription("Enter a whole number of units, without decimals.");
+    await expect(quantity).toHaveAttribute("aria-invalid", "true");
+    await dialog.getByRole("button", { name: `Save ${kind}` }).click();
+    await expect(quantity).toBeFocused();
+    await expect(dialog).toBeVisible();
+
+    await quantity.fill("1.5");
+    await expect(dialog.getByRole("alert")).toBeVisible();
+    await quantity.fill("1");
+    await expect(dialog.getByRole("alert")).toHaveCount(0);
+    await dialog.getByRole("spinbutton", { name: "Price", exact: true }).fill("2.99");
+    await dialog.getByRole("button", { name: `Save ${kind}` }).click();
+    await expect(dialog).toBeHidden();
+  });
+}
+
 test("adjusts stock and shows the movement", async ({ page }) => {
   await page.goto("/app/stock");
   const firstProduct = page.locator("#stock-table tbody button").first();
